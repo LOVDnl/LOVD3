@@ -474,10 +474,11 @@ class LOVD_VV
                 array(
                     '/^Homo sapiens\s+/', // Remove species name.
                     '/^' . preg_quote($aJSON['current_name'], '/') . '\s+/', // The current gene name.
-                    '/^\(' . preg_quote($aJSON['current_symbol'], '/') . '\),\s+/', // The current symbol.
-                    '/, mRNA$/', // mRNA suffix.
+                    '/.*\(' . preg_quote($aJSON['current_symbol'], '/') . '\),\s+/', // The current symbol.
+                    '/, mRNA\b/', // mRNA suffix.
                     '/, non-coding RNA$/', // non-coding RNA suffix, replaced to " (non-coding)".
-                ), array('', '', '', '', ' (non-coding)'), $aTranscript['description']);
+                    '/; nuclear gene for mitochondrial product$/', // suffix given to a certain class of genes.
+                ), array('', '', '', '', ' (non-coding)', ''), $aTranscript['description']);
 
             // Figure out the genomic positions, which are given to us using the NCs.
             $aGenomicPositions = array();
