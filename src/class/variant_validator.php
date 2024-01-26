@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2023-06-23
+ * Modified    : 2024-01-25
  * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -408,30 +408,77 @@ class LOVD_VV
 
 
 
-    public function getTranscriptsByGene ($sSymbol)
+    public function getTranscriptsByID ($sSymbol)
     {
-        // Returns the available transcripts for the given gene.
-        global $_SETT;
+        // Returns the available transcripts for the given gene or transcript.
+        // When a transcript has been passed, it returns only that transcript (any version).
+        global $_CONF, $_SETT;
+
+        $bTranscript = preg_match('/^[NX][MR]_[0-9.]+$/', $sSymbol);
+        // For now, let's remove the version to just match anything.
+        // VV's output does not depend on this, but our checks further down do.
+        if ($bTranscript) {
+            $sSymbol = strstr($sSymbol, '.', true);
+        }
 
         $aJSON = $this->callVV('VariantValidator/tools/gene2transcripts', array(
             'id' => $sSymbol,
         ));
+        if ($aJSON && is_array($aJSON) && count($aJSON) == 1 && isset($aJSON[0])) {
+            // Handle https://github.com/openvar/variantValidator/issues/579.
+            // The output was suddenly a list instead of the expected object.
+            $aJSON = current($aJSON);
+        }
         if (!$aJSON || empty($aJSON['transcripts'])) {
             // Failure.
-            return false;
+            // OK, but... what if we were working on chrM? And VV doesn't support these yet?
+            if ($aJSON && isset($aJSON['current_symbol']) && substr($aJSON['current_symbol'], 0, 3) == 'MT-') {
+                return array_merge(
+                    $this->aResponse,
+                    [
+                        'data' => [
+                            $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences']['M'] . '(' . $aJSON['current_symbol'] . ')' => [
+                                'name' => 'transcript variant 1',
+                                'id_ncbi_protein' => '',
+                                'genomic_positions' => [
+                                    $_CONF['refseq_build'] => [
+                                        'M' => [
+                                            'start' => null,
+                                            'end' => null,
+                                        ]
+                                    ]
+                                ],
+                                'transcript_positions' => [
+                                    'cds_start' => null,
+                                    'cds_length' => null,
+                                    'length' => null,
+                                ],
+                                'select' => false,
+                            ],
+                        ],
+                    ]
+                );
+            }
+            return array_merge($this->aResponse, ['errors' => 'No transcripts found.']);
         }
 
         $aData = $this->aResponse;
         foreach ($aJSON['transcripts'] as $aTranscript) {
+            // If we requested a single transcript, show only those.
+            if ($bTranscript && strpos($aTranscript['reference'], $sSymbol . '.') === false) {
+                continue;
+            }
+
             // Clean name.
             $sName = preg_replace(
                 array(
                     '/^Homo sapiens\s+/', // Remove species name.
                     '/^' . preg_quote($aJSON['current_name'], '/') . '\s+/', // The current gene name.
-                    '/^\(' . preg_quote($aJSON['current_symbol'], '/') . '\),\s+/', // The current symbol.
-                    '/, mRNA$/', // mRNA suffix.
+                    '/.*\(' . preg_quote($aJSON['current_symbol'], '/') . '\),\s+/', // The current symbol.
+                    '/, mRNA\b/', // mRNA suffix.
                     '/, non-coding RNA$/', // non-coding RNA suffix, replaced to " (non-coding)".
-                ), array('', '', '', '', ' (non-coding)'), $aTranscript['description']);
+                    '/; nuclear gene for mitochondrial product$/', // suffix given to a certain class of genes.
+                ), array('', '', '', '', ' (non-coding)', ''), $aTranscript['description']);
 
             // Figure out the genomic positions, which are given to us using the NCs.
             $aGenomicPositions = array();
@@ -456,6 +503,8 @@ class LOVD_VV
             }
 
             $aData['data'][$aTranscript['reference']] = array(
+                'gene_symbol' => $aJSON['current_symbol'],
+                'gene_hgnc' => substr(strstr($aJSON['hgnc'] ?? '', ':'), 1),
                 'name' => $sName,
                 'id_ncbi_protein' => $aTranscript['translation'],
                 'genomic_positions' => $aGenomicPositions,
@@ -463,11 +512,12 @@ class LOVD_VV
                     'cds_start' => $aTranscript['coding_start'],
                     'cds_length' => (!$aTranscript['coding_end']? NULL : ($aTranscript['coding_end'] - $aTranscript['coding_start'] + 1)),
                     'length' => $aTranscript['length'],
-                )
+                ),
+                'select' => ($aTranscript['annotations']['db_xref']['select'] ?? false),
             );
         }
 
-        ksort($aData['data']);
+        ksort($aData['data'], SORT_NATURAL);
         return $aData;
     }
 

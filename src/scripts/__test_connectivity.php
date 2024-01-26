@@ -38,7 +38,7 @@ if ($bProxy) {
     // Dump proxy settings.
     var_dump($_CONF['proxy_host'], $_CONF['proxy_port'], $_CONF['proxy_username'], str_repeat('*', strlen($_CONF['proxy_password'])));
     // Check if proxy can be bypassed.
-    $bProxyCanBeBypassed = (bool) @file('http://www.lovd.nl/mirrors/lrg/LRG_list.txt');
+    $bProxyCanBeBypassed = (bool) @file('http://www.lovd.nl/mirrors/ncbi/NG_list.txt');
     print("
 Proxy server " . ($bProxyCanBeBypassed? 'CAN' : 'CAN NOT') . " be bypassed.
 ");
@@ -55,7 +55,7 @@ print("
 ================================================================================
 Opening remote file over HTTP, using " . ($bFopenWrappers? 'our file() since wrapper is enabled' : 'fsockopen() fallback since wrapper is disabled') . ", should return large positive number:
 ");
-var_dump(strlen(implode("\n", lovd_php_file('http://www.lovd.nl/mirrors/lrg/LRG_list.txt'))));
+var_dump(strlen(implode("\n", lovd_php_file('http://www.lovd.nl/mirrors/ncbi/NG_list.txt'))));
 
 // Testing connection to HGNC.
 print("
@@ -75,7 +75,7 @@ if (!is_array($aOutput)) {
 $sURL = str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . '/json/getGeneLocation?build=' . $_CONF['refseq_build'] . '&gene=IVD';
 print("
 ================================================================================
-Contacting Mutalyzer at ${_CONF['mutalyzer_soap_url']} over HTTPS, using fsockopen() fallback, should return IVD mapping data:
+Contacting Mutalyzer at {$_CONF['mutalyzer_soap_url']} over HTTPS, using fsockopen() fallback, should return IVD mapping data:
 ");
 $aOutput = lovd_php_file($sURL);
 if (!is_array($aOutput)) {
@@ -87,7 +87,7 @@ if (!is_array($aOutput)) {
 }
 print("
 ================================================================================
-Contacting Mutalyzer at ${_CONF['mutalyzer_soap_url']} over HTTPS, using non-context file() call, should " . (!$bFopenWrappers? 'fail since fopen wrappers are off' : ($bProxy && !$bProxyCanBeBypassed? 'fail since the proxy is ignored' : 'return IVD mapping data')) . ":
+Contacting Mutalyzer at {$_CONF['mutalyzer_soap_url']} over HTTPS, using non-context file() call, should " . (!$bFopenWrappers? 'fail since fopen wrappers are off' : ($bProxy && !$bProxyCanBeBypassed? 'fail since the proxy is ignored' : 'return IVD mapping data')) . ":
 ");
 $aOutput = file($sURL, FILE_IGNORE_NEW_LINES);
 if (!is_array($aOutput)) {
@@ -100,7 +100,7 @@ if (!is_array($aOutput)) {
 if ($bCurl) {
     print("
 ================================================================================
-Contacting Mutalyzer at ${_CONF['mutalyzer_soap_url']} over Curl, should return IVD mapping data:
+Contacting Mutalyzer at {$_CONF['mutalyzer_soap_url']} over Curl, should return IVD mapping data:
 ");
     var_dump(lovd_callMutalyzer('getGeneLocation', array('build' => $_CONF['refseq_build'], 'gene' => 'IVD')));
 }

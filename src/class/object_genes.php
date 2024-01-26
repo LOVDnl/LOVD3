@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2023-02-02
- * For LOVD    : 3.0-29
+ * Modified    : 2024-01-24
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -275,7 +275,7 @@ class LOVD_Gene extends LOVD_Object
         }
 
         if (lovd_getProjectFile() != '/import.php' && !in_array($aData['refseq_genomic'], $zData['genomic_references'])) {
-            lovd_errorAdd('refseq_genomic' ,'Please select a proper NG, NC, or LRG accession number in the \'NCBI accession number for the genomic reference sequence\' selection box.');
+            lovd_errorAdd('refseq_genomic' ,'Please select a proper NG or NC accession number in the \'NCBI accession number for the genomic reference sequence\' selection box.');
         }
 
         if (!empty($aData['refseq']) && empty($aData['refseq_url'])) {
@@ -365,15 +365,13 @@ class LOVD_Gene extends LOVD_Object
         } else {
             $aSelectRefseqGenomic = array_combine($zData['genomic_references'], $zData['genomic_references']);
         }
-        $aTranscriptNames = array();
         $aTranscriptsForm = array();
         if (!empty($zData['transcripts'])) {
-            foreach ($zData['transcripts'] as $sTranscript) {
-                // Until revision 679 the transcript version was not used in the index and removed with preg_replace.
-                // Can not figure out why version is not included. Therefore, for now we will do without preg_replace.
-                if (!isset($aTranscriptNames[$sTranscript])) {
-                    $aTranscriptsForm[$sTranscript] = lovd_shortenString($zData['transcriptNames'][$sTranscript], 50);
-                    $aTranscriptsForm[$sTranscript] .= str_repeat(')', substr_count($aTranscriptsForm[$sTranscript], '(')) . ' (' . $sTranscript . ')';
+            foreach ($zData['transcripts'] as $sTranscript => $aTranscript) {
+                $aTranscriptsForm[$sTranscript] = lovd_shortenString($aTranscript['name'], 50);
+                $aTranscriptsForm[$sTranscript] .= str_repeat(')', substr_count($aTranscriptsForm[$sTranscript], '(')) . ' (' . $sTranscript . ')';
+                if ($aTranscript['select']) {
+                    $aTranscriptsForm[$sTranscript] .= ' (' . $aTranscript['select'] . ' select)';
                 }
             }
             asort($aTranscriptsForm);
@@ -435,7 +433,7 @@ class LOVD_Gene extends LOVD_Object
                         array('', '', 'note', 'Collecting variants requires a proper reference sequence. Without a genomic and a transcript reference sequence the variants in this LOVD database cannot be interpreted properly or mapped to the genome.'),
                         'hr',
     'refseq_genomic' => array('Genomic reference sequence', '', 'select', 'refseq_genomic', 1, $aSelectRefseqGenomic, false, false, false),
-                        array('', '', 'note', 'Select the genomic reference sequence (NG, NC, LRG accession number). Only the references that are available to LOVD are shown.'),
+                        array('', '', 'note', 'Select the genomic reference sequence (NG or NC accession number). Only the references that are available to LOVD are shown.'),
     'transcripts' =>    array('Transcript reference sequence(s)', 'Select transcript references (NM accession numbers).', 'select', 'active_transcripts', $nTranscriptsFormSize, $aTranscriptsForm, false, true, false),
                         'hr',
                         'skip',

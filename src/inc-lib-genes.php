@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-25
- * Modified    : 2023-07-06
+ * Modified    : 2024-01-24
  * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -33,20 +33,6 @@
 // Don't allow direct access.
 if (!defined('ROOT_PATH')) {
     exit;
-}
-
-
-
-
-
-function lovd_getLRGbyGeneSymbol ($sGeneSymbol)
-{
-    // Get LRG reference sequence
-    preg_match('/(LRG_\d+)\s+' . $sGeneSymbol . '/', implode(' ', lovd_php_file('http://www.lovd.nl/mirrors/lrg/LRG_list.txt')), $aMatches);
-    if (!empty($aMatches)) {
-        return $aMatches[1];
-    }
-    return false;
 }
 
 
@@ -406,38 +392,5 @@ function lovd_getGeneInfoFromHgncOld ($sHgncId, $aCols, $bRecursion = false)
         }
     }
     return false;
-}
-
-
-
-
-
-function lovd_getUDForGene ($sBuild, $sGene)
-{
-    // Retrieves an UD for any given gene and genome build.
-    // In principle, any build is supported, but we'll check against the available builds supported in LOVD.
-    global $_SETT;
-
-    if (!$sBuild || !is_string($sBuild) || !isset($_SETT['human_builds'][$sBuild])) {
-        return false;
-    }
-
-    if (!$sGene || !is_string($sGene)) {
-        return false;
-    }
-
-    $sUD = '';
-
-    // Let's get the mapping information.
-    $aResponse = lovd_callMutalyzer('getGeneLocation', array('build' => $sBuild, 'gene' => $sGene));
-    // If this is false, Mutalyzer returned a HTTP 500. On screen you'd get a reason and error message perhaps, but lovd_callMutalyzer() just returns false.
-    if ($aResponse && array_keys($aResponse) != array('faultcode', 'faultstring')) {
-        $sChromosome = $_SETT['human_builds'][$sBuild]['ncbi_sequences'][substr($aResponse['chromosome_name'], 3)];
-        $nStart = $aResponse['start'] - ($aResponse['orientation'] == 'forward'? 5000 : 2000);
-        $nEnd = $aResponse['stop'] + ($aResponse['orientation'] == 'forward'? 2000 : 5000);
-        $sUD = lovd_callMutalyzer('sliceChromosome', array('chromAccNo' => $sChromosome, 'start' => $nStart, 'end' => $nEnd, 'orientation' => ($aResponse['orientation'] == 'forward'? 1 : 2)));
-    }
-
-    return $sUD;
 }
 ?>

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-10-21
- * For LOVD    : 3.0-29
+ * Modified    : 2024-01-26
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Daan Asscheman <D.Asscheman@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -513,15 +513,15 @@ function lovd_fixHGVS ($sVariant, $sType = '')
                             // Both positions are in the UTR.
                             $sLast = substr($sLast, 1);
                             if ($sFirst > $sLast) {
-                                $aParts[$i] = "*${sLast}_*${sFirst}";
+                                $aParts[$i] = "*{$sLast}_*{$sFirst}";
                             }
                         } else {
-                            $aParts[$i] = "${sLast}_*${sFirst}";
+                            $aParts[$i] = "{$sLast}_*{$sFirst}";
                         }
                     } elseif ($sLast[0] != '*') {
                         // Fully numeric positions. Change only if in wrong order.
                         if ($sFirst > $sLast) {
-                            $aParts[$i] = "${sLast}_${sFirst}";
+                            $aParts[$i] = "{$sLast}_{$sFirst}";
                         }
                     }
 

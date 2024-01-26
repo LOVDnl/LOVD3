@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2023-02-03
- * For LOVD    : 3.0-29
+ * Modified    : 2024-01-25
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
@@ -1561,6 +1561,9 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                 require ROOT_PATH . 'inc-lib-actions.php';
                 require ROOT_PATH . 'inc-lib-genes.php';
 
+                require ROOT_PATH . 'class/variant_validator.php';
+                $_VV = new LOVD_VV();
+
                 $aIupacTable = array(
                     'A' => array('A'),
                     'C' => array('C'),
@@ -1594,7 +1597,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
                 $aGenesChecked = array();       // Contains arrays with [refseq_UD], [name], [strand] and [columns] for each gene we'll encounter
                 $aAccessionToSymbol = array();  // Contains the gene symbol for each SeattleSeq transcript accession
-                $aAccessionMapping = array();   // Maps SeattleSeq transcript accession numbers to their LOVD and Mutalyzer-compatible versions
+                $aAccessionMapping = array();   // Maps SeattleSeq transcript accession numbers to their LOVD-compatible versions.
 
                 // Prepare the arrays that will hold the data that can be inserted into the database.
                 $aFieldsGene = array();         // [geneSymbol] = values
@@ -1805,8 +1808,10 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                             } elseif (strpos($_POST['autocreate'], 't') !== false) {
                                 // ONLY attempt to fetch gene information in case we're allowed to create this (apparently new) transcript.
                                 // Otherwise, why bother?
-                                // FIXME: Isn't it easier to just check the geneList column? See if that contains just one gene, and use that?
-                                $sSymbol = lovd_callMutalyzer('getGeneName', array('build' => $_CONF['refseq_build'], 'accno' => $sAccession));
+                                $aVV = $_VV->getTranscriptsByID($sAccession);
+                                if (!empty($aVV['data'])) {
+                                    $sSymbol = current($aVV['data'])['gene_symbol'];
+                                }
                             }
                             if (empty($sSymbol)) {
                                 $sSymbol = 'none';
@@ -1881,7 +1886,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                         $sChromBand = $aMatches[2];
                                     }
 
-                                    // Get the complete LRG/NG list from LOVD.nl, all at once. Saves us a lot of queries because we need to look up quite some genes.
+                                    // Get the complete NG list from LOVD.nl, all at once. Saves us a lot of queries because we need to look up quite some genes.
                                     if (empty($aNgMapping)) {
                                         $aNgMapping = array();
                                         $_BAR->setMessage('Loading genomic reference list...', 'done');
@@ -1895,15 +1900,6 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                             }
                                         }
 
-                                        // Overwrite with any existing LRG's.
-                                        // FIXME; Implement cache, so we don't request this file for every gene.
-                                        $aLines = lovd_php_file('http://www.lovd.nl/mirrors/lrg/LRG_list.txt');
-                                        foreach ($aLines as $sLine) {
-                                            if (preg_match('/(LRG_\d+)\s+(\w+)/', $sLine, $aMatches)) {
-                                                $aNgMapping[$aMatches[2]] = $aMatches[1];
-                                            }
-                                        }
-
                                         // Remove the 'Loading reference list...' message.
                                         $_BAR->setMessage('Loading gene information for ' . $sSymbol . '...', 'done');
                                     }
@@ -1914,9 +1910,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                     } else {
                                         $sRefseqGenomic = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$sChromosome];
                                     }
-
-                                    // Get UDID from Mutalyzer.
-                                    $sRefseqUD = lovd_getUDForGene($_CONF['refseq_build'], $sSymbol);
+                                    $sRefseqUD = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$sChromosome];
 
                                     // Not adding the gene just yet, but we remember its data...
                                     // FIXME: Need to define all fields here to prevent problems with strict mode on. Most of these fields however, can just allow for NULL values.
@@ -1989,7 +1983,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                     continue;
                                 }
 
-                                // We'll try to get it from the database first. If we don't have it, we'll try Mutalyzer.
+                                // We'll try to get it from the database first. If we don't have it, we'll try VV.
                                 // We might have matched a different version before, now find the version we have, preferring the version given by SeattleSeq, otherwise the one added last.
                                 if ($sAccessionDB = $_DB->q('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi LIKE ? ORDER BY (id_ncbi = ?) DESC, id DESC', array($sAccessionClean . '.%', $sAccession))->fetchColumn()) {
                                     // We have this transcript in the database already.
@@ -1999,32 +1993,26 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                     // We don't have it in the database, but we are allowed to add it.
 
                                     if (!isset($aFieldsTranscript[$sSymbol])) {
-                                        // We still need to contact Mutalyzer to find information for the transcripts of this gene.
+                                        // We still need to contact VV to find information for the transcripts of this gene.
 
                                         $aFieldsTranscript[$sSymbol] = array();
                                         $_BAR->setMessage('Loading transcript information for ' . $sSymbol . '...', 'done');
 
-                                        $aTranscripts = lovd_callMutalyzer('getTranscriptsAndInfo', array('genomicReference' => $aGenesChecked[$sSymbol]['refseq_UD'], 'geneName' => $sSymbol));
-                                        if (!empty($aTranscripts) && empty($aTranscripts['faultcode'])) {
-                                            foreach ($aTranscripts as $aTranscript) {
-                                                // Remember the data for each of this gene's transcripts. We may insert them as needed.
-                                                $aFieldsTranscript[$sSymbol][$aTranscript['id']] = array(
-                                                    'geneid' => $sSymbol,
-                                                    'name' => str_replace($aGenesChecked[$sSymbol]['name'] . ', ', '', $aTranscript['product']),
-                                                    'id_mutalyzer' => str_replace($sSymbol . '_v', '', $aTranscript['name']),
-                                                    'id_ncbi' => $aTranscript['id'],
-                                                    'id_ensembl' => '',
-                                                    'id_protein_ncbi' => (empty($aTranscript['proteinTranscript']['id'])? '' : $aTranscript['proteinTranscript']['id']),
-                                                    'id_protein_ensembl' => '',
-                                                    'id_protein_uniprot' => '',
-                                                    'position_c_mrna_start' => $aTranscript['cTransStart'],
-                                                    'position_c_mrna_end' => $aTranscript['sortableTransEnd'],
-                                                    'position_c_cds_end' => $aTranscript['cCDSStop'],
-                                                    'position_g_mrna_start' => $aTranscript['chromTransStart'],
-                                                    'position_g_mrna_end' => $aTranscript['chromTransEnd'],
-                                                    'created_by' => 0,
-                                                    'created_date' => date('Y-m-d H:i:s'));
-                                            }
+                                        $aTranscripts = $_VV->getTranscriptsByID($sSymbol);
+                                        foreach ($aTranscripts['data'] as $sTranscript => $aTranscript) {
+                                            // Remember the data for each of this gene's transcripts. We may insert them as needed.
+                                            $aFieldsTranscript[$sSymbol][$sTranscript] = array(
+                                                'geneid' => $sSymbol,
+                                                'name' => $aTranscript['name'],
+                                                'id_ncbi' => $sTranscript,
+                                                'id_protein_ncbi' => ($aTranscript['id_ncbi_protein'] ?? ''),
+                                                'position_c_mrna_start' => -$aTranscript['transcript_positions']['cds_start'] + 1, // FIXME; Fix the database, the VV model is more logical.
+                                                'position_c_mrna_end' => $aTranscript['transcript_positions']['length'] - $aTranscript['transcript_positions']['cds_start'] + 1, // FIXME; Fix the database, the VV model is more logical.
+                                                'position_c_cds_end' => ($aTranscript['transcript_positions']['cds_length'] ?: 0),
+                                                'position_g_mrna_start' => ($aTranscript['genomic_positions'][$_CONF['refseq_build']][$sChromosome]['start'] ?? 0),
+                                                'position_g_mrna_end' => ($aTranscript['genomic_positions'][$_CONF['refseq_build']][$sChromosome]['end'] ?? 0),
+                                                'created_by' => 0,
+                                                'created_date' => date('Y-m-d H:i:s'));
                                         }
 
                                         // Remove the 'Loading transcript information...' message.
@@ -2043,7 +2031,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                     }
 
                                     if (!$bSuccess) {
-                                        // We still didn't find it, so Mutalyzer didn't have this transcript either.
+                                        // We still didn't find it, so VV didn't have this transcript either.
                                         // We ignore this accession from now on by mapping it to 'none'.
                                         $sAccession = $aAccessionMapping[$sAccession] = 'none';
                                     }
