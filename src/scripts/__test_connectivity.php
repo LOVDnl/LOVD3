@@ -75,7 +75,7 @@ if (!is_array($aOutput)) {
 $sURL = str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . '/json/getGeneLocation?build=' . $_CONF['refseq_build'] . '&gene=IVD';
 print("
 ================================================================================
-Contacting Mutalyzer at ${_CONF['mutalyzer_soap_url']} over HTTPS, using fsockopen() fallback, should return IVD mapping data:
+Contacting Mutalyzer at {$_CONF['mutalyzer_soap_url']} over HTTPS, using fsockopen() fallback, should return IVD mapping data:
 ");
 $aOutput = lovd_php_file($sURL);
 if (!is_array($aOutput)) {
@@ -87,7 +87,7 @@ if (!is_array($aOutput)) {
 }
 print("
 ================================================================================
-Contacting Mutalyzer at ${_CONF['mutalyzer_soap_url']} over HTTPS, using non-context file() call, should " . (!$bFopenWrappers? 'fail since fopen wrappers are off' : ($bProxy && !$bProxyCanBeBypassed? 'fail since the proxy is ignored' : 'return IVD mapping data')) . ":
+Contacting Mutalyzer at {$_CONF['mutalyzer_soap_url']} over HTTPS, using non-context file() call, should " . (!$bFopenWrappers? 'fail since fopen wrappers are off' : ($bProxy && !$bProxyCanBeBypassed? 'fail since the proxy is ignored' : 'return IVD mapping data')) . ":
 ");
 $aOutput = file($sURL, FILE_IGNORE_NEW_LINES);
 if (!is_array($aOutput)) {
@@ -100,7 +100,7 @@ if (!is_array($aOutput)) {
 if ($bCurl) {
     print("
 ================================================================================
-Contacting Mutalyzer at ${_CONF['mutalyzer_soap_url']} over Curl, should return IVD mapping data:
+Contacting Mutalyzer at {$_CONF['mutalyzer_soap_url']} over Curl, should return IVD mapping data:
 ");
     var_dump(lovd_callMutalyzer('getGeneLocation', array('build' => $_CONF['refseq_build'], 'gene' => 'IVD')));
 }
