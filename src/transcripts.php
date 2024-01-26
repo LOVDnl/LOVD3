@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2024-01-25
+ * Modified    : 2024-01-26
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -367,10 +367,10 @@ if (ACTION == 'create') {
             }
             if (count($aSuccessTranscripts)) {
                 lovd_writeLog('Event', LOG_EVENT, 'Transcript information entries successfully added to gene ' . $zData['gene']['id'] . ' - ' . $zData['gene']['name']);
-            }
 
-            // Change updated date for gene.
-            lovd_setUpdatedDate($sGene);
+                // Change updated date for gene.
+                lovd_setUpdatedDate($sGene);
+            }
 
             unset($_SESSION['work'][$sPathBase][$_POST['workID']]);
 
