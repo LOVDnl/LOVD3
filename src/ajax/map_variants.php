@@ -584,8 +584,8 @@ if (!empty($aVariants)) {
                     // Mapping is going to succeed! Let's add this gene and transcript.
                     $aVariantOnTranscriptSQL = $aVariantOnTranscriptSQL[$aFieldsTranscript['id_ncbi']];
 
-                    // But first check if the gene was already there without transcripts.
-                    if (!$_DB->q('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE id = ?', array($sSymbol))->fetchColumn()) {
+                    // But first check if the gene was already there without transcripts, or with a different symbol.
+                    if (!$_DB->q('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE id_hgnc = ?', array($sHgncID))->fetchColumn()) {
                         $aFields = array('id' => $sSymbol,
                                          'name' => $sGeneName,
                                          'chromosome' => $sChromosome,
@@ -629,6 +629,12 @@ if (!empty($aVariants)) {
 
                         // Also activate default custom columns for this gene.
                         lovd_addAllDefaultCustomColumns('gene', $sSymbol, 0);
+
+                    } else {
+                        // Make sure we update the gene symbol for the transcript information,
+                        //  because likely we had the wrong gene symbol in the database.
+                        $sGeneSymbol = $_DB->q('SELECT id FROM ' . TABLE_GENES . ' WHERE id_hgnc = ?', array($sHgncID))->fetchColumn();
+                        $aFieldsTranscript['geneid'] = $sGeneSymbol;
                     }
 
                     // Now insert the transcript.
