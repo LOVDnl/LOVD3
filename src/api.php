@@ -341,7 +341,7 @@ if ($sDataType == 'variants') {
                                         $sQ .= ' AND vog.position_g_start >= ' . $nMin . ' AND vog.position_g_end <= ' . $nMax;
                                         continue;
                                     } elseif ($_GET['position_match'] == 'partial') {
-                                        $sQ .= ' AND (vog.position_g_start BETWEEN ' . $nMin . ' AND ' . $nMax . ' OR vog.position_g_end BETWEEN ' . $nMin . ' AND ' . $nMax . ' OR (vog.position_g_start <= ' . $nMin . ' AND vog.position_g_end >= ' . $nMax . '))';
+                                        $sQ .= ' AND vog.position_g_start <= ' . $nMax . ' AND vog.position_g_end >= ' . $nMin;
                                         continue;
                                     }
                                 }
