@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2023-12-22
+ * Modified    : 2024-04-02
  * For LOVD    : 3.0-30
  *
  * Supported URIs:
@@ -40,7 +40,7 @@
  *  3.0-27 (v2)  /api/v#/ga4gh/table/variants/data:hg19:chr1:123456-234567 (GET/HEAD)
  *  3.0-18 (v1)  /api/v#/submissions (POST) (/v# is optional)
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -338,15 +338,15 @@ if ($sDataType == 'variants') {
                                 if (!empty($_GET['position_match'])) {
                                     if ($_GET['position_match'] == 'exclusive') {
                                         // Mutation should be completely in the range.
-                                        $sQ .= ' AND vog.position_g_start ' . ($bSense? '>= ' . $nMin : '<= ' . $nMax) . ' AND vog.position_g_end ' . ($bSense? '<= ' . $nMax : '>= ' . $nMin);
+                                        $sQ .= ' AND vog.position_g_start >= ' . $nMin . ' AND vog.position_g_end <= ' . $nMax;
                                         continue;
                                     } elseif ($_GET['position_match'] == 'partial') {
-                                        $sQ .= ' AND (vog.position_g_start BETWEEN ' . $nMin . ' AND ' . $nMax . ' OR vog.position_g_end BETWEEN ' . $nMin . ' AND ' . $nMax . ' OR (vog.position_g_start ' . ($bSense? '<= ' . $nMin : '>= ' . $nMax) . ' AND vog.position_g_end ' . ($bSense? '>= ' . $nMax : '<= ' . $nMin) . '))';
+                                        $sQ .= ' AND vog.position_g_start <= ' . $nMax . ' AND vog.position_g_end >= ' . $nMin;
                                         continue;
                                     }
                                 }
                                 // Exact match, directly requested through $_GET['position_match'] or argument not given/recognized.
-                                $sQ .= ' AND position_' . $aRegs[1] . '_start = "' . ($bSense? $nMin : $nMax) . '" AND position_' . $aRegs[1] . '_end = "' . ($bSense? $nMax : $nMin) . '"';
+                                $sQ .= ' AND position_' . $aRegs[1] . '_start = "' . $nMin . '" AND position_' . $aRegs[1] . '_end = "' . $nMax . '"';
                             } else {
                                 $aStart = lovd_convertDNAPositionToDB($nPositionMRNAStart, $nPositionMRNAEnd, $nPositionCDSEnd, $aRegs[2]);
                                 if (empty($aRegs[4])) {
