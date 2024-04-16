@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2024-01-24
+ * Modified    : 2024-04-16
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -66,8 +66,7 @@ class LOVD_Gene extends LOVD_Object
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'g.*, g.id_entrez AS id_pubmed_gene,
-                                            IF(g.show_genetests AND g.id_entrez, g.id_entrez, 0) AS show_genetests,
-                                            IF(g.show_orphanet AND g.id_hgnc, g.id_hgnc, 0) AS show_orphanet, ' .
+                                            IF(g.show_genetests AND g.id_entrez, g.id_entrez, 0) AS show_genetests, ' .
                                            'GROUP_CONCAT(DISTINCT d.id, ";", IFNULL(d.id_omim, 0), ";", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol), ";", d.name ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ";;") AS __diseases, ' .
                                            'GROUP_CONCAT(DISTINCT t.id, ";", t.id_ncbi ORDER BY t.id_ncbi SEPARATOR ";;") AS __transcripts, ' .
                                            'MAX(t.position_g_mrna_start < t.position_g_mrna_end) AS sense, ' .
@@ -733,7 +732,7 @@ class LOVD_Gene extends LOVD_Object
                     //  it would be good if we'd standardize that.
                     $zData[$sColID . '_'] = '<A href="' .
                         lovd_getExternalSource($sSource,
-                            ($sType == 'id' || $sSource == 'genetests' || $sSource == 'orphanet'? $zData[$sColID] :
+                            ($sType == 'id' || $sSource == 'genetests'? $zData[$sColID] :
                                 rawurlencode($zData['id'])), true) . '" target="_blank">' .
                         ($sType == 'id'? $zData[$sColID] : rawurlencode($zData['id'])) . '</A>';
                 } else {
