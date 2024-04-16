@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2023-01-27
- * For LOVD    : 3.0-29
+ * Modified    : 2024-04-16
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.NL>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -825,6 +825,10 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  '3.0-28d' =>
                  array(
                      'UPDATE ' . TABLE_LINKS . ' SET replace_text = "<A href=\"https://www.ncbi.nlm.nih.gov/snp/[1]\" target=\"_blank\">dbSNP</A>" WHERE name = "DbSNP" AND replace_text = "<A href=\"https://www.ncbi.nlm.nih.gov/SNP/snp_ref.cgi?rs=[1]\" target=\"_blank\">dbSNP</A>"',
+                 ),
+                 '3.0-29b' =>
+                 array(
+                     'UPDATE ' . TABLE_SOURCES . ' SET url = "https://www.orpha.net/en/disease/gene/{{ ID }}" WHERE id = "orphanet"',
                  ),
              );
 
