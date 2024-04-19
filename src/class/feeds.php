@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-09
- * Modified    : 2022-11-22
- * For LOVD    : 3.0-29
+ * Modified    : 2023-12-22
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -129,7 +129,7 @@ class Feed
 
 
 
-    function addEntry ($sTitle, $sSelfURL = '', $sAltURL, $sID, $sAuthor, $sDateCreated, $sContributor = '', $sDateUpdated = '', $sSummary = '', $sContentType = 'text', $sContent = '')
+    function addEntry ($sTitle, $sSelfURL, $sAltURL, $sID, $sAuthor, $sDateCreated, $sContributor = '', $sDateUpdated = '', $sSummary = '', $sContentType = 'text', $sContent = '')
     {
         // Creates an entry, regardless of what kind of. Will be called by other methods that are specialized for a type of entry.
 
@@ -186,6 +186,10 @@ class Feed
     function formatDate ($t)
     {
         // Formats dates (timestamp or formatted) to the format needed for the Atom format.
+        if (!isset($t)) {
+            $t = '';
+        }
+
         if (preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\+[0-9]{2}:[0-9]{2}$/', $t)) {
             // Already looks good.
             return $t;

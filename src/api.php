@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2022-11-22
- * For LOVD    : 3.0-29
+ * Modified    : 2024-04-02
+ * For LOVD    : 3.0-30
  *
  * Supported URIs:
  *  3.0-26       /api/rest.php/get_frequencies (POST)
@@ -40,7 +40,7 @@
  *  3.0-27 (v2)  /api/v#/ga4gh/table/variants/data:hg19:chr1:123456-234567 (GET/HEAD)
  *  3.0-18 (v1)  /api/v#/submissions (POST) (/v# is optional)
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -104,7 +104,7 @@ list($sDataType, $sSymbol, $nID) = array(
 
 // Check if gene exists.
 if ($sSymbol) {
-    $sSymbol = $_DB->q('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array($sSymbol))->fetchColumn();
+    $sSymbol = $_DB->q('SELECT id FROM ' . TABLE_GENES . ' WHERE ' . (ctype_digit($sSymbol)? 'id_hgnc' : 'id') . ' = ?', array($sSymbol))->fetchColumn();
     if (!$sSymbol) {
         header('HTTP/1.0 404 Not Found');
         die('This gene does not exist.');
@@ -293,8 +293,10 @@ if ($sDataType == 'variants') {
                  GROUP_CONCAT(DISTINCT LEFT(vog.effectid, 1) SEPARATOR ";") AS effect_reported,
                  GROUP_CONCAT(DISTINCT RIGHT(vog.effectid, 1) SEPARATOR ";") AS effect_concluded,
                  vog.`VariantOnGenome/DNA`,
-                 GROUP_CONCAT(DISTINCT ' . ($nRefSeqID? '' : 't.id_ncbi, ":", ') . 'vot.`VariantOnTranscript/DNA`
+                 GROUP_CONCAT(DISTINCT ' . ($nRefSeqID? '' : 't.id_ncbi, ":", ') . 'REPLACE(vot.`VariantOnTranscript/DNA`, ";;", ";")
                    ORDER BY t.id_ncbi SEPARATOR ";;") AS `__VariantOnTranscript/DNA`,
+                 GROUP_CONCAT(DISTINCT t.id_ncbi, "##", vot.`VariantOnTranscript/DNA`, "##", IFNULL(vot.`VariantOnTranscript/RNA`, "r.(?)"), "##", IFNULL(vot.`VariantOnTranscript/Protein`, "p.?")
+                   ORDER BY t.id_ncbi SEPARATOR "$$") AS `__variants_on_transcripts`,
                  vog.`VariantOnGenome/DBID`,
                  GROUP_CONCAT(DISTINCT uc.name SEPARATOR ";") AS _created_by,
                  MIN(vog.created_date) AS created_date,
@@ -336,15 +338,15 @@ if ($sDataType == 'variants') {
                                 if (!empty($_GET['position_match'])) {
                                     if ($_GET['position_match'] == 'exclusive') {
                                         // Mutation should be completely in the range.
-                                        $sQ .= ' AND vog.position_g_start ' . ($bSense? '>= ' . $nMin : '<= ' . $nMax) . ' AND vog.position_g_end ' . ($bSense? '<= ' . $nMax : '>= ' . $nMin);
+                                        $sQ .= ' AND vog.position_g_start >= ' . $nMin . ' AND vog.position_g_end <= ' . $nMax;
                                         continue;
                                     } elseif ($_GET['position_match'] == 'partial') {
-                                        $sQ .= ' AND (vog.position_g_start BETWEEN ' . $nMin . ' AND ' . $nMax . ' OR vog.position_g_end BETWEEN ' . $nMin . ' AND ' . $nMax . ' OR (vog.position_g_start ' . ($bSense? '<= ' . $nMin : '>= ' . $nMax) . ' AND vog.position_g_end ' . ($bSense? '>= ' . $nMax : '<= ' . $nMin) . '))';
+                                        $sQ .= ' AND vog.position_g_start <= ' . $nMax . ' AND vog.position_g_end >= ' . $nMin;
                                         continue;
                                     }
                                 }
                                 // Exact match, directly requested through $_GET['position_match'] or argument not given/recognized.
-                                $sQ .= ' AND position_' . $aRegs[1] . '_start = "' . ($bSense? $nMin : $nMax) . '" AND position_' . $aRegs[1] . '_end = "' . ($bSense? $nMax : $nMin) . '"';
+                                $sQ .= ' AND position_' . $aRegs[1] . '_start = "' . $nMin . '" AND position_' . $aRegs[1] . '_end = "' . $nMax . '"';
                             } else {
                                 $aStart = lovd_convertDNAPositionToDB($nPositionMRNAStart, $nPositionMRNAEnd, $nPositionCDSEnd, $aRegs[2]);
                                 if (empty($aRegs[4])) {
@@ -391,7 +393,7 @@ if ($sDataType == 'variants') {
           GREATEST(MAX(t.position_g_mrna_start),
           MAX(t.position_g_mrna_end)) AS position_g_mrna_end, g.refseq_genomic,
           GROUP_CONCAT(DISTINCT t.id_ncbi ORDER BY (SELECT COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' WHERE transcriptid = t.id) DESC,
-          t.id ASC SEPARATOR ";") AS id_ncbi, g.id_entrez,
+          t.id ASC SEPARATOR ";") AS id_ncbi, g.id_hgnc, g.id_entrez,
           g.created_date, g.updated_date, u.name AS created_by,
           GROUP_CONCAT(DISTINCT cur.name SEPARATOR ";") AS curators
         FROM ' . TABLE_GENES . ' AS g
@@ -611,6 +613,19 @@ if ($sDataType == 'variants') {
                 $_CONF['refseq_build'] => 'chr' . $sChromosome . ':' .
                     $zData['VariantOnGenome/DNA'],
             ),
+            'variants_on_transcripts' => call_user_func_array(
+                'array_merge',
+                array_map(
+                function ($sValue)
+                {
+                    $a = explode('##', $sValue);
+                    return [
+                        $a[0] => array_combine(
+                            ['DNA', 'RNA', 'protein'],
+                            array_slice($a, 1)
+                        )
+                    ];
+                }, explode('$$', $zData['__variants_on_transcripts']))),
             'Variant/DNA' => explode(';;', $zData['__VariantOnTranscript/DNA']),
             'Variant/DBID' => $zData['Variant/DBID'],
             'Times_reported' => $zData['Times'],
@@ -728,6 +743,7 @@ if ($sDataType == 'variants') {
         // The Atom data will also use these transformations, but may have less fields and in a different order.
         $aReturn = array(
             'id' => $zData['id'],
+            'hgnc_id' => $zData['id_hgnc'],
             'entrez_id' => $zData['id_entrez'],
             'symbol' => $zData['id'],
             'name' => $zData['name'],
@@ -738,12 +754,12 @@ if ($sDataType == 'variants') {
             'position_start' => 'chr' . $zData['chromosome'] . ':' . ($zData['sense']? $zData['position_g_mrna_start'] : $zData['position_g_mrna_end']),
             'position_end' => 'chr' . $zData['chromosome'] . ':' . ($zData['sense']? $zData['position_g_mrna_end'] : $zData['position_g_mrna_start']),
             'refseq_genomic' => $zData['refseq_genomic'],
-            'refseq_mrna' => explode(';', $zData['id_ncbi']),
+            'refseq_mrna' => explode(';', ($zData['id_ncbi'] ?? '')),
             'refseq_build' => $_CONF['refseq_build'],
             'created_by' => $zData['created_by'],
             'created_date' => date('c', strtotime($zData['created_date'])),
             'curators' => explode(';', $zData['curators']),
-            'updated_date' => date('c', strtotime($zData['updated_date'])),
+            'updated_date' => date('c', strtotime(($zData['updated_date'] ?? ''))),
         );
 
         return $aReturn;
