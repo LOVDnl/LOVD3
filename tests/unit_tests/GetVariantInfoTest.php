@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2023-09-11
+ * Modified    : 2024-05-01
  * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Loes Werkman <L.Werkman@LUMC.nl>
@@ -943,10 +943,11 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'type' => 'repeat',
                 'range' => false,
                 'warnings' => array(
-                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
-                    'WINVALIDREPEATLENGTH' => 'A repeat sequence of coding DNA should always have a length of (a multiple of) 3.',
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
                 ),
-                'errors' => array(),
+                'errors' => array(
+                    'EINVALIDREPEATLENGTH' => 'A repeat sequence of coding DNA should always have a length of (a multiple of) 3.',
+                ),
             )),
             array('g.1AC[20]', array(
                 'position_start' => 1,

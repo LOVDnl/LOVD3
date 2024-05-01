@@ -2177,12 +2177,14 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if (ctype_alpha($sRepeat) && strlen($sRepeat) % 3) {
                 // Repeat variants on coding DNA should always have
                 //  a length of a multiple of three bases.
-                $aResponse['warnings']['WINVALIDREPEATLENGTH'] =
+                $aResponse['errors']['EINVALIDREPEATLENGTH'] =
                     'A repeat sequence of coding DNA should always have a length of (a multiple of) 3.';
                 if ($bCheckHGVS) {
                     return false;
                 }
                 break;
+                // We'll have to fix the WNOTSUPPORTED.
+                $aResponse['warnings']['WNOTSUPPORTED'] = 'This syntax is currently not supported for mapping and validation.';
             }
         }
     }
