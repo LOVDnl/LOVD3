@@ -976,6 +976,7 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'range' => false,
                 'warnings' => array(
                     'WREPEATLENGTHFORMAT' => 'The repeat length format does not follow HGVS guidelines. Please rewrite "AC[21_20]" to "AC[(20_21)]".',
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
                 ),
                 'errors' => array(),
             )),
@@ -986,6 +987,7 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'range' => false,
                 'warnings' => array(
                     'WREPEATLENGTHFORMAT' => 'The repeat length format does not follow HGVS guidelines. Please rewrite "GT[10_10]" to "GT[10]".',
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
                 ),
                 'errors' => array(),
             )),
@@ -1014,7 +1016,9 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'position_end' => 1,
                 'type' => 'repeat',
                 'range' => false,
-                'warnings' => array(),
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
+                ),
                 'errors' => array(
                     'EREPEATLENGTHFORMAT' => 'The repeat length format does not follow HGVS guidelines.',
                 ),
@@ -1034,7 +1038,9 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'position_end' => 2,
                 'type' => 'repeat',
                 'range' => true,
-                'warnings' => array(),
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
+                ),
                 'errors' => array(
                     'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U", "Z".',
                 ),

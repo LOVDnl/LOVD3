@@ -1721,6 +1721,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.';
         } elseif ($bCheckHGVS) {
             return false;
+        } else {
+            // Even with errors, add a WNOTSUPPORTED, but with a different text.
+            $aResponse['warnings']['WNOTSUPPORTED'] =
+                'This syntax is currently not supported for mapping and validation.';
         }
 
     } elseif ($aVariant['type'] == '?') {
