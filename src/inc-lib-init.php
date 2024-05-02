@@ -2541,14 +2541,12 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                                 current($aVariantInInsertion['warnings']);
                         }
 
-                    } elseif (!(
-                        (preg_match(                                                                       // c.1_2ins15+1_16-1
-                            '/^([-*]?[0-9]+([-+][0-9]+)?)_([-*]?[0-9]+([-+]([0-9]+))?)(inv)?$/', $sInsertion, $aRegs)
-                            && !(ctype_digit($aRegs[1]) && ctype_digit($aRegs[3]) && $aRegs[1] > $aRegs[3])))) { // if positions are simple, is A < B?
+                    } else {
+                        // Anything else that we don't recognize (yet).
                         if ($bCheckHGVS) {
                             return false;
                         }
-                        $aResponse['warnings']['WSUFFIXFORMAT'] =
+                        $aResponse['errors']['ESUFFIXFORMAT'] =
                             'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.';
                     }
                     if (!$bCaseOK) {
