@@ -1068,7 +1068,19 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                     'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
                 ),
                 'errors' => array(
-                    'EINVALIDREPEATLENGTH' => 'The given repeat unit AC does not fit in the given positions 1_9. Adjust your positions or the given sequences.',
+                    'EINVALIDREPEATLENGTH' => 'The given repeat unit (AC) does not fit in the given positions 1_9. Adjust your positions or the given sequences.',
+                ),
+            )),
+            array('g.1_9AC[20]GT[10]', array(
+                'position_start' => 1,
+                'position_end' => 9,
+                'type' => 'repeat',
+                'range' => true,
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
+                ),
+                'errors' => array(
+                    'EINVALIDREPEATLENGTH' => 'The given repeat units (AC, GT) do not fit in the given positions 1_9. Adjust your positions or the given sequences.',
                 ),
             )),
             array('g.1_40AC[20]GT[10]', array(

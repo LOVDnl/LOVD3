@@ -2212,7 +2212,56 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     'The sequence ' . $sRepeatBases . ' does not fit in the given positions ' . $aVariant['positions'] . '. Adjust your positions or the given sequences.';
             } elseif (count($aRepeatUnits) == 1 && ($nLength % strlen($aRepeatUnits[0])) !== 0) {
                 $aResponse['errors']['EINVALIDREPEATLENGTH'] =
-                    'The given repeat unit ' . $sRepeatBases . ' does not fit in the given positions ' . $aVariant['positions'] . '. Adjust your positions or the given sequences.';
+                    'The given repeat unit (' . $sRepeatBases . ') does not fit in the given positions ' . $aVariant['positions'] . '. Adjust your positions or the given sequences.';
+            } else {
+                // OK, this one is complex. We have multiple repeats (e.g., g.1_9AC[20]GT[10]) and we need to check if any combination of units fits the given positions.
+                $bInvalidLength = true;
+                $aRepeatUnitCounts = array_map(
+                    function ($sVal)
+                    {
+                        return [strlen($sVal), 1];
+                    }, $aRepeatUnits
+                );
+                while (true) {
+                    $nTotalLength = array_reduce(
+                        $aRepeatUnitCounts,
+                        function ($nCurrentLength, $aRepeatUnit)
+                        {
+                            return $nCurrentLength + ($aRepeatUnit[0] * $aRepeatUnit[1]);
+                        }
+                    );
+                    if ($nTotalLength == $nLength) {
+                        // Fits perfectly!
+                        $bInvalidLength = false;
+                        break;
+                    } elseif ($nTotalLength > $nLength) {
+                        // See if we can continue somehow.
+                        for ($i = array_key_last($aRepeatUnitCounts); $i >= 0; $i--) {
+                            if ($aRepeatUnitCounts[$i][1] == 1) {
+                                // This unit is present just once, continue up the list.
+                                continue;
+                            }
+                            // This is the first non-1 value in the list. If it's the first repeat, we're done.
+                            if (!$i) {
+                                // Nope, it doesn't fit.
+                                break 2;
+                            } else {
+                                // Reset this unit and try to increase the previous one.
+                                $aRepeatUnitCounts[$i][1] = 1;
+                                $aRepeatUnitCounts[$i-1][1]++;
+                                break;
+                            }
+                        }
+                    } else {
+                        // We're not there yet.
+                        $aRepeatUnitCounts[array_key_last($aRepeatUnitCounts)][1]++;
+                    }
+                }
+
+                if ($bInvalidLength) {
+                    $aResponse['errors']['EINVALIDREPEATLENGTH'] =
+                        'The given repeat units (' . implode(', ', $aRepeatUnits) . ') do not fit in the given positions ' . $aVariant['positions'] . '. Adjust your positions or the given sequences.';
+                }
             }
             if ($aResponse['errors']) {
                 if ($bCheckHGVS) {
