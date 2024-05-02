@@ -2177,7 +2177,16 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.';
         }
 
+    } elseif ($aResponse['type'] == 'repeat' && isset($aResponse['messages']['IPOSITIONRANGE'])) {
+        // Repeats can't have uncertain positions. Separating this from the block below to not have too much nesting.
+        if ($bCheckHGVS) {
+            return false;
+        }
+        $aResponse['errors']['EWRONGTYPE'] = 'The repeat syntax can not be used for uncertain positions. Rewrite your variant description as a deletion or insertion, depending on whether the repeat contracted or expanded.';
+        unset($aResponse['warnings']['WNOTSUPPORTED']);
+
     } elseif ($aResponse['type'] == 'repeat') {
+        // Full validation of the repeat.
         $aRepeatUnits = array_values(
             array_filter(
                 preg_split('/[\[\]]/', $aVariant['type']),
@@ -2192,11 +2201,11 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 if (strlen($sRepeat) % 3) {
                     // Repeat variants on coding DNA should always have
                     //  a length of a multiple of three bases.
-                    $aResponse['errors']['EINVALIDREPEATLENGTH'] =
-                        'A repeat sequence of coding DNA should always have a length of (a multiple of) 3.';
                     if ($bCheckHGVS) {
                         return false;
                     }
+                    $aResponse['errors']['EINVALIDREPEATLENGTH'] =
+                        'A repeat sequence of coding DNA should always have a length of (a multiple of) 3.';
                     // We'll have to fix the WNOTSUPPORTED.
                     $aResponse['warnings']['WNOTSUPPORTED'] = 'This syntax is currently not supported for mapping and validation.';
                     break;
@@ -2297,13 +2306,14 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     //  is formatted as it should.
     if (!$aVariant['suffix']
         && (in_array($aVariant['type'], array('ins', 'delins'))
-            || isset($aResponse['messages']['IPOSITIONRANGE']))
-        && $aResponse['type'] != 'subst') {
+            || (isset($aResponse['messages']['IPOSITIONRANGE'])
+                && !in_array($aResponse['type'], array('subst', 'repeat'))))) {
         // Variants of type ins and delins need a suffix showing what has been
         //  inserted and variants which took place within a range need a suffix
         //  showing the length of the variant.
         // This is not required for substitutions with an IPOSITIONRANGE,
-        //  as their length is always 1.
+        //  as their length is always 1. It's also not required for repeats,
+        //  since they can't have uncertain positions; they get another error.
         if ($bCheckHGVS) {
             return false;
         }
@@ -2343,8 +2353,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             } else {
                 $aResponse['warnings']['WSUFFIXGIVEN'] = 'Nothing should follow "' . $aVariant['type'] . '".';
             }
-            // We'll have to fix the WNOTSUPPORTED.
-            $aResponse['warnings']['WNOTSUPPORTED'] = 'This syntax is currently not supported for mapping and validation.';
+            // We'll have to fix the WNOTSUPPORTED, but don't create it if it's not there.
+            if (isset($aResponse['warnings']['WNOTSUPPORTED'])) {
+                $aResponse['warnings']['WNOTSUPPORTED'] = 'This syntax is currently not supported for mapping and validation.';
+            }
 
         } elseif (in_array($aResponse['type'], array('ins', 'delins'))) {
             // Note: Using $aResponse's type here, because 'con' is changed to 'delins' there.

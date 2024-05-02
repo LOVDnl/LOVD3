@@ -1104,6 +1104,17 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.1_40AC[20]GT[10]A', array(
+                'position_start' => 1,
+                'position_end' => 40,
+                'type' => 'repeat',
+                'range' => true,
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
+                    'WSUFFIXFORMAT' => 'The part after "AC[20]GT[10]" does not follow HGVS guidelines. Please rewrite "AC[20]GT[10]A" to "AC[20]GT[10]A[1]".',
+                ),
+                'errors' => array(),
+            )),
 
             // Mosaicism and chimerism.
             array('g.123=/A>G', array(
@@ -2437,10 +2448,25 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'type' => 'repeat',
                 'range' => true,
                 'warnings' => array(
-                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
                     'WSUFFIXFORMAT' => 'The part after "ACT[20]" does not follow HGVS guidelines. Please rewrite "ACT[20]A" to "ACT[20]A[1]".',
                 ),
-                'errors' => array(),
+                'errors' => array(
+                    'EWRONGTYPE' =>
+                        'The repeat syntax can not be used for uncertain positions. Rewrite your variant description as a deletion or insertion, depending on whether the repeat contracted or expanded.',
+                ),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(1_100)ACT[20]A[10]', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'repeat',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(
+                    'EWRONGTYPE' => 'The repeat syntax can not be used for uncertain positions. Rewrite your variant description as a deletion or insertion, depending on whether the repeat contracted or expanded.',
+                ),
                 'messages' => array(
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
