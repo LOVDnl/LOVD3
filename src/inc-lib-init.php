@@ -2402,6 +2402,24 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                             $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
                         }
 
+                    } elseif (preg_match('/^\(([A-Z]+)\)$/i', $sInsertion, $aRegs)) {
+                        // g.1_2ins(AA).
+                        $bCaseOK = ($sInsertion == strtoupper($sInsertion));
+
+                        // Check if only correct bases have been used.
+                        $sUnknownBases = preg_replace(
+                            '/' . $_LIBRARIES['regex_patterns']['bases']['alt'] . '+/',
+                            '',
+                            strtoupper($aRegs[1])
+                        );
+                        if ($sUnknownBases) {
+                            $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
+                        }
+
+                        $aResponse['warnings']['WSUFFIXFORMAT'] =
+                            'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
+                            ' Please rewrite "' . $sInsertion . '" to "' . strtoupper($aRegs[1]) . '".';
+
                     } elseif (ctype_digit($sInsertion)) {
                         // c.1_2ins10.
                         // We don't know if this should be a position or a length.

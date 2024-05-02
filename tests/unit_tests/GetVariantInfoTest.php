@@ -1943,6 +1943,16 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.1_2ins(A)', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Please rewrite "(A)" to "A".',
+                ),
+                'errors' => array(),
+            )),
             array('g.1_2ins[NC_123456.1:g.1_10;A;123_125;TGCG]', array(
                 'position_start' => 1,
                 'position_end' => 2,
