@@ -500,6 +500,16 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'warnings' => array(),
                 'errors' => array(),
             )),
+            array('c.1_2ins50+10_*10-20inv', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(),
+            )),
             array('g.1_2ins[NC_123456.1:g.1_10]', array(
                 'position_start' => 1,
                 'position_end' => 2,

@@ -2528,7 +2528,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     } elseif (preg_match('/^([-*]?[0-9]+([-+][0-9]+)?)_([-*]?[0-9]+([-+]([0-9]+))?)(inv)?$/', $sInsertion, $aRegs)) {
                         // c.1_2ins10_20 or c.1_2ins10+1_*20-1.
                         // Instead of writing our own logic here, re-use our own function.
-                        $sVariantInInsertion = $aVariant['prefix'] . '.' . $aRegs[0] . ($aRegs[6] ?? 'del');
+                        $sVariantInInsertion = $aVariant['prefix'] . '.' . $aRegs[0] . (!empty($aRegs[6])? '' : 'del');
                         $aVariantInInsertion = lovd_getVariantInfo($sVariantInInsertion, false);
                         // We can expect any error here. EFALSEUTR, EPOSITIONFORMAT, WPOSITIONFORMAT, a combination, etc.
                         if ($aVariantInInsertion['errors']) {
