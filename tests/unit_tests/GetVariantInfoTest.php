@@ -1001,6 +1001,17 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.1ac[(20_21)]gt[(10_11)]', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'repeat',
+                'range' => false,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "ac[(20_21)]gt[(10_11)]" to "AC[(20_21)]GT[(10_11)]".',
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
+                ),
+                'errors' => array(),
+            )),
             array('g.1AC[(?_21)]GT[(10_?)]A[?]', array(
                 'position_start' => 1,
                 'position_end' => 1,
@@ -1029,9 +1040,11 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'type' => 'repeat',
                 'range' => true,
                 'warnings' => array(
-                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
                 ),
-                'errors' => array(),
+                'errors' => array(
+                    'EINVALIDREPEATLENGTH' => 'The sequence ACGT does not fit in the given positions 1_2. Adjust your positions or the given sequences.',
+                ),
             )),
             array('g.1_2AN[20]UZ[10]', array(
                 'position_start' => 1,
@@ -1043,7 +1056,18 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 ),
                 'errors' => array(
                     'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U", "Z".',
+                    'EINVALIDREPEATLENGTH' => 'The sequence ANUZ does not fit in the given positions 1_2. Adjust your positions or the given sequences.',
                 ),
+            )),
+            array('g.1_40AC[20]GT[10]', array(
+                'position_start' => 1,
+                'position_end' => 40,
+                'type' => 'repeat',
+                'range' => true,
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
+                ),
+                'errors' => array(),
             )),
 
             // Mosaicism and chimerism.

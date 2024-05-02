@@ -1664,10 +1664,11 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         // Variant type has already been checked for case problems.
 
         // Check if only correct bases have been used.
+        $sRepeatBases = preg_replace('/\[[^\]]+\]/', '', $aVariant['type']);
         $sUnknownBases = preg_replace(
             '/' . $_LIBRARIES['regex_patterns']['bases']['ref'] . '+/',
             '',
-            preg_replace('/\[[^\]]+\]/', '', $aVariant['type'])
+            $sRepeatBases
         );
         if ($sUnknownBases) {
             $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', str_split($sUnknownBases)) . '".';
@@ -2176,17 +2177,33 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.';
         }
 
-    } elseif ($aResponse['type'] == 'repeat' && $aVariant['prefix'] == 'c') {
-        foreach (explode('[', $aVariant['type']) as $sRepeat) {
-            if (ctype_alpha($sRepeat) && strlen($sRepeat) % 3) {
-                // Repeat variants on coding DNA should always have
-                //  a length of a multiple of three bases.
+    } elseif ($aResponse['type'] == 'repeat') {
+        if ($aVariant['prefix'] == 'c') {
+            foreach (explode('[', $aVariant['type']) as $sRepeat) {
+                if (ctype_alpha($sRepeat) && strlen($sRepeat) % 3) {
+                    // Repeat variants on coding DNA should always have
+                    //  a length of a multiple of three bases.
+                    $aResponse['errors']['EINVALIDREPEATLENGTH'] =
+                        'A repeat sequence of coding DNA should always have a length of (a multiple of) 3.';
+                    if ($bCheckHGVS) {
+                        return false;
+                    }
+                    // We'll have to fix the WNOTSUPPORTED.
+                    $aResponse['warnings']['WNOTSUPPORTED'] = 'This syntax is currently not supported for mapping and validation.';
+                    break;
+                }
+            }
+        }
+        if (empty($aResponse['errors']['EINVALIDREPEATLENGTH']) && $aResponse['range']) {
+            // Do a rudimentary length check. We know that g.1_2ACG[2] can never work, since ACG doesn't fit within g.1_2.
+            // However, when things get more complex (e.g., g.1_6ACG[2]GG[2], it becomes more difficult to check.
+            $nLength = lovd_getVariantLength($aResponse);
+            if (strlen($sRepeatBases) > $nLength) {
                 $aResponse['errors']['EINVALIDREPEATLENGTH'] =
-                    'A repeat sequence of coding DNA should always have a length of (a multiple of) 3.';
+                    'The sequence ' . $sRepeatBases . ' does not fit in the given positions ' . $aVariant['positions'] . '. Adjust your positions or the given sequences.';
                 if ($bCheckHGVS) {
                     return false;
                 }
-                break;
                 // We'll have to fix the WNOTSUPPORTED.
                 $aResponse['warnings']['WNOTSUPPORTED'] = 'This syntax is currently not supported for mapping and validation.';
             }
