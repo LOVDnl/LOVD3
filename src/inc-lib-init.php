@@ -2178,9 +2178,16 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         }
 
     } elseif ($aResponse['type'] == 'repeat') {
+        $aRepeatUnits = array_filter(
+            preg_split('/[\[\]]/', $aVariant['type']),
+            function ($sValue, $nKey)
+            {
+                return ($sValue && !($nKey % 2));
+            }, ARRAY_FILTER_USE_BOTH
+        );
         if ($aVariant['prefix'] == 'c') {
-            foreach (explode('[', $aVariant['type']) as $sRepeat) {
-                if (ctype_alpha($sRepeat) && strlen($sRepeat) % 3) {
+            foreach ($aRepeatUnits as $sRepeat) {
+                if (strlen($sRepeat) % 3) {
                     // Repeat variants on coding DNA should always have
                     //  a length of a multiple of three bases.
                     $aResponse['errors']['EINVALIDREPEATLENGTH'] =
