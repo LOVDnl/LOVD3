@@ -2178,12 +2178,14 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         }
 
     } elseif ($aResponse['type'] == 'repeat') {
-        $aRepeatUnits = array_filter(
-            preg_split('/[\[\]]/', $aVariant['type']),
-            function ($sValue, $nKey)
-            {
-                return ($sValue && !($nKey % 2));
-            }, ARRAY_FILTER_USE_BOTH
+        $aRepeatUnits = array_values(
+            array_filter(
+                preg_split('/[\[\]]/', $aVariant['type']),
+                function ($sValue, $nKey)
+                {
+                    return ($sValue && !($nKey % 2));
+                }, ARRAY_FILTER_USE_BOTH
+            )
         );
         if ($aVariant['prefix'] == 'c') {
             foreach ($aRepeatUnits as $sRepeat) {
@@ -2208,6 +2210,11 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if (strlen($sRepeatBases) > $nLength) {
                 $aResponse['errors']['EINVALIDREPEATLENGTH'] =
                     'The sequence ' . $sRepeatBases . ' does not fit in the given positions ' . $aVariant['positions'] . '. Adjust your positions or the given sequences.';
+            } elseif (count($aRepeatUnits) == 1 && ($nLength % strlen($aRepeatUnits[0])) !== 0) {
+                $aResponse['errors']['EINVALIDREPEATLENGTH'] =
+                    'The given repeat unit ' . $sRepeatBases . ' does not fit in the given positions ' . $aVariant['positions'] . '. Adjust your positions or the given sequences.';
+            }
+            if ($aResponse['errors']) {
                 if ($bCheckHGVS) {
                     return false;
                 }
