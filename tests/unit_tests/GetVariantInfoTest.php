@@ -959,6 +959,17 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.1AC[20]GT', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'repeat',
+                'range' => false,
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
+                    'WSUFFIXFORMAT' => 'The part after "AC[20]" does not follow HGVS guidelines. Please rewrite "AC[20]GT" to "AC[20]GT[1]".',
+                ),
+                'errors' => array(),
+            )),
             array('g.1AC[20]GT[10]', array(
                 'position_start' => 1,
                 'position_end' => 1,
@@ -2415,8 +2426,8 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'type' => 'repeat',
                 'range' => false,
                 'warnings' => array(
-                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
-                    'WSUFFIXGIVEN' => 'Nothing should follow "ACT[20]".',
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
+                    'WSUFFIXFORMAT' => 'The part after "ACT[20]" does not follow HGVS guidelines. Please rewrite "ACT[20]A" to "ACT[20]A[1]".',
                 ),
                 'errors' => array(),
             )),
@@ -2426,8 +2437,8 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'type' => 'repeat',
                 'range' => true,
                 'warnings' => array(
-                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
-                    'WSUFFIXGIVEN' => 'Nothing should follow "ACT[20]".',
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
+                    'WSUFFIXFORMAT' => 'The part after "ACT[20]" does not follow HGVS guidelines. Please rewrite "ACT[20]A" to "ACT[20]A[1]".',
                 ),
                 'errors' => array(),
                 'messages' => array(

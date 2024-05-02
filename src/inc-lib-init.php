@@ -2337,7 +2337,14 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if ($bCheckHGVS) {
                 return false;
             }
-            $aResponse['warnings']['WSUFFIXGIVEN'] = 'Nothing should follow "' . $aVariant['type'] . '".';
+            // If the suffix is just sequence, though, they probably forgot a "[1]".
+            if (preg_match('/^' . $_LIBRARIES['regex_patterns']['bases']['alt'] . '+$/', $aVariant['suffix'])) {
+                $aResponse['warnings']['WSUFFIXFORMAT'] = 'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines. Please rewrite "' . $aVariant['type'] . $aVariant['suffix'] . '" to "' . $aVariant['type'] . $aVariant['suffix'] . '[1]".';
+            } else {
+                $aResponse['warnings']['WSUFFIXGIVEN'] = 'Nothing should follow "' . $aVariant['type'] . '".';
+            }
+            // We'll have to fix the WNOTSUPPORTED.
+            $aResponse['warnings']['WNOTSUPPORTED'] = 'This syntax is currently not supported for mapping and validation.';
 
         } elseif (in_array($aResponse['type'], array('ins', 'delins'))) {
             // Note: Using $aResponse's type here, because 'con' is changed to 'delins' there.
