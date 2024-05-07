@@ -3080,8 +3080,7 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'type' => 'delins',
                 'range' => false,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => // Adding a WWRONGCASE here is difficult; the code handling insertions is too complex and we'd need to then fix lovd_fixHGVS() again also.
-                        'The part after "delins" does not follow HGVS guidelines.', // Idem for the suggestion how to fix it. It's too complex right now and lovd_fixHGVS() easily handles it anyway.
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "delinsgagagauu" to "delinsGAGAGAUU".',
                 ),
                 'errors' => array(
                     'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U".',
