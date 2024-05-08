@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-11-16
- * Modified    : 2022-11-22
- * For LOVD    : 3.0-29
+ * Modified    : 2024-05-07
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -361,7 +361,7 @@ if (ACTION == 'new_screening' && POST) {
     // Unfortunately, we cannot easily just remove or edit a line.
     // We have to loop through the contents, edit in memory, and overwrite the entire file.
     // This will take a lot of memory, but oh well.
-    $aMetaData = file($_INI['paths']['data_files'] . '/' . $sFile); // Leaving line endings on purpose.
+    $aMetaData = (file($_INI['paths']['data_files'] . '/' . $sFile) ?: []); // Leaving line endings on purpose.
     $sSection = '';
     $bHeaderPrevRow = false;
     $bSuccess = false;
