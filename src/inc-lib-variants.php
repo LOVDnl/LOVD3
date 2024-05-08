@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2024-01-26
+ * Modified    : 2024-05-07
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -275,6 +275,19 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         && !isset($aVariant['errors']['EPOSITIONFORMAT'])
         && isset($aVariant['warnings']['WTOOMUCHUNKNOWN'])) {
         return $sReference . $sVariant; // Not HGVS, unrepairable.
+    }
+
+    // Handle any given lovd_getVariantInfo() suggestion.
+    foreach ($aVariant['warnings'] as $sCode => $sWarning) {
+        if (preg_match('/Please rewrite "([^"]+)" to "([^"]+)"\.$/', $sWarning, $aRegs)
+            // Don't fix things in the suffix when there is anyway an invalid length.
+            && !($sCode == 'WSUFFIXFORMAT' && isset($aVariant['warnings']['WSUFFIXINVALIDLENGTH']))) {
+            list(, $sOld, $sNew) = $aRegs;
+            // To prevent a disaster when g.100del1 gets replaced to g.N[1]00delN[1], replace only the last occurrence.
+            // That's where usually the issues are.
+            $nPosition = strrpos($sReference . $sVariant, $sOld);
+            return lovd_fixHGVS(substr_replace($sReference . $sVariant, $sNew, $nPosition, strlen($sOld)), $sType);
+        }
     }
 
     // Make fixes to the reference sequences as indicated by lovd_getVariantInfo().
