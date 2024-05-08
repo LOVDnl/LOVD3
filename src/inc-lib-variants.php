@@ -325,6 +325,16 @@ function lovd_fixHGVS ($sVariant, $sType = '')
                 str_replace('U', 'T', strtoupper($aRegs[2]) .
                     (!isset($aRegs[3])? '' : 'ins' . strtoupper($aRegs[3]))), $sType);
         }
+
+    } elseif (isset($aVariant['errors']['EINVALIDNUCLEOTIDES'])
+        && strpos($aVariant['errors']['EINVALIDNUCLEOTIDES'], ': "U".')
+        && strpos($sVariant, 'U') !== false) {
+        // Check if there is a U that we can change to a T.
+        // This is usually an error, but could be a warning if we only found a U.
+        // But, only do this when we don't have a WWRONGCASE left, and only when we actually find a "U".
+        // Case issues can result in a warning for a "U" while the variant contains a "u".
+        // Assuming a capital U doesn't happen anywhere in the variant, we'll just do a str_replace().
+        return lovd_fixHGVS($sReference . str_replace('U', 'T', $sVariant), $sType);
     }
 
     // Change the variant type (if possible) if the wrong type was chosen.

@@ -116,6 +116,7 @@ class FixHGVSTest extends PHPUnit\Framework\TestCase
 
             // U given instead of T.
             array('g.123insAUG', 'g.123insATG'),
+            array('c.123A>U', 'c.123A>T'),
 
             // Variant types should be something else.
             array('g.100_200con400_500', 'g.100_200delins400_500'),
