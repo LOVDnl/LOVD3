@@ -92,6 +92,9 @@ class FixHGVSTest extends PHPUnit\Framework\TestCase
             array('c.123—5del', 'c.123-5del'),
             array('c,123del', 'c.123del'),
             array('c.A123C', 'c.123A>C'),
+            array('c.a123u', 'c.123A>T'),
+            array('c.a123uu', 'c.123delinsTT'),
+            array('c.ua123uu', 'c.124A>T'),
             array('c.216G A', 'c.216G>A'), // " " seen in AIPL1_20702822_Jacobson-2011.pdf ("c.216G A")
             array('c.1106G®A', 'c.1106G>A'), // "®" seen in CACNA1F_9662399_Strom-1998.pdf ("1106G®A")
             array('c.220T?C', 'c.220T>C'), // "?" seen in CACNA1F_12111638_Wutz-2002.pdf ("220T?C")

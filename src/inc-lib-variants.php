@@ -205,7 +205,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     }
 
     // Protein formatting for DNA variants.
-    if (preg_match('/^([cgmn]\.)([ACGTUN]+)([0-9]+)([ACGTUN]+)$/', $sVariant, $aRegs)) {
+    if (preg_match('/^([cgmn]\.)([A-Z]+)([0-9]+)([A-Z]+)$/i', $sVariant, $aRegs)) {
         // Rebuild the variant into a substitution.
         list(, $sPrefix, $sRef, $nPosition, $sAlt) = $aRegs;
         return lovd_fixHGVS($sReference . $sPrefix . $nPosition . $sRef . '>' . $sAlt, $sType);
