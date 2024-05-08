@@ -35,7 +35,7 @@ use \Facebook\WebDriver\WebDriverBy;
 
 class ConvertLOVD2ExportIVDTest extends LOVDSeleniumWebdriverBaseTestCase
 {
-    protected function setUp ()
+    protected function setUp (): void
     {
         parent::setUp();
         $this->driver->get(ROOT_URL . '/src/genes/IVD');

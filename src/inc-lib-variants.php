@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2024-01-26
+ * Modified    : 2024-05-07
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -167,7 +167,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             // The parentheses are formatted in a more difficult way than
             //  is worth handling. We will return the variant, which is sadly
             //  still not HGVS.
-            return $sReference . $sVariant; // Not HGVS.
+            return $sReference . $sVariant; // Not HGVS, unrepairable.
         }
 
     } elseif ($sVariant[0] == '(') {
@@ -205,7 +205,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     }
 
     // Protein formatting for DNA variants.
-    if (preg_match('/^([cgmn]\.)([ACGTUN]+)([0-9]+)([ACGTUN]+)$/', $sVariant, $aRegs)) {
+    if (preg_match('/^([cgmn]\.)([A-Z]+)([0-9]+)([A-Z]+)$/i', $sVariant, $aRegs)) {
         // Rebuild the variant into a substitution.
         list(, $sPrefix, $sRef, $nPosition, $sAlt) = $aRegs;
         return lovd_fixHGVS($sReference . $sPrefix . $nPosition . $sRef . '>' . $sAlt, $sType);
@@ -231,7 +231,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     //  and fix the variant.
     $aVariant = lovd_getVariantInfo($sReference . $sVariant, false);
     if ($aVariant === false) {
-        return $sReference . $sVariant; // Not HGVS.
+        return $sReference . $sVariant; // Not HGVS, unrepairable.
 
     } elseif (isset($aVariant['errors']['EPIPEMISSING'])) {
         // This looked like a methylation-related variant that was missing a
@@ -260,7 +260,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             } else {
                 // The user likely put the input in the wrong field.
                 // We cannot fix this variant with certainty.
-                return $sReference . $sVariant; // Not HGVS.
+                return $sReference . $sVariant; // Not HGVS, unrepairable.
             }
 
         } else {
@@ -274,7 +274,20 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         && !isset($aVariant['errors']['ESUFFIXMISSING'])
         && !isset($aVariant['errors']['EPOSITIONFORMAT'])
         && isset($aVariant['warnings']['WTOOMUCHUNKNOWN'])) {
-        return $sReference . $sVariant; // Not HGVS.
+        return $sReference . $sVariant; // Not HGVS, unrepairable.
+    }
+
+    // Handle any given lovd_getVariantInfo() suggestion.
+    foreach ($aVariant['warnings'] as $sCode => $sWarning) {
+        if (preg_match('/Please rewrite "([^"]+)" to "([^"]+)"\.$/', $sWarning, $aRegs)
+            // Don't fix things in the suffix when there is anyway an invalid length.
+            && !($sCode == 'WSUFFIXFORMAT' && isset($aVariant['warnings']['WSUFFIXINVALIDLENGTH']))) {
+            list(, $sOld, $sNew) = $aRegs;
+            // To prevent a disaster when g.100del1 gets replaced to g.N[1]00delN[1], replace only the last occurrence.
+            // That's where usually the issues are.
+            $nPosition = strrpos($sReference . $sVariant, $sOld);
+            return lovd_fixHGVS(substr_replace($sReference . $sVariant, $sNew, $nPosition, strlen($sOld)), $sType);
+        }
     }
 
     // Make fixes to the reference sequences as indicated by lovd_getVariantInfo().
@@ -312,6 +325,16 @@ function lovd_fixHGVS ($sVariant, $sType = '')
                 str_replace('U', 'T', strtoupper($aRegs[2]) .
                     (!isset($aRegs[3])? '' : 'ins' . strtoupper($aRegs[3]))), $sType);
         }
+
+    } elseif (isset($aVariant['errors']['EINVALIDNUCLEOTIDES'])
+        && strpos($aVariant['errors']['EINVALIDNUCLEOTIDES'], ': "U".')
+        && strpos($sVariant, 'U') !== false) {
+        // Check if there is a U that we can change to a T.
+        // This is usually an error, but could be a warning if we only found a U.
+        // But, only do this when we don't have a WWRONGCASE left, and only when we actually find a "U".
+        // Case issues can result in a warning for a "U" while the variant contains a "u".
+        // Assuming a capital U doesn't happen anywhere in the variant, we'll just do a str_replace().
+        return lovd_fixHGVS($sReference . str_replace('U', 'T', $sVariant), $sType);
     }
 
     // Change the variant type (if possible) if the wrong type was chosen.
@@ -440,6 +463,26 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     }
 
 
+
+    // Before we try to reformat the suffix, check if we can use any reference bases in there.
+    if ((isset($aVariant['warnings']['WSUFFIXFORMAT']) || isset($aVariant['warnings']['WSUFFIXINVALIDLENGTH']))
+        && $aVariant['type'] == 'delins' && preg_match('/del([A-Z]+)ins([A-Z]+)/', $sVariant, $aRegs)) {
+        // Variants like delAinsG throw a WWRONGTYPE and are corrected. But variants like delAinsAA are changed to insAA.
+        // We can do a better job there. Our intelligent code (just above here) can handle A>AA and many other formats.
+        // So, just have a look if that works. If not, ignore and continue, otherwise, take this correction.
+        $sFixedVariant = lovd_fixHGVS(
+            $sReference . str_replace(
+                $aRegs[0],
+                $aRegs[1] . '>' . $aRegs[2],
+                $sVariant
+            )
+        );
+        if (lovd_getVariantInfo($sFixedVariant, false, true)) {
+            // Quick check shows the fixed variant does not through errors.
+            // Use that, then.
+            return $sFixedVariant; // The reference is already included there.
+        }
+    }
 
     // Reformat wrongly described suffixes.
     if (isset($aVariant['warnings']['WSUFFIXFORMAT'])) {
@@ -724,7 +767,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
 
 
     // We're out of things that we can do.
-    return $sReference . $sVariant; // Not HGVS.
+    return $sReference . $sVariant; // Not HGVS, unrepairable.
 }
 
 

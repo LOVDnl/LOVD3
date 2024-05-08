@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2022-10-26
- * For LOVD    : 3.0-29
+ * Modified    : 2024-05-01
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Loes Werkman <L.Werkman@LUMC.nl>
@@ -32,7 +32,7 @@
 
 require_once 'src/inc-lib-init.php';
 
-class GetVariantInfoTest extends PHPUnit_Framework_TestCase
+class GetVariantInfoTest extends PHPUnit\Framework\TestCase
 {
     /**
      * @dataProvider dataProviderGetVariantInfo
@@ -187,6 +187,16 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
             )),
+            array('g.123a>c', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'subst',
+                'range' => false,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "a>c" to "A>C".',
+                ),
+                'errors' => array(),
+            )),
             array('g.123.>.', array(
                 'position_start' => 123,
                 'position_end' => 123,
@@ -309,6 +319,26 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.123N>U', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'subst',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(
+                    'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U".',
+                ),
+            )),
+            array('g.123U>Z', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'subst',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(
+                    'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U", "Z".',
+                ),
+            )),
 
             // Duplications.
             array('g.123dup', array(
@@ -357,6 +387,17 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.1DELA', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "DEL" to "del".',
+                    'WSUFFIXGIVEN' => 'Nothing should follow "del".',
+                ),
+                'errors' => array(),
+            )),
             array('g.1del<unknown>', array(
                 'position_start' => 1,
                 'position_end' => 1,
@@ -377,7 +418,45 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
             )),
+            array('g.1_2insa', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "insa" to "insA".',
+                ),
+                'errors' => array(),
+            )),
             array('g.1_2insN', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('g.1_2insU', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(
+                    'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U".',
+                ),
+            )),
+            array('g.1_2insa[10]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "insa[10]" to "insA[10]".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1_2insA[10]', array(
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
@@ -399,13 +478,33 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'ins',
                 'range' => true,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.',
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Do you mean to indicate inserted positions (e.g., "ins50_60") or an inserted fragment with an unknown sequence but a given length (e.g., "insN[50]")?',
                 ),
                 'errors' => array(),
             )),
             array('g.1_2ins5_10', array(
                 'position_start' => 1,
                 'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('c.1_2ins50+10_*10-20', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('c.1_2ins50+10_*10-20inv', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
                 'type' => 'ins',
                 'range' => true,
                 'warnings' => array(),
@@ -429,6 +528,18 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.1_2insU[5_10]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Please rewrite "U[5_10]" to "U[(5_10)]".',
+                ),
+                'errors' => array(
+                    'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U".',
+                ),
+            )),
             array('g.1_2insN[(5_10)]', array(
                 'position_start' => 1,
                 'position_end' => 2,
@@ -436,6 +547,16 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
+            )),
+            array('g.1_2insU[(5_10)]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(
+                    'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U".',
+                ),
             )),
             array('g.1_2insN[(10_5)]', array(
                 'position_start' => 1,
@@ -648,6 +769,19 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.123deluinsG', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'delins',
+                'range' => false,
+                'warnings' => array(
+                    'WWRONGTYPE' => 'A deletion-insertion of one base to one base should be described as a substitution. Please rewrite "deluinsG" to "U>G".',
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
+                ),
+                'errors' => array(
+                    'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U".',
+                ),
+            )),
             array('g.123delAinsGG', array(
                 'position_start' => 123,
                 'position_end' => 123,
@@ -655,6 +789,68 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'range' => false,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "delAinsGG" to "delinsGG".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.123delAinsAG', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'delins',
+                'range' => false,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "g.123delAinsAG" to "g.123_124insG".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.123delAAinsGA', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'delins',
+                'range' => false,
+                'warnings' => array(
+                    'WSUFFIXINVALIDLENGTH' => 'The positions indicate a range shorter than the given length of the variant. Please adjust the positions if the variant length is certain, or remove the variant length.',
+                ),
+                'errors' => array(),
+            )),
+            array('g.123delAAinsGG', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'delins',
+                'range' => false,
+                'warnings' => array(
+                    'WSUFFIXINVALIDLENGTH' => 'The positions indicate a range shorter than the given length of the variant. Please adjust the positions if the variant length is certain, or remove the variant length.',
+                ),
+                'errors' => array(),
+            )),
+            array('g.123_124delAAinsAA', array(
+                'position_start' => 123,
+                'position_end' => 124,
+                'type' => 'delins',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "g.123_124delAAinsAA" to "g.123_124=".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.123_124delaainsGA', array(
+                'position_start' => 123,
+                'position_end' => 124,
+                'type' => 'delins',
+                'range' => true,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "g.123_124delaainsGA" to "g.123A>G".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.123_124delAAinsggaa', array(
+                'position_start' => 123,
+                'position_end' => 124,
+                'type' => 'delins',
+                'range' => true,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "g.123_124delAAinsggaa" to "g.122_123insGG".',
                 ),
                 'errors' => array(),
             )),
@@ -675,7 +871,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'range' => false,
                 'warnings' => array(
                     'WWRONGTYPE' => 'A conversion should be described as a deletion-insertion. Please rewrite "con" to "delins".',
-                    'WSUFFIXFORMAT' => 'The part after "con" does not follow HGVS guidelines.',
+                    'WSUFFIXFORMAT' => 'The part after "con" does not follow HGVS guidelines. Failed to recognize a valid sequence or position in "NC_000001.10:100_200".',
                 ),
                 'errors' => array(),
             )),
@@ -693,7 +889,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'delins',
                 'range' => true,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The part after "delins" does not follow HGVS guidelines.',
+                    'WSUFFIXFORMAT' => 'The part after "delins" does not follow HGVS guidelines. The positions are not given in the correct order. Please verify your description and try again.',
                 ),
                 'errors' => array(),
             )),
@@ -757,10 +953,11 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'repeat',
                 'range' => false,
                 'warnings' => array(
-                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
-                    'WINVALIDREPEATLENGTH' => 'A repeat sequence of coding DNA should always have a length of (a multiple of) 3.',
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
                 ),
-                'errors' => array(),
+                'errors' => array(
+                    'EINVALIDREPEATLENGTH' => 'A repeat sequence of coding DNA should always have a length of (a multiple of) 3.',
+                ),
             )),
             array('g.1AC[20]', array(
                 'position_start' => 1,
@@ -772,6 +969,17 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.1AC[20]GT', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'repeat',
+                'range' => false,
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
+                    'WSUFFIXFORMAT' => 'The part after "AC[20]" does not follow HGVS guidelines. Please rewrite "AC[20]GT" to "AC[20]GT[1]".',
+                ),
+                'errors' => array(),
+            )),
             array('g.1AC[20]GT[10]', array(
                 'position_start' => 1,
                 'position_end' => 1,
@@ -779,6 +987,141 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'range' => false,
                 'warnings' => array(
                     'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1AC[21_20]GT[10]', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'repeat',
+                'range' => false,
+                'warnings' => array(
+                    'WREPEATLENGTHFORMAT' => 'The repeat length format does not follow HGVS guidelines. Please rewrite "AC[21_20]" to "AC[(20_21)]".',
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1AC[(20_21)]GT[10_10]', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'repeat',
+                'range' => false,
+                'warnings' => array(
+                    'WREPEATLENGTHFORMAT' => 'The repeat length format does not follow HGVS guidelines. Please rewrite "GT[10_10]" to "GT[10]".',
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1AC[(20_21)]GT[(10_11)]', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'repeat',
+                'range' => false,
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1ac[(20_21)]gt[(10_11)]', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'repeat',
+                'range' => false,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "ac[(20_21)]gt[(10_11)]" to "AC[(20_21)]GT[(10_11)]".',
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1AC[(?_21)]GT[(10_?)]A[?]', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'repeat',
+                'range' => false,
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1AC[(??)]', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'repeat',
+                'range' => false,
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
+                ),
+                'errors' => array(
+                    'EREPEATLENGTHFORMAT' => 'The repeat length format does not follow HGVS guidelines.',
+                ),
+            )),
+            array('g.1_2AC[20]GT[10]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'repeat',
+                'range' => true,
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
+                ),
+                'errors' => array(
+                    'EINVALIDREPEATLENGTH' => 'The sequence ACGT does not fit in the given positions 1_2. Adjust your positions or the given sequences.',
+                ),
+            )),
+            array('g.1_2AN[20]UZ[10]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'repeat',
+                'range' => true,
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
+                ),
+                'errors' => array(
+                    'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U", "Z".',
+                    'EINVALIDREPEATLENGTH' => 'The sequence ANUZ does not fit in the given positions 1_2. Adjust your positions or the given sequences.',
+                ),
+            )),
+            array('g.1_9AC[20]', array(
+                'position_start' => 1,
+                'position_end' => 9,
+                'type' => 'repeat',
+                'range' => true,
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
+                ),
+                'errors' => array(
+                    'EINVALIDREPEATLENGTH' => 'The given repeat unit (AC) does not fit in the given positions 1_9. Adjust your positions or the given sequences.',
+                ),
+            )),
+            array('g.1_9AC[20]GT[10]', array(
+                'position_start' => 1,
+                'position_end' => 9,
+                'type' => 'repeat',
+                'range' => true,
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
+                ),
+                'errors' => array(
+                    'EINVALIDREPEATLENGTH' => 'The given repeat units (AC, GT) do not fit in the given positions 1_9. Adjust your positions or the given sequences.',
+                ),
+            )),
+            array('g.1_40AC[20]GT[10]', array(
+                'position_start' => 1,
+                'position_end' => 40,
+                'type' => 'repeat',
+                'range' => true,
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1_40AC[20]GT[10]A', array(
+                'position_start' => 1,
+                'position_end' => 40,
+                'type' => 'repeat',
+                'range' => true,
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
+                    'WSUFFIXFORMAT' => 'The part after "AC[20]GT[10]" does not follow HGVS guidelines. Please rewrite "AC[20]GT[10]A" to "AC[20]GT[10]A[1]".',
                 ),
                 'errors' => array(),
             )),
@@ -829,6 +1172,41 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'WBASESGIVEN' => 'When using "=", please remove the original sequence before the "=".',
                 ),
                 'errors' => array(),
+            )),
+            array('g.123N=', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => '=',
+                'range' => false,
+                'warnings' => array(
+                    'WBASESGIVEN' => 'When using "=", please remove the original sequence before the "=".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.123U=', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => '=',
+                'range' => false,
+                'warnings' => array(
+                    'WBASESGIVEN' => 'When using "=", please remove the original sequence before the "=".',
+                ),
+                'errors' => array(
+                    'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U".',
+                ),
+            )),
+            array('g.123u=', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => '=',
+                'range' => false,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "u=" to "U=".',
+                    'WBASESGIVEN' => 'When using "=", please remove the original sequence before the "=".',
+                ),
+                'errors' => array(
+                    'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U".',
+                ),
             )),
 
             // Unknown variants.
@@ -1425,14 +1803,144 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
             )),
 
             // Challenging insertions.
+            array('g.1_2ins10', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(
+                    'ESUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Do you mean to indicate inserted positions (e.g., "ins10_20") or an inserted fragment with an unknown sequence but a given length (e.g., "insN[10]")?',
+                ),
+            )),
+            array('g.1_2ins0_10', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(
+                    'ESUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. This variant description contains an invalid position: "0". Please verify your description and try again.',
+                ),
+            )),
+            array('g.1_2ins10_5', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. The positions are not given in the correct order. Please verify your description and try again.',
+                ),
+                'errors' => array(),
+            )),
             array('g.1_2ins(5_10)', array(
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
                 'range' => true,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.',
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Do you mean to indicate inserted positions (e.g., "ins5_10") or an inserted fragment with an unknown sequence but a given length (e.g., "insN[(5_10)]")?',
                 ),
+                'errors' => array(),
+            )),
+            array('g.1_2ins(0_5)', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(
+                    'ESUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. This variant description contains an invalid position or length: "0". Do you mean to indicate inserted positions (e.g., "ins100_200") or an inserted fragment with an unknown sequence but a given length (e.g., "insN[(100_200)]")?',
+                ),
+            )),
+            array('g.1_2ins(5_0)', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(
+                    'ESUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. This variant description contains an invalid position or length: "0". Do you mean to indicate inserted positions (e.g., "ins100_200") or an inserted fragment with an unknown sequence but a given length (e.g., "insN[100]")?',
+                ),
+            )),
+            array('g.1_2insN[5]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('g.1_2insN[5_10]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Please rewrite "N[5_10]" to "N[(5_10)]".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1_2insN[?_10]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Please rewrite "N[?_10]" to "N[(?_10)]".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1_2insN[5_?]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Please rewrite "N[5_?]" to "N[(5_?)]".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1_2insN[?]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('g.1_2insN[(5_5)]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Please rewrite "N[(5_5)]" to "N[5]".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1_2insN[(5_10)]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('g.1_2insN[(?_10)]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('g.1_2insN[(5_?)]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
                 'errors' => array(),
             )),
             array('g.1_2ins[A]', array(
@@ -1441,7 +1949,17 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'ins',
                 'range' => true,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.',
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Only use square brackets for complex insertions.',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1_2ins(A)', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Please rewrite "(A)" to "A".',
                 ),
                 'errors' => array(),
             )),
@@ -1452,6 +1970,18 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
+            )),
+            array('g.1_2ins[NC_123456.1:g.1_10;a;U]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case.',
+                ),
+                'errors' => array(
+                    'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U".',
+                ),
             )),
             array('g.1_2ins[1_2;A]', array(
                 'position_start' => 1,
@@ -1467,17 +1997,17 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'ins',
                 'range' => true,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.',
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Failed to recognize a valid sequence or position in "NC123456.1:g.1_10".',
                 ),
                 'errors' => array(),
             )),
-            array('g.1_2ins340', array(
+            array('g.1_2insNC_123456.1:g.1_10', array(
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
                 'range' => true,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.',
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Use square brackets for complex insertions.',
                 ),
                 'errors' => array(),
             )),
@@ -1583,13 +2113,37 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
             )),
+            array('g.(1_100)delA[50]', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(1_100)dela[50]', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'range' => true,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "dela[50]" to "delA[50]".',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
             array('g.(1_100)del50', array(
                 'position_start' => 1,
                 'position_end' => 100,
                 'type' => 'del',
                 'range' => true,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "50" to "N[50]".',
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "50" to "N[50]".',
                 ),
                 'errors' => array(),
                 'messages' => array(
@@ -1602,7 +2156,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'range' => true,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(30)" to "N[30]".',
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "(30)" to "N[30]".',
                 ),
                 'errors' => array(),
                 'messages' => array(
@@ -1626,7 +2180,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'range' => true,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(100)" to "N[100]".',
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "(100)" to "N[100]".',
                     'WSUFFIXINVALIDLENGTH' =>
                         'The positions indicate a range equally long as the given length of the variant. Please remove the variant length and parentheses if the positions are certain, or adjust the positions or variant length.',
                 ),
@@ -1641,7 +2195,35 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'range' => true,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(30_30)" to "N[30]".',
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "(30_30)" to "N[30]".',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(1_100)del(0_50)', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'range' => true,
+                'warnings' => array(
+                    // FIXME: We can't see the difference. The reason is that $nSuffixMinLength's default value is 0.
+                    //  So we think we couldn't parse the suffix.
+                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. When indicating an uncertain position like this, the length or sequence of the variant must be provided.',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(1_100)del(50_0)', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "(50_0)" to "N[50]".',
                 ),
                 'errors' => array(),
                 'messages' => array(
@@ -1654,7 +2236,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'range' => true,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(30_50)" to "N[(30_50)]".',
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "(30_50)" to "N[(30_50)]".',
                 ),
                 'errors' => array(),
                 'messages' => array(
@@ -1678,7 +2260,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'range' => true,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(50_30)" to "N[(30_50)]".',
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "(50_30)" to "N[(30_50)]".',
                 ),
                 'errors' => array(),
                 'messages' => array(
@@ -1691,8 +2273,81 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'range' => true,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "N[30_50]" to "N[(30_50)]".',
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "N[30_50]" to "N[(30_50)]".',
                 ),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(1_100)delA[30_50]', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "A[30_50]" to "A[(30_50)]".',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(1_100)delA[(30_50)]', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(1_100)delA[?_50]', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "A[?_50]" to "A[(?_50)]".',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(1_100)delA[(?_50)]', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(1_100)dela[30_?]', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'range' => true,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "a[30_?]" to "A[(30_?)]".',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(1_100)delA[?]', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'range' => true,
+                'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
@@ -1718,7 +2373,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'range' => true,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "300" to "N[300]".',
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "300" to "N[300]".',
                 ),
                 'errors' => array(),
                 'messages' => array(
@@ -1731,7 +2386,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'range' => true,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(300)" to "N[300]".',
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "(300)" to "N[300]".',
                 ),
                 'errors' => array(),
                 'messages' => array(
@@ -1744,7 +2399,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'inv',
                 'range' => false,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(30)" to "N[30]".',
+                    'WSUFFIXFORMAT' => 'The part after "inv" does not follow HGVS guidelines. Please rewrite "(30)" to "N[30]".',
                     'WSUFFIXINVALIDLENGTH' =>
                         'The positions indicate a range shorter than the given length of the variant.' .
                         ' Please adjust the positions if the variant length is certain, or remove the variant length.',
@@ -1759,7 +2414,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'inv',
                 'range' => true,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(30)" to "N[30]".',
+                    'WSUFFIXFORMAT' => 'The part after "inv" does not follow HGVS guidelines. Please rewrite "(30)" to "N[30]".',
                     'WSUFFIXINVALIDLENGTH' =>
                         'The positions indicate a range longer than the given length of the variant.' .
                         ' Please adjust the positions if the variant length is certain, or remove the variant length.',
@@ -1772,7 +2427,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'inv',
                 'range' => true,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(30)" to "N[30]".',
+                    'WSUFFIXFORMAT' => 'The part after "inv" does not follow HGVS guidelines. Please rewrite "(30)" to "N[30]".',
                 ),
                 'errors' => array(),
                 'messages' => array(
@@ -1785,7 +2440,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'inv',
                 'range' => true,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(30)" to "N[30]".',
+                    'WSUFFIXFORMAT' => 'The part after "inv" does not follow HGVS guidelines. Please rewrite "(30)" to "N[30]".',
                     'WSUFFIXINVALIDLENGTH' => 'The positions indicate a range smaller than the given length of the variant. Please adjust the positions or variant length.',
                 ),
                 'errors' => array(
@@ -1802,8 +2457,8 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'repeat',
                 'range' => false,
                 'warnings' => array(
-                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
-                    'WSUFFIXGIVEN' => 'Nothing should follow "ACT[20]".',
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
+                    'WSUFFIXFORMAT' => 'The part after "ACT[20]" does not follow HGVS guidelines. Please rewrite "ACT[20]A" to "ACT[20]A[1]".',
                 ),
                 'errors' => array(),
             )),
@@ -1813,10 +2468,25 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'repeat',
                 'range' => true,
                 'warnings' => array(
-                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
-                    'WSUFFIXGIVEN' => 'Nothing should follow "ACT[20]".',
+                    'WSUFFIXFORMAT' => 'The part after "ACT[20]" does not follow HGVS guidelines. Please rewrite "ACT[20]A" to "ACT[20]A[1]".',
                 ),
-                'errors' => array(),
+                'errors' => array(
+                    'EWRONGTYPE' =>
+                        'The repeat syntax can not be used for uncertain positions. Rewrite your variant description as a deletion or insertion, depending on whether the repeat contracted or expanded.',
+                ),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(1_100)ACT[20]A[10]', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'repeat',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(
+                    'EWRONGTYPE' => 'The repeat syntax can not be used for uncertain positions. Rewrite your variant description as a deletion or insertion, depending on whether the repeat contracted or expanded.',
+                ),
                 'messages' => array(
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
@@ -2355,7 +3025,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'dup',
                 'range' => false,
                 'warnings' => array(
-                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters.',
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "G." to "g.".',
                 ),
                 'errors' => array(),
             )),
@@ -2365,7 +3035,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'dup',
                 'range' => false,
                 'warnings' => array(
-                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters.',
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "DUP" to "dup".',
                 ),
                 'errors' => array(),
             )),
@@ -2376,6 +3046,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'range' => true,
                 'warnings' => array(
                     'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "delgagagatt" to "delGAGAGATT".',
+                    'WSUFFIXGIVEN' => 'Nothing should follow "del".',
                 ),
                 'errors' => array(),
             )),
@@ -2385,10 +3056,12 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'range' => true,
                 'warnings' => array(
-                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
-                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "delgagagauu" to "delGAGAGATT".',
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "delgagagauu" to "delGAGAGAUU".',
+                    'WSUFFIXGIVEN' => 'Nothing should follow "del".',
                 ),
-                'errors' => array(),
+                'errors' => array(
+                    'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U".',
+                ),
             )),
             array('g.123_130deln[8]', array(
                 'position_start' => 123,
@@ -2397,6 +3070,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'range' => true,
                 'warnings' => array(
                     'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "deln[8]" to "delN[8]".',
+                    'WSUFFIXGIVEN' => 'Nothing should follow "del".',
                 ),
                 'errors' => array(),
             )),
@@ -2406,10 +3080,11 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'delins',
                 'range' => false,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => // Adding a WWRONGCASE here is difficult; the code handling insertions is too complex and we'd need to then fix lovd_fixHGVS() again also.
-                        'The part after "delins" does not follow HGVS guidelines.', // Idem for the suggestion how to fix it. It's too complex right now and lovd_fixHGVS() easily handles it anyway.
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "delinsgagagauu" to "delinsGAGAGAUU".',
                 ),
-                'errors' => array(),
+                'errors' => array(
+                    'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U".',
+                ),
             )),
             array('g.123delainst', array(
                 'position_start' => 123,
@@ -2423,6 +3098,18 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.123DELAINST', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'delins',
+                'range' => false,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "DEL" to "del".',
+                    'WWRONGTYPE' =>
+                        'A deletion-insertion of one base to one base should be described as a substitution. Please rewrite "DELAINST" to "A>T".',
+                ),
+                'errors' => array(),
+            )),
             array('g.123delainsu', array(
                 'position_start' => 123,
                 'position_end' => 123,
@@ -2431,9 +3118,11 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(
                     'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
                     'WWRONGTYPE' =>
-                        'A deletion-insertion of one base to one base should be described as a substitution. Please rewrite "delainsu" to "A>T".',
+                        'A deletion-insertion of one base to one base should be described as a substitution. Please rewrite "delainsu" to "A>U".',
                 ),
-                'errors' => array(),
+                'errors' => array(
+                    'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U".',
+                ),
             )),
             array('g. 123_124insA', array(
                 'position_start' => 123,

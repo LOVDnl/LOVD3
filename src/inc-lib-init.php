@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2023-06-01
+ * Modified    : 2024-05-01
  * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -35,6 +35,10 @@
 //  this in $_SETT because tests need it (and don't include inc-init.php).
 $_LIBRARIES = array(
     'regex_patterns' => array(
+        'bases' => array(
+            'ref' => '[ACGTN]',
+            'alt' => '[ACGTMRWSYKVHDBN]',
+        ),
         'refseq' => array(
             'basic' => '/^[A-Z_.t0-9()-]+$/',
             'strict'  =>
@@ -1383,13 +1387,13 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 '([-+]([0-9]+|\?))?' .           // 18. Latest intronic end position.
         '\)))?' .
 
-        '((?:[ACGTU]+|\.)>(?:[ACGTRYSWKMBDHUVN]+|\.)' .      //  | (substitution)
-        '|([ACGTU]+\[[0-9]+])+' .                            //  | (repeat sequence)
-        '|[ACGTU]*=(\/{1,2}[ACGTU]*>[ACGTRYSWKMBDHUVN]+)?' . //  | (wild types, mosaics, or chimerics)
-        '|ins|dup|con|delins|del|inv|sup|\?' .               //  V
-        '|\|(gom|lom|met=|.+))' .                            // 20. Type of variant.
+        '(con|delins|del|dup|ins|inv|sup|\?' .   // 20. Type of variant.
+        '|(?:[A-Z]+|\.)>(?:[A-Z]+|\.)' .         //     (substitutions)
+        '|([A-Z]+\[[0-9_()?]+])+' .              //     (repeat sequence)
+        '|\|(gom|lom|met=|.+)' .                 //     (types starting with a pipe)
+        '|[A-Z]*=(\/{1,2}[A-Z]*>[A-Z]+)?)' .     //     (wild types, mosaics, or chimerics)
 
-        '(.*)))/i',                                          // 24. Suffix.
+        '(.*)))/i',                              // 24. Suffix.
 
         $sVariant, $aMatches);
 
@@ -1413,7 +1417,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         'latest_end'              => (!isset($aMatches[17])?  0 : $aMatches[17]),
         'latest_intronic_end'     => (!isset($aMatches[18])?  0 : (int) str_replace('?', '1', $aMatches[18])),
         'type'                    => (!isset($aMatches[20])? '' :
-            (preg_match('/(^[ACTG]*=|[>\[])/i', $aMatches[20])? strtoupper($aMatches[20]) : strtolower($aMatches[20]))),
+            (preg_match('/(^[A-Z]*=|[>\[])/i', $aMatches[20])? strtoupper($aMatches[20]) : strtolower($aMatches[20]))),
         'suffix'                  => (!isset($aMatches[24])? '' : $aMatches[24]),
     ));
 
@@ -1532,7 +1536,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
     // Clean position string. We'll use it for reporting later on.
     if ($aVariant['positions']) {
-        $aVariant['positions'] = strstr($aVariant['positions'], $aVariant['type'], true);
+        $aVariant['positions'] = stristr($aVariant['positions'], $aVariant['type'], true);
         // And now with more precision.
         $aResponse['range'] = (strpos($aVariant['positions'], '_') !== false);
     }
@@ -1543,15 +1547,19 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         $aVariant['type'] = str_replace('bsrc', 'bsrC', $aVariant['type']);
     }
     // Now check.
-    if ((isset($aMatches[1]) && $aVariant['prefix'] != $aMatches[1])
-        || (isset($aMatches[20]) && $aVariant['type'] != $aMatches[20])) {
-        // There's a case problem.
-        if ($bCheckHGVS) {
-            return false;
-        }
+    if ((isset($aMatches[1]) && $aVariant['prefix'] != $aMatches[1])) {
+        // There's a case problem in the prefix.
         $aResponse['warnings']['WWRONGCASE'] =
             'This is not a valid HGVS description, due to characters being in the wrong case.' .
-            ' Please check the use of upper- and lowercase characters.';
+            ' Please rewrite "' . $aMatches[1] . '." to "' . $aVariant['prefix'] . '.".';
+    } elseif (isset($aMatches[20]) && $aVariant['type'] != $aMatches[20]) {
+        // There's a case problem in the variant type.
+        $aResponse['warnings']['WWRONGCASE'] =
+            'This is not a valid HGVS description, due to characters being in the wrong case.' .
+            ' Please rewrite "' . $aMatches[20] . '" to "' . $aVariant['type'] . '".';
+    }
+    if (isset($aResponse['warnings']['WWRONGCASE']) && $bCheckHGVS) {
+        return false;
     }
 
     // Storing the variant type.
@@ -1606,8 +1614,40 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             $aResponse['type'] = '=';
         }
 
+        // Check if only correct bases have been used.
+        // Variant type has already been checked for case problems.
+        $sRefBases = strstr($aVariant['type'], '=', true);
+        $sAltBases = '';
+        // For mosaic/chimeric variants that also indicate the presence of a substitution.
+        if (preg_match('/([A-Z]*)>([A-Z]+)/', $aVariant['type'], $aRegs)) {
+            $sRefBases .= $aRegs[1];
+            $sAltBases .= $aRegs[2];
+        }
+        $sUnknownBases =
+            preg_replace('/' . $_LIBRARIES['regex_patterns']['bases']['ref'] . '+/', '', $sRefBases) .
+            preg_replace('/' . $_LIBRARIES['regex_patterns']['bases']['alt'] . '+/', '', $sAltBases);
+        if ($sUnknownBases) {
+            if ($bCheckHGVS) {
+                return false;
+            }
+            $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', str_split($sUnknownBases)) . '".';
+        }
+
     } elseif (strpos($aVariant['type'], '>')) {
         $aResponse['type'] = 'subst';
+
+        // Check if only correct bases have been used.
+        // Variant type has already been checked for case problems.
+        list($sRefBases, $sAltBases) = explode('>', str_replace('.', '', $aVariant['type']), 2);
+        $sUnknownBases =
+            preg_replace('/' . $_LIBRARIES['regex_patterns']['bases']['ref'] . '+/', '', $sRefBases) .
+            preg_replace('/' . $_LIBRARIES['regex_patterns']['bases']['alt'] . '+/', '', $sAltBases);
+        if ($sUnknownBases) {
+            if ($bCheckHGVS) {
+                return false;
+            }
+            $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', str_split($sUnknownBases)) . '".';
+        }
 
     } elseif ($aVariant['type'] == 'con') {
         if ($bCheckHGVS) {
@@ -1619,8 +1659,74 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
     } elseif (substr($aVariant['type'], -1) == ']') {
         $aResponse['type'] = 'repeat';
-        $aResponse['warnings']['WNOTSUPPORTED'] =
-            'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.';
+
+        // We'll have to do all the checking here, before we call this a valid format.
+        // Variant type has already been checked for case problems.
+
+        // Check if only correct bases have been used.
+        $sRepeatBases = preg_replace('/\[[^\]]+\]/', '', $aVariant['type']);
+        $sUnknownBases = preg_replace(
+            '/' . $_LIBRARIES['regex_patterns']['bases']['ref'] . '+/',
+            '',
+            $sRepeatBases
+        );
+        if ($sUnknownBases) {
+            $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', str_split($sUnknownBases)) . '".';
+        }
+
+        // This code is based on the deletion suffix check code. The variant type is already in uppercase.
+        foreach (array_filter(preg_split('/(?<=])/', $aVariant['type'])) as $sRepeat) {
+            if (preg_match('/^([A-Z]+)\[(([0-9]+|\?)_([0-9]+|\?))\]$/', $sRepeat, $aRegs)) {
+                // ...N[50_60].
+                list(, $sSequence, $nSuffixLength, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
+                if (strpos($nSuffixLength, '?') === false && $nSuffixMinLength > $nSuffixMaxLength) {
+                    list($nSuffixMinLength, $nSuffixMaxLength) = array($nSuffixMaxLength, $nSuffixMinLength);
+                }
+                $aResponse['warnings']['WREPEATLENGTHFORMAT'] =
+                    'The repeat length format does not follow HGVS guidelines.' .
+                    ' Please rewrite "' . $sRepeat . '" to "' . $sSequence . '[' .
+                    ($nSuffixMinLength == $nSuffixMaxLength ?
+                        $nSuffixMinLength :
+                        '(' . $nSuffixMinLength . '_' . $nSuffixMaxLength . ')') . ']".';
+                break; // We can only handle one, anyway.
+
+            } elseif (preg_match('/^([A-Z]+)\[(([0-9]+|\?)|\(([0-9]+|\?)_([0-9]+|\?)\))\]$/', $sRepeat, $aRegs)) {
+                // ...N[2], ...N[(50_60)].
+                if (isset($aRegs[4])) {
+                    // Range was given.
+                    list(, $sSequence, $nSuffixLength, , $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
+                    if (strpos($nSuffixLength, '?') === false && $nSuffixMinLength >= $nSuffixMaxLength) {
+                        list($nSuffixMinLength, $nSuffixMaxLength) = array($nSuffixMaxLength, $nSuffixMinLength);
+                        $aResponse['warnings']['WREPEATLENGTHFORMAT'] =
+                            'The repeat length format does not follow HGVS guidelines.' .
+                            ' Please rewrite "' . $sRepeat . '" to "' . $sSequence . '[' .
+                            ($nSuffixMinLength == $nSuffixMaxLength ?
+                                $nSuffixMinLength :
+                                '(' . $nSuffixMinLength . '_' . $nSuffixMaxLength . ')') . ']".';
+                        break; // We can only handle one, anyway.
+                    }
+                }
+
+            } else {
+                // Something else. That can't be, because above are all the allowed options.
+                $aResponse['errors']['EREPEATLENGTHFORMAT'] =
+                    'The repeat length format does not follow HGVS guidelines.';
+                break; // We can only handle one, anyway.
+            }
+        }
+
+        // At this point, any warning or error is bad.
+        if (!count($aResponse['errors']) && !count($aResponse['warnings'])) {
+            // Only when there are no errors...
+            $aResponse['warnings']['WNOTSUPPORTED'] =
+                'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.';
+        } elseif ($bCheckHGVS) {
+            return false;
+        } else {
+            // Even with errors, add a WNOTSUPPORTED, but with a different text.
+            $aResponse['warnings']['WNOTSUPPORTED'] =
+                'This syntax is currently not supported for mapping and validation.';
+        }
 
     } elseif ($aVariant['type'] == '?') {
         $aResponse['type'] = NULL;
@@ -1869,8 +1975,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     }
 
     // Making sure wild type descriptions don't provide nucleotides
-    // (e.g. c.123A=, which should be c.123=).
-    if ($aResponse['type'] == '=' && preg_match('/[ACGT]/', $sVariant)) {
+    //  (e.g. c.123A=, which should be c.123=).
+    if ($aResponse['type'] == '=' && preg_match('/^[A-Z]/', $aVariant['type'])) {
         if ($bCheckHGVS) {
             return false;
         }
@@ -2071,17 +2177,107 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.';
         }
 
-    } elseif ($aResponse['type'] == 'repeat' && $aVariant['prefix'] == 'c') {
-        foreach (explode('[', $aVariant['type']) as $sRepeat) {
-            if (ctype_alpha($sRepeat) && strlen($sRepeat) % 3) {
-                // Repeat variants on coding DNA should always have
-                //  a length of a multiple of three bases.
-                $aResponse['warnings']['WINVALIDREPEATLENGTH'] =
-                    'A repeat sequence of coding DNA should always have a length of (a multiple of) 3.';
+    } elseif ($aResponse['type'] == 'repeat' && isset($aResponse['messages']['IPOSITIONRANGE'])) {
+        // Repeats can't have uncertain positions. Separating this from the block below to not have too much nesting.
+        if ($bCheckHGVS) {
+            return false;
+        }
+        $aResponse['errors']['EWRONGTYPE'] = 'The repeat syntax can not be used for uncertain positions. Rewrite your variant description as a deletion or insertion, depending on whether the repeat contracted or expanded.';
+        unset($aResponse['warnings']['WNOTSUPPORTED']);
+
+    } elseif ($aResponse['type'] == 'repeat') {
+        // Full validation of the repeat.
+        $aRepeatUnits = array_values(
+            array_filter(
+                preg_split('/[\[\]]/', $aVariant['type']),
+                function ($sValue, $nKey)
+                {
+                    return ($sValue && !($nKey % 2));
+                }, ARRAY_FILTER_USE_BOTH
+            )
+        );
+        if ($aVariant['prefix'] == 'c') {
+            foreach ($aRepeatUnits as $sRepeat) {
+                if (strlen($sRepeat) % 3) {
+                    // Repeat variants on coding DNA should always have
+                    //  a length of a multiple of three bases.
+                    if ($bCheckHGVS) {
+                        return false;
+                    }
+                    $aResponse['errors']['EINVALIDREPEATLENGTH'] =
+                        'A repeat sequence of coding DNA should always have a length of (a multiple of) 3.';
+                    // We'll have to fix the WNOTSUPPORTED.
+                    $aResponse['warnings']['WNOTSUPPORTED'] = 'This syntax is currently not supported for mapping and validation.';
+                    break;
+                }
+            }
+        }
+        if (empty($aResponse['errors']['EINVALIDREPEATLENGTH']) && $aResponse['range']) {
+            // Do a rudimentary length check. We know that g.1_2ACG[2] can never work, since ACG doesn't fit within g.1_2.
+            // However, when things get more complex (e.g., g.1_6ACG[2]GG[2], it becomes more difficult to check.
+            $nLength = lovd_getVariantLength($aResponse);
+            if (strlen($sRepeatBases) > $nLength) {
+                $aResponse['errors']['EINVALIDREPEATLENGTH'] =
+                    'The sequence ' . $sRepeatBases . ' does not fit in the given positions ' . $aVariant['positions'] . '. Adjust your positions or the given sequences.';
+            } elseif (count($aRepeatUnits) == 1 && ($nLength % strlen($aRepeatUnits[0])) !== 0) {
+                $aResponse['errors']['EINVALIDREPEATLENGTH'] =
+                    'The given repeat unit (' . $sRepeatBases . ') does not fit in the given positions ' . $aVariant['positions'] . '. Adjust your positions or the given sequences.';
+            } else {
+                // OK, this one is complex. We have multiple repeats (e.g., g.1_9AC[20]GT[10]) and we need to check if any combination of units fits the given positions.
+                $bInvalidLength = true;
+                $aRepeatUnitCounts = array_map(
+                    function ($sVal)
+                    {
+                        return [strlen($sVal), 1];
+                    }, $aRepeatUnits
+                );
+                while (true) {
+                    $nTotalLength = array_reduce(
+                        $aRepeatUnitCounts,
+                        function ($nCurrentLength, $aRepeatUnit)
+                        {
+                            return $nCurrentLength + ($aRepeatUnit[0] * $aRepeatUnit[1]);
+                        }
+                    );
+                    if ($nTotalLength == $nLength) {
+                        // Fits perfectly!
+                        $bInvalidLength = false;
+                        break;
+                    } elseif ($nTotalLength > $nLength) {
+                        // See if we can continue somehow.
+                        for ($i = array_key_last($aRepeatUnitCounts); $i >= 0; $i--) {
+                            if ($aRepeatUnitCounts[$i][1] == 1) {
+                                // This unit is present just once, continue up the list.
+                                continue;
+                            }
+                            // This is the first non-1 value in the list. If it's the first repeat, we're done.
+                            if (!$i) {
+                                // Nope, it doesn't fit.
+                                break 2;
+                            } else {
+                                // Reset this unit and try to increase the previous one.
+                                $aRepeatUnitCounts[$i][1] = 1;
+                                $aRepeatUnitCounts[$i-1][1]++;
+                                break;
+                            }
+                        }
+                    } else {
+                        // We're not there yet.
+                        $aRepeatUnitCounts[array_key_last($aRepeatUnitCounts)][1]++;
+                    }
+                }
+
+                if ($bInvalidLength) {
+                    $aResponse['errors']['EINVALIDREPEATLENGTH'] =
+                        'The given repeat units (' . implode(', ', $aRepeatUnits) . ') do not fit in the given positions ' . $aVariant['positions'] . '. Adjust your positions or the given sequences.';
+                }
+            }
+            if ($aResponse['errors']) {
                 if ($bCheckHGVS) {
                     return false;
                 }
-                break;
+                // We'll have to fix the WNOTSUPPORTED.
+                $aResponse['warnings']['WNOTSUPPORTED'] = 'This syntax is currently not supported for mapping and validation.';
             }
         }
     }
@@ -2110,13 +2306,14 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     //  is formatted as it should.
     if (!$aVariant['suffix']
         && (in_array($aVariant['type'], array('ins', 'delins'))
-            || isset($aResponse['messages']['IPOSITIONRANGE']))
-        && $aResponse['type'] != 'subst') {
+            || (isset($aResponse['messages']['IPOSITIONRANGE'])
+                && !in_array($aResponse['type'], array('subst', 'repeat'))))) {
         // Variants of type ins and delins need a suffix showing what has been
         //  inserted and variants which took place within a range need a suffix
         //  showing the length of the variant.
         // This is not required for substitutions with an IPOSITIONRANGE,
-        //  as their length is always 1.
+        //  as their length is always 1. It's also not required for repeats,
+        //  since they can't have uncertain positions; they get another error.
         if ($bCheckHGVS) {
             return false;
         }
@@ -2150,7 +2347,16 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if ($bCheckHGVS) {
                 return false;
             }
-            $aResponse['warnings']['WSUFFIXGIVEN'] = 'Nothing should follow "' . $aVariant['type'] . '".';
+            // If the suffix is just sequence, though, they probably forgot a "[1]".
+            if (preg_match('/^' . $_LIBRARIES['regex_patterns']['bases']['alt'] . '+$/', $aVariant['suffix'])) {
+                $aResponse['warnings']['WSUFFIXFORMAT'] = 'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines. Please rewrite "' . $aVariant['type'] . $aVariant['suffix'] . '" to "' . $aVariant['type'] . $aVariant['suffix'] . '[1]".';
+            } else {
+                $aResponse['warnings']['WSUFFIXGIVEN'] = 'Nothing should follow "' . $aVariant['type'] . '".';
+            }
+            // We'll have to fix the WNOTSUPPORTED, but don't create it if it's not there.
+            if (isset($aResponse['warnings']['WNOTSUPPORTED'])) {
+                $aResponse['warnings']['WNOTSUPPORTED'] = 'This syntax is currently not supported for mapping and validation.';
+            }
 
         } elseif (in_array($aResponse['type'], array('ins', 'delins'))) {
             // Note: Using $aResponse's type here, because 'con' is changed to 'delins' there.
@@ -2167,36 +2373,129 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
             } else {
                 $bSuffixIsSurroundedByBrackets = ($aVariant['suffix'][0] == '[' && substr($aVariant['suffix'], -1) == ']');
-                $bMultipleInsertionsInSuffix = strpos($aVariant['suffix'], ';');
+                $aInsertions = explode(';', (!$bSuffixIsSurroundedByBrackets? $aVariant['suffix'] :
+                    substr($aVariant['suffix'], 1, -1)));
+                $bMultipleInsertionsInSuffix = (count($aInsertions) > 1);
+                $bRefSeqInSuffix = strpos($aVariant['suffix'], ':');
 
-                foreach (explode(';', (!$bSuffixIsSurroundedByBrackets? $aVariant['suffix'] :
-                        substr($aVariant['suffix'], 1, -1))) as $sInsertion) {
-                    // Looping through all possible variants.
+                // Check for, e.g., c.1_2ins[A].
+                if ($bSuffixIsSurroundedByBrackets && !$bMultipleInsertionsInSuffix && !$bRefSeqInSuffix) {
+                    $aResponse['warnings']['WSUFFIXFORMAT'] =
+                        'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines. Only use square brackets for complex insertions.';
+                }
+
+                foreach ($aInsertions as $sInsertion) {
+                    // Looping through all possible suffixes.
                     // Some have specific errors, so we handle these first.
-                    if (preg_match('/^([ACGTN]+)\[([0-9]+|\?)_([0-9]+|\?)\]$/', $sInsertion, $aRegs)) {
-                        // c.1_2insN[10_20].
-                        if ($bCheckHGVS) {
-                            return false;
+                    $bCaseOK = true;
+                    if (preg_match('/^[A-Z]+$/i', $sInsertion)) {
+                        // g.1_2insAA.
+                        $bCaseOK = ($sInsertion == strtoupper($sInsertion));
+
+                        // Check if only correct bases have been used.
+                        $sUnknownBases = preg_replace(
+                            '/' . $_LIBRARIES['regex_patterns']['bases']['alt'] . '+/',
+                            '',
+                            strtoupper($sInsertion)
+                        );
+                        if ($sUnknownBases) {
+                            $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
                         }
-                        list(, $sSequence, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
+
+                    } elseif (preg_match('/^\(([A-Z]+)\)$/i', $sInsertion, $aRegs)) {
+                        // g.1_2ins(AA).
+                        $bCaseOK = ($sInsertion == strtoupper($sInsertion));
+
+                        // Check if only correct bases have been used.
+                        $sUnknownBases = preg_replace(
+                            '/' . $_LIBRARIES['regex_patterns']['bases']['alt'] . '+/',
+                            '',
+                            strtoupper($aRegs[1])
+                        );
+                        if ($sUnknownBases) {
+                            $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
+                        }
+
+                        $aResponse['warnings']['WSUFFIXFORMAT'] =
+                            'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
+                            ' Please rewrite "' . $sInsertion . '" to "' . strtoupper($aRegs[1]) . '".';
+
+                    } elseif (ctype_digit($sInsertion)) {
+                        // c.1_2ins10.
+                        // We don't know if this should be a position or a length.
+                        // Because we don't know, this is an error, and not a warning.
+                        $aResponse['errors']['ESUFFIXFORMAT'] =
+                            'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
+                            ' Do you mean to indicate inserted positions (e.g., "ins' . $sInsertion . '_' . ((int) $sInsertion[0] + 1) . substr($sInsertion, 1) . '")' .
+                            ' or an inserted fragment with an unknown sequence but a given length (e.g., "insN[' . $sInsertion . ']")?';
+
+                    } elseif (preg_match('/^\(([0-9]+)(?:_([0-9]+))?\)$/', $sInsertion, $aRegs)) {
+                        // c.1_2ins(10) or c.1_2ins(10_20). We'll assume here that this is a length.
+                        list(, $nSuffixMinLength, $nSuffixMaxLength) = array_pad($aRegs, 3, '');
+                        if ($nSuffixMaxLength && $nSuffixMinLength > $nSuffixMaxLength) {
+                            list($nSuffixMinLength, $nSuffixMaxLength) = array($nSuffixMaxLength, $nSuffixMinLength);
+                        }
+                        // First, disallow any zero-values.
+                        if ($nSuffixMinLength === '0' || $nSuffixMaxLength === '0') {
+                            $aResponse['errors']['ESUFFIXFORMAT'] =
+                                'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
+                                ' This variant description contains an invalid position or length: "0". Do you mean to indicate inserted positions (e.g., "ins100_200")' .
+                                ' or an inserted fragment with an unknown sequence but a given length (e.g., "insN[' . (!$nSuffixMaxLength? '100' : '(100_200)') . ']")?';
+                        } else {
+                            // Even though we choose to throw a warning here and fixHGVS() actually rewrites
+                            //  ins(10) into insN[10], we still want to provide both choices in the warning message.
+                            $aResponse['warnings']['WSUFFIXFORMAT'] =
+                                'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
+                                ' Do you mean to indicate inserted positions (e.g., "ins' . $nSuffixMinLength . '_' .
+                                ($nSuffixMaxLength && $nSuffixMinLength != $nSuffixMaxLength ?
+                                    $nSuffixMaxLength : ((int)$nSuffixMinLength[0] + 1) . substr($nSuffixMinLength, 1)) . '")' .
+                                ' or an inserted fragment with an unknown sequence but a given length (e.g., "insN[' .
+                                (!$nSuffixMaxLength || $nSuffixMinLength == $nSuffixMaxLength ?
+                                    $nSuffixMinLength :
+                                    '(' . $nSuffixMinLength . '_' . $nSuffixMaxLength . ')') . ']")?';
+                        }
+
+                    } elseif (preg_match('/^([A-Z]+)\[(([0-9]+|\?)_([0-9]+|\?))\]$/', strtoupper($sInsertion), $aRegs)) {
+                        // c.1_2insN[10_20].
+                        $bCaseOK = ($sInsertion == strtoupper($sInsertion));
+                        list(, $sSequence, $nSuffixLength, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
+                        if (strpos($nSuffixLength, '?') === false && $nSuffixMinLength > $nSuffixMaxLength) {
+                            list($nSuffixMinLength, $nSuffixMaxLength) = array($nSuffixMaxLength, $nSuffixMinLength);
+                        }
+
+                        // Check if only correct bases have been used.
+                        $sUnknownBases = preg_replace(
+                            '/' . $_LIBRARIES['regex_patterns']['bases']['alt'] . '+/',
+                            '',
+                            $sSequence
+                        );
+                        if ($sUnknownBases) {
+                            $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', str_split($sUnknownBases)) . '".';
+                        }
                         $aResponse['warnings']['WSUFFIXFORMAT'] =
                             'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
                             ' Please rewrite "' . $sInsertion . '" to "' . $sSequence . '[' .
                             ($nSuffixMinLength == $nSuffixMaxLength?
                                 $nSuffixMinLength :
-                                '(' . (strpos($sInsertion, '?') !== false || $nSuffixMinLength < $nSuffixMaxLength?
-                                    $nSuffixMinLength . '_' . $nSuffixMaxLength :
-                                    min($nSuffixMinLength, $nSuffixMaxLength) . '_' . max($nSuffixMinLength, $nSuffixMaxLength)) . ')') . ']".';
+                                '(' . $nSuffixMinLength . '_' . $nSuffixMaxLength . ')') . ']".';
 
-                    } elseif (preg_match('/^([ACGTN]+)\[(([0-9]+|\?)|\(([0-9]+|\?)_([0-9]+|\?)\))\]$/', $sInsertion, $aRegs)) {
+                    } elseif (preg_match('/^([A-Z]+)\[(([0-9]+|\?)|\(([0-9]+|\?)_([0-9]+|\?)\))\]$/', strtoupper($sInsertion), $aRegs)) {
                         // c.1_2insN[40] or ..N[(1_2)].
+                        $bCaseOK = ($sInsertion == strtoupper($sInsertion));
+                        // Check if only correct bases have been used.
+                        $sUnknownBases = preg_replace(
+                            '/' . $_LIBRARIES['regex_patterns']['bases']['alt'] . '+/',
+                            '',
+                            $aRegs[1]
+                        );
+                        if ($sUnknownBases) {
+                            $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
+                        }
+
                         if (isset($aRegs[4])) {
                             // Range was given.
                             list(, $sSequence, $nSuffixLength,, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
                             if (strpos($nSuffixLength, '?') === false && $nSuffixMinLength >= $nSuffixMaxLength) {
-                                if ($bCheckHGVS) {
-                                    return false;
-                                }
                                 list($nSuffixMinLength, $nSuffixMaxLength) = array($nSuffixMaxLength, $nSuffixMinLength);
                                 $aResponse['warnings']['WSUFFIXFORMAT'] =
                                     'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
@@ -2207,24 +2506,71 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                             }
                         }
 
-                    } elseif (!(
-                        (!(!$bMultipleInsertionsInSuffix && $bSuffixIsSurroundedByBrackets)                            // so no c.1_2ins[A]
-                            && (preg_match('/^[ACGTN]+$/', $sInsertion)                                                // c.1_2insATG
-                                || (preg_match(                                                                        // c.1_2ins15+1_16-1
-                                    '/^([-*]?[0-9]+([-+][0-9]+)?)_([-*]?[0-9]+([-+]([0-9]+))?)(inv)?$/', $sInsertion, $aRegs)
-                                    && !(ctype_digit($aRegs[1]) && ctype_digit($aRegs[3]) && $aRegs[1] > $aRegs[3])))) // if positions are simple, is A < B?
-                        ||
-                        ($bSuffixIsSurroundedByBrackets && strpos($sInsertion, ':')
-                            && ( // If we have brackets and we find a colon, we expect a full position or inversion.
-                                (substr($sInsertion, -3) == 'inv' && lovd_getVariantInfo($sInsertion, false, true))
-                                || lovd_getVariantInfo($sInsertion . 'del', false, true)
-                            )
-                        ))) {
+                    } elseif (strpos($sInsertion, ':') !== false) {
+                        // This part has a refseq?
+                        // Require brackets around the insertion and either a valid position or a valid inversion.
+                        $sVariantInInsertion = (substr($sInsertion, -3) == 'inv'? $sInsertion : $sInsertion . 'del');
+                        if (!lovd_getVariantInfo($sVariantInInsertion, false, true)) {
+                            // Not a valid description. We might still be able to fix this, but we don't know right now.
+                            // We could try to tell the difference, but in this case, we'll just store a warning.
+                            $aResponse['warnings']['WSUFFIXFORMAT'] =
+                                'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
+                                ' Failed to recognize a valid sequence or position in "' . $sInsertion . '".';
+                        } else {
+                            // Let's only throw this warning when the above error isn't present.
+                            //  The user may not have meant to send a complex variant.
+                            if (!$bSuffixIsSurroundedByBrackets) {
+                                $aResponse['warnings']['WSUFFIXFORMAT'] =
+                                    'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines. Use square brackets for complex insertions.';
+                            }
+                        }
+
+                    } elseif (preg_match('/^([-*]?[0-9]+([-+][0-9]+)?)_([-*]?[0-9]+([-+]([0-9]+))?)(inv)?$/', $sInsertion, $aRegs)) {
+                        // c.1_2ins10_20 or c.1_2ins10+1_*20-1.
+                        // Instead of writing our own logic here, re-use our own function.
+                        $sVariantInInsertion = $aVariant['prefix'] . '.' . $aRegs[0] . (!empty($aRegs[6])? '' : 'del');
+                        $aVariantInInsertion = lovd_getVariantInfo($sVariantInInsertion, false);
+                        // We can expect any error here. EFALSEUTR, EPOSITIONFORMAT, WPOSITIONFORMAT, a combination, etc.
+                        if ($aVariantInInsertion['errors']) {
+                            $aResponse['errors']['ESUFFIXFORMAT'] =
+                                'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines. ' .
+                                current($aVariantInInsertion['errors']);
+                        } elseif ($aVariantInInsertion['warnings']) {
+                            $aResponse['warnings']['WSUFFIXFORMAT'] =
+                                'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines. ' .
+                                current($aVariantInInsertion['warnings']);
+                        }
+
+                    } else {
+                        // Anything else that we don't recognize (yet).
                         if ($bCheckHGVS) {
                             return false;
                         }
-                        $aResponse['warnings']['WSUFFIXFORMAT'] =
+                        $aResponse['errors']['ESUFFIXFORMAT'] =
                             'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.';
+                    }
+                    if (!$bCaseOK) {
+                        // Wrong case in the suffix.
+                        // Don't add a suggestion when we already throw a WSUFFIXFORMAT because that one contains a better fix.
+                        if (!isset($aResponse['warnings']['WSUFFIXFORMAT'])) {
+                            // Wrong case only.
+                            $aResponse['warnings']['WWRONGCASE'] =
+                                'This is not a valid HGVS description, due to characters being in the wrong case.' .
+                                ($bRefSeqInSuffix? '' : // Don't uppercase the whole suffix when there's a refseq in there.
+                                    ' Please rewrite "' . $aVariant['type'] . $aVariant['suffix'] . '" to "' . $aVariant['type'] . strtoupper($aVariant['suffix']) . '".');
+                        } elseif (!isset($aResponse['warnings']['WWRONGCASE'])) {
+                            // There's already a detailed warning on what to replace. Throw a general warning only.
+                            $aResponse['warnings']['WWRONGCASE'] =
+                                'This is not a valid HGVS description, due to characters being in the wrong case.' .
+                                ' Please check the use of upper- and lowercase characters after "' . $aVariant['type'] . '".';
+                        }
+                    }
+                    if ($bCheckHGVS
+                        && (isset($aResponse['errors']['EINVALIDNUCLEOTIDES'])
+                            || isset($aResponse['errors']['ESUFFIXFORMAT'])
+                            || isset($aResponse['warnings']['WSUFFIXFORMAT'])
+                            || isset($aResponse['warnings']['WWRONGCASE']))) {
+                        return false;
                     }
                 }
             }
@@ -2250,7 +2596,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             // All other variants should get their suffix checked first, before
             //  we warn that it shouldn't be there. Because if it contains a
             //  different type of error, we should report that first.
-            // Case problems are not checked yet. So it's important to do that here.
+            // Case problems in the suffix are not checked yet. So it's important to do that here.
             $bCaseOK = true;
 
             // First check all length issues. Can we parse the suffix into a
@@ -2261,18 +2607,23 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 // g.123_124del2.
                 $nSuffixMinLength = $aVariant['suffix'];
                 $aResponse['warnings']['WSUFFIXFORMAT'] =
-                    'The length of the variant is not formatted following the HGVS guidelines.' .
+                    'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
                     ' Please rewrite "' . $aVariant['suffix'] . '" to "N[' . $nSuffixMinLength . ']".';
 
-            } elseif (preg_match('/^[ACGTNU]+$/i', $aVariant['suffix'])) {
+            } elseif (stripos($aVariant['suffix'], 'ins') === false && preg_match('/^[A-Z]+$/i', $aVariant['suffix'])) {
                 // g.123_124delAA.
                 $bCaseOK = ($aVariant['suffix'] == strtoupper($aVariant['suffix']));
-                if (strpos(strtoupper($aVariant['suffix']), 'U') !== false) {
-                    $aResponse['warnings']['WSUFFIXFORMAT'] =
-                        'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
-                        ' Please rewrite "' . $aVariant['type'] . $aVariant['suffix'] . '" to "' . $aVariant['type'] . str_replace('U', 'T', strtoupper($aVariant['suffix'])) . '".';
-                }
                 $nSuffixMinLength = strlen($aVariant['suffix']);
+
+                // Check if only correct bases have been used.
+                $sUnknownBases = preg_replace(
+                    '/' . $_LIBRARIES['regex_patterns']['bases']['ref'] . '+/',
+                    '',
+                    strtoupper($aVariant['suffix'])
+                );
+                if ($sUnknownBases) {
+                    $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
+                }
 
             } elseif (preg_match('/^\(([0-9]+)(?:_([0-9]+))?\)$/', $aVariant['suffix'], $aRegs)) {
                 // g.123_124del(2), g.(100_200)del(50_60).
@@ -2281,48 +2632,67 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     list($nSuffixMinLength, $nSuffixMaxLength) = array($nSuffixMaxLength, $nSuffixMinLength);
                 }
                 $aResponse['warnings']['WSUFFIXFORMAT'] =
-                    'The length of the variant is not formatted following the HGVS guidelines.' .
+                    'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
                     ' Please rewrite "' . $aVariant['suffix'] . '" to "N[' .
                     (!$nSuffixMaxLength || $nSuffixMinLength == $nSuffixMaxLength?
                         $nSuffixMinLength :
                         '(' . $nSuffixMinLength . '_' . $nSuffixMaxLength . ')') . ']".';
 
-            } elseif (preg_match('/^N\[([0-9]+)_([0-9]+)\]$/i', $aVariant['suffix'], $aRegs)) {
+            } elseif (preg_match('/^([A-Z]+)\[(([0-9]+|\?)_([0-9]+|\?))\]$/', strtoupper($aVariant['suffix']), $aRegs)) {
                 // g.(100_200)delN[50_60].
-                $bCaseOK = (substr($aVariant['suffix'], 0, 1) == 'N');
-                list(, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
-                if ($nSuffixMinLength > $nSuffixMaxLength) {
+                $bCaseOK = ($aVariant['suffix'] == strtoupper($aVariant['suffix']));
+                list(, $sSequence, $nSuffixLength, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
+                if (strpos($nSuffixLength, '?') === false && $nSuffixMinLength > $nSuffixMaxLength) {
                     list($nSuffixMinLength, $nSuffixMaxLength) = array($nSuffixMaxLength, $nSuffixMinLength);
                 }
+                // Check if only correct bases have been used.
+                $sUnknownBases = preg_replace(
+                    '/' . $_LIBRARIES['regex_patterns']['bases']['ref'] . '+/',
+                    '',
+                    $sSequence
+                );
+                if ($sUnknownBases) {
+                    $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', str_split($sUnknownBases)) . '".';
+                }
                 $aResponse['warnings']['WSUFFIXFORMAT'] =
-                    'The length of the variant is not formatted following the HGVS guidelines.' .
-                    ' Please rewrite "' . $aVariant['suffix'] . '" to "N[' .
+                    'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
+                    ' Please rewrite "' . $aVariant['suffix'] . '" to "' . $sSequence . '[' .
                     ($nSuffixMinLength == $nSuffixMaxLength?
                         $nSuffixMinLength :
                         '(' . $nSuffixMinLength . '_' . $nSuffixMaxLength . ')') . ']".';
 
-            } elseif (preg_match('/^N\[([0-9]+|\(([0-9]+)_([0-9]+)\))\]$/i', $aVariant['suffix'], $aRegs)) {
+            } elseif (preg_match('/^([A-Z]+)\[(([0-9]+|\?)|\(([0-9]+|\?)_([0-9]+|\?)\))\]$/', strtoupper($aVariant['suffix']), $aRegs)) {
                 // g.123_124delN[2], g.(100_200)delN[(50_60)].
-                $bCaseOK = (substr($aVariant['suffix'], 0, 1) == 'N');
-                if (count($aRegs) == 2) {
-                    list(, $nSuffixMinLength) = $aRegs;
-                } else {
-                    list(,, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
+                $bCaseOK = ($aVariant['suffix'] == strtoupper($aVariant['suffix']));
+                // Check if only correct bases have been used.
+                $sUnknownBases = preg_replace(
+                    '/' . $_LIBRARIES['regex_patterns']['bases']['ref'] . '+/',
+                    '',
+                    $aRegs[1]
+                );
+                if ($sUnknownBases) {
+                    $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
+                }
 
-                    if ($nSuffixMinLength > $nSuffixMaxLength || $nSuffixMinLength == $nSuffixMaxLength) {
+                if (!isset($aRegs[4])) {
+                    list(,, $nSuffixMinLength) = $aRegs;
+                } else {
+                    // Range was given.
+                    list(, $sSequence, $nSuffixLength,, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
+                    if (strpos($nSuffixLength, '?') === false && $nSuffixMinLength >= $nSuffixMaxLength) {
+                        list($nSuffixMinLength, $nSuffixMaxLength) = array($nSuffixMaxLength, $nSuffixMinLength);
                         $aResponse['warnings']['WSUFFIXFORMAT'] =
-                            'The length of the variant is not formatted following the HGVS guidelines.' .
-                            ' Please rewrite "' . $aVariant['suffix'] . '" to "N[' .
+                            'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
+                            ' Please rewrite "' . $aVariant['suffix'] . '" to "' . $sSequence . '[' .
                             ($nSuffixMinLength == $nSuffixMaxLength?
                                 $nSuffixMinLength :
-                                '(' . $nSuffixMaxLength . '_' . $nSuffixMinLength . ')') . ']".';
-                        list($nSuffixMinLength, $nSuffixMaxLength) = array($nSuffixMaxLength, $nSuffixMinLength);
+                                '(' . $nSuffixMinLength . '_' . $nSuffixMaxLength . ')') . ']".';
                     }
                 }
             }
             if (!$bCaseOK) {
                 if (!isset($aResponse['warnings']['WSUFFIXFORMAT'])) {
-                    // Wrong case only, no U-characters detected.
+                    // Wrong case only.
                     $aResponse['warnings']['WWRONGCASE'] =
                         'This is not a valid HGVS description, due to characters being in the wrong case.' .
                         ' Please rewrite "' . $aVariant['type'] . $aVariant['suffix'] . '" to "' . $aVariant['type'] . strtoupper($aVariant['suffix']) . '".';
@@ -2334,7 +2704,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 }
             }
             if ($bCheckHGVS
-                && (isset($aResponse['warnings']['WSUFFIXFORMAT']) || isset($aResponse['warnings']['WWRONGCASE']))) {
+                // We deliberately ignore WWRONGCASE here, as we want to analyze the suffix even more.
+                && (isset($aResponse['errors']['EINVALIDNUCLEOTIDES'])
+                    || isset($aResponse['warnings']['WSUFFIXFORMAT']))) {
                 return false;
             }
 
@@ -2345,6 +2717,14 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 $nVariantLength = lovd_getVariantLength($aResponse);
                 if (!$nSuffixMaxLength) {
                     $nSuffixMaxLength = $nSuffixMinLength;
+                }
+
+                // To make sure we can handle questionmarks used in lengths, reset them to numeric values.
+                if ($nSuffixMinLength == '?') {
+                    $nSuffixMinLength = 1;
+                }
+                if ($nSuffixMaxLength == '?') {
+                    $nSuffixMaxLength = $nVariantLength;
                 }
 
                 if (isset($aResponse['messages']['IUNCERTAINRANGE'])) {
@@ -2384,7 +2764,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         $aResponse['warnings']['WSUFFIXINVALIDLENGTH'] =
                             'The positions indicate a range longer than the given length of the variant.' .
                             ' Please adjust the positions if the variant length is certain, or remove the variant length.';
-                    } elseif (!isset($aResponse['warnings']['WWRONGCASE'])) {
+                    } else {
                         // Length is not (partially) larger, is not (partially) smaller, so must be equal.
                         // This is where the suffix becomes unnecessary.
                         $aResponse['warnings']['WSUFFIXGIVEN'] = 'Nothing should follow "' . $aVariant['type'] . '".';
@@ -2408,33 +2788,85 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     $aResponse['warnings']['WSUFFIXFORMAT'] =
                         'The length of the variant is not formatted following the HGVS guidelines.' .
                         ' When indicating an uncertain position like this, the length or sequence of the variant must be provided.';
-                } elseif ($aVariant['type'] == 'del' && strpos(strtolower($aVariant['suffix']), 'ins')) {
+                } elseif ($aVariant['type'] == 'del' && stripos($aVariant['suffix'], 'ins')) {
                     // A very special case; deletions where the suffix contains "ins". This is usually a delNinsN case.
                     // We can have this rewritten, but only when the length matches. We'll use a recursive call to find
                     //  out if that's OK. Based on that, we'll devise our answer.
-                    list($sDeleted, $sInserted) = array_map('strtoupper', explode('ins', str_replace('u', 't', strtolower($aVariant['suffix'])), 2));
+                    list($sDeleted, $sInserted) = array_map('strtoupper', explode('ins', strtolower($aVariant['suffix']), 2));
+
+                    // Check for a proper case.
+                    $bCaseOK = ($aVariant['suffix'] == $sDeleted . 'ins' . $sInserted);
+                    if (!$bCaseOK && !isset($aResponse['warnings']['WWRONGCASE'])) {
+                        // Don't overwrite an existing WWRONGCASE, that complained about the variant type itself.
+                        $aResponse['warnings']['WWRONGCASE'] =
+                            'This is not a valid HGVS description, due to characters being in the wrong case.' .
+                            ' Please check the use of upper- and lowercase characters after "' . $aVariant['type'] . '".';
+                    }
+
+                    // Check if only correct bases have been used.
+                    $sUnknownBases = preg_replace(
+                        '/' . $_LIBRARIES['regex_patterns']['bases']['ref'] . '+/',
+                        '',
+                        $sDeleted
+                    ) . preg_replace(
+                        '/' . $_LIBRARIES['regex_patterns']['bases']['alt'] . '+/',
+                        '',
+                        $sInserted
+                    );
+                    if ($sUnknownBases) {
+                        $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
+                    }
+
+                    // Check the deleted part, by checking simply everything before "ins".
                     $aDeletion = lovd_getVariantInfo(str_replace($aVariant['suffix'], $sDeleted, $sVariant), $sTranscriptID);
                     // If the suffix matches the variant's length, or the suffix is unparseable, then we'll get a WSUFFIXGIVEN.
-                    if (count($aDeletion['warnings']) == 1 && isset($aDeletion['warnings']['WSUFFIXGIVEN'])) {
+                    // We'll also allow the presence of a WWRONGCASE.
+                    if (!array_diff(array_keys($aDeletion['warnings']), array('WSUFFIXGIVEN', 'WWRONGCASE'))) {
                         $aResponse['type'] = 'delins';
-                        $bCaseOK = ($aVariant['suffix'] == $sDeleted . 'ins' . $sInserted);
-                        if (!$bCaseOK) {
-                            $aResponse['warnings']['WWRONGCASE'] =
-                                'This is not a valid HGVS description, due to characters being in the wrong case.' .
-                                ' Please check the use of upper- and lowercase characters after "' . $aVariant['type'] . '".';
-                        }
-                        if (strlen($sDeleted) == 1 && strlen($sInserted) == 1 && preg_match('/^[ACGTN]$/', $sDeleted)) {
+                        if (strlen($sDeleted) == 1 && strlen($sInserted) == 1 && preg_match('/^[A-Z]$/', $sDeleted)) {
                             // Another special case; a delins that should have been a substitution.
                             $aResponse['warnings']['WWRONGTYPE'] =
                                 'A deletion-insertion of one base to one base should be described as a substitution.' .
-                                ' Please rewrite "' . $aVariant['type'] . $aVariant['suffix'] . '" to "' . $sDeleted . '>' . $sInserted . '".';
+                                ' Please rewrite "' . substr($sVariant, stripos($sVariant, $aVariant['type'])) . '" to "' . $sDeleted . '>' . $sInserted . '".';
                         } else {
-                            // We're not going to check here if this is a delAinsAT here that should be a shifted ins
-                            //  or even check for insertions that should be dups. VV will handle that if we need it.
-                            // Simply tell them to rewrite it.
-                            $aResponse['warnings']['WSUFFIXFORMAT'] =
-                                'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
-                                ' Please rewrite "' . $aVariant['type'] . $aVariant['suffix'] . '" to "delins' . $sInserted . '".';
+                            // The deleted and/or the inserted part is not 1 base long.
+                            if (function_exists('lovd_fixHGVS')
+                                && strlen($sDeleted) && preg_match('/^[A-Z]+$/', $sDeleted . $sInserted)) {
+                                // We have to intervene here; we can't give a generic warning that may be incorrect,
+                                //  because lovd_fixHGVS() will simply perform the suggested fix and think it's all OK.
+                                //  To make sure that we handle delAinsAA cases and related, activate the part of
+                                //  lovd_fixHGVS() that generates the proper variant description.
+                                $sFixedVariant = lovd_fixHGVS(
+                                    str_ireplace(
+                                        $aVariant['type'] . $aVariant['suffix'],
+                                        $sDeleted . '>' . $sInserted,
+                                        $sVariant
+                                    )
+                                );
+                                $aFixedVariant = lovd_getVariantInfo($sFixedVariant, $sTranscriptID);
+                                if (empty($aFixedVariant['errors']) && empty($aFixedVariant['warnings'])) {
+                                    // The suggested fix is correct HGVS. If the variant is pretty much the same, we
+                                    //  only mention the last part of the variant in our output. Otherwise, the whole
+                                    //  variant description is mentioned.
+                                    if (stripos($sFixedVariant, $aVariant['prefix'] . '.' . $aVariant['positions'] . $aVariant['type']) === 0) {
+                                        // Very similar variants.
+                                        $aResponse['warnings']['WSUFFIXFORMAT'] =
+                                            'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
+                                            ' Please rewrite "' . $aVariant['type'] . $aVariant['suffix'] . '" to "' . strstr($sFixedVariant, $aFixedVariant['type']) . '".';
+                                    } else {
+                                        $aResponse['warnings']['WSUFFIXFORMAT'] =
+                                            'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
+                                            ' Please rewrite "' . $sVariant . '" to "' . $sFixedVariant . '".';
+                                    }
+                                }
+                            }
+
+                            if (!isset($aResponse['warnings']['WSUFFIXFORMAT'])) {
+                                // The above code didn't result in a better fix, so provide our default.
+                                $aResponse['warnings']['WSUFFIXFORMAT'] =
+                                    'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
+                                    ' Please rewrite "' . $aVariant['type'] . $aVariant['suffix'] . '" to "delins' . $sInserted . '".';
+                            }
                         }
 
                     } elseif (count($aDeletion['warnings']) == 1 && isset($aDeletion['warnings']['WSUFFIXINVALIDLENGTH'])) {
@@ -2459,14 +2891,15 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                             'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.';
                     }
                 }
+            }
 
-                if ($bCheckHGVS
-                    && (isset($aResponse['warnings']['WSUFFIXFORMAT'])
-                        || isset($aResponse['warnings']['WSUFFIXGIVEN'])
-                        || isset($aResponse['warnings']['WWRONGCASE'])
-                        || isset($aResponse['warnings']['WWRONGTYPE']))) {
-                    return false;
-                }
+            if ($bCheckHGVS
+                && (isset($aResponse['warnings']['WSUFFIXFORMAT'])
+                    || isset($aResponse['warnings']['WSUFFIXGIVEN'])
+                    || isset($aResponse['warnings']['WSUFFIXINVALIDLENGTH'])
+                    || isset($aResponse['warnings']['WWRONGCASE'])
+                    || isset($aResponse['warnings']['WWRONGTYPE']))) {
+                return false;
             }
         }
     }

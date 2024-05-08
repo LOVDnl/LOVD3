@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-07
- * Modified    : 2023-02-03
- * For LOVD    : 3.0-29
+ * Modified    : 2024-05-01
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Loes Werkman <L.Werkman@LUMC.nl>
  *
@@ -36,7 +36,7 @@
 require_once 'src/inc-lib-init.php'; // For the dependency on lovd_getVariantInfo().
 require_once 'src/inc-lib-variants.php'; // For lovd_fixHGVS().
 
-class FixHGVSTest extends PHPUnit_Framework_TestCase
+class FixHGVSTest extends PHPUnit\Framework\TestCase
 {
 
     /**
@@ -92,6 +92,9 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('c.123—5del', 'c.123-5del'),
             array('c,123del', 'c.123del'),
             array('c.A123C', 'c.123A>C'),
+            array('c.a123u', 'c.123A>T'),
+            array('c.a123uu', 'c.123delinsTT'),
+            array('c.ua123uu', 'c.124A>T'),
             array('c.216G A', 'c.216G>A'), // " " seen in AIPL1_20702822_Jacobson-2011.pdf ("c.216G A")
             array('c.1106G®A', 'c.1106G>A'), // "®" seen in CACNA1F_9662399_Strom-1998.pdf ("1106G®A")
             array('c.220T?C', 'c.220T>C'), // "?" seen in CACNA1F_12111638_Wutz-2002.pdf ("220T?C")
@@ -116,6 +119,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
 
             // U given instead of T.
             array('g.123insAUG', 'g.123insATG'),
+            array('c.123A>U', 'c.123A>T'),
 
             // Variant types should be something else.
             array('g.100_200con400_500', 'g.100_200delins400_500'),
@@ -140,6 +144,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.123A>.', 'g.123del'),
             array('g.123AA>.', 'g.123_124del'),
             array('g.123delAinsG', 'g.123A>G'),
+            array('g.123delAAinsGA', 'g.123A>G'),
             array('g.123delainst', 'g.123A>T'),
             array('g.123delainsu', 'g.123A>T'),
 
@@ -181,6 +186,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.123_124del(2)', 'g.123_124del'),
             array('g.123_124delN[2]', 'g.123_124del'),
             array('g.123delAinsGG', 'g.123delinsGG'),
+            array('g.123delAAinsGG', 'g.123_124delinsGG'),
 
             // Wrongly formatted suffixes.
             array('c.1_2ins[A]', 'c.1_2insA'),
@@ -207,6 +213,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.(100_200)del(50_50)', 'g.(100_200)delN[50]'),
             array('g.(100_200)del(60_50)', 'g.(100_200)delN[(50_60)]'),
             array('g.1_5delins20_10', 'g.1_5delins10_20'),
+            array('g.1AC[20]GT', 'g.1AC[20]GT[1]'),
 
             // Question marks.
             // Note, that some of these variants do *not* need fixing and

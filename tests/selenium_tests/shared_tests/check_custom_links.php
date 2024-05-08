@@ -35,7 +35,7 @@ use \Facebook\WebDriver\WebDriverKeys;
 
 class CheckCustomLinks extends LOVDSeleniumWebdriverBaseTestCase
 {
-    public function setUp ()
+    protected function setUp (): void
     {
         parent::setUp();
         $this->driver->get(ROOT_URL . '/src/variants');

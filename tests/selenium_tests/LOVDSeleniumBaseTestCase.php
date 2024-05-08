@@ -44,7 +44,7 @@ use \Facebook\WebDriver\WebDriverKeys;
 
 
 
-abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestCase
+abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit\Framework\TestCase
 {
     // Base class for all Selenium tests.
 
@@ -379,7 +379,7 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
 
 
 
-    protected function setUp ()
+    protected function setUp (): void
     {
         // This method is called before every test invocation.
         $this->driver = getWebDriverInstance();
