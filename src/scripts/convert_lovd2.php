@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2022-11-22
- * For LOVD    : 3.0-29
+ * Modified    : 2024-05-07
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -244,7 +244,7 @@ function lovd_callJSONService ($sURL, $bArray = false)
     // Call $sURL using lovd_php_file() and return the decoded JSON output.
     // FIXME: Can be replaced by lovd_callMutalyzer().
 
-    $sResponse = @join('', lovd_php_file($sURL));
+    $sResponse = @join('', (lovd_php_file($sURL) ?: []));
     if ($sResponse) {
         return json_decode($sResponse, $bArray);
     }
@@ -866,7 +866,7 @@ function lovd_openLOVD2ExportFile ($aRequest, $aFiles)
             // to use as little memory as possible.
             // Reading the entire file in memory, because we need to detect the encoding and
             // possibly convert.
-            $aData = lovd_php_file($aFiles['LOVD2_export']['tmp_name']);
+            $aData = (lovd_php_file($aFiles['LOVD2_export']['tmp_name']) ?: []);
 
             // Fix encoding problems.
             if ($aRequest['charset'] == 'auto' || !isset($aCharSets[$aRequest['charset']])) {

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2023-07-06
+ * Modified    : 2024-05-07
  * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -775,7 +775,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
 
                 // Open the file using file() to check the line endings, then check the encodings, try to use as little memory as possible.
                 // Reading the entire file in memory, because we need to detect the encoding and possibly convert.
-                $aData = lovd_php_file($_FILES['import']['tmp_name']);
+                $aData = (lovd_php_file($_FILES['import']['tmp_name']) ?: []);
 
                 // Fix encoding problems.
                 if ($_POST['charset'] == 'auto' || !isset($aCharSets[$_POST['charset']])) {

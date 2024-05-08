@@ -19,7 +19,7 @@ print("
 ================================================================================
 Opening local file, using fopen(), should return large positive number:
 ");
-var_dump(strlen(implode("\n", lovd_php_file(__FILE__))));
+var_dump(strlen(implode("\n", (lovd_php_file(__FILE__) ?: []))));
 
 // Check for fopen wrapper settings.
 print("
@@ -55,7 +55,7 @@ print("
 ================================================================================
 Opening remote file over HTTP, using " . ($bFopenWrappers? 'our file() since wrapper is enabled' : 'fsockopen() fallback since wrapper is disabled') . ", should return large positive number:
 ");
-var_dump(strlen(implode("\n", lovd_php_file('http://www.lovd.nl/mirrors/ncbi/NG_list.txt'))));
+var_dump(strlen(implode("\n", (lovd_php_file('http://www.lovd.nl/mirrors/ncbi/NG_list.txt') ?: []))));
 
 // Testing connection to HGNC.
 print("
@@ -110,5 +110,5 @@ print("
 ================================================================================
 Contacting LOVD server over HTTPS, using our file() wrapper, testing SNI_server_name vs peer_name settings, should " . (!$bFopenWrappers? 'fail since fopen wrappers are off' : 'return a large positive number') . ":
 ");
-var_dump(strlen(implode("\n", lovd_php_file('https://www.LOVD.nl/'))));
+var_dump(strlen(implode("\n", (lovd_php_file('https://www.LOVD.nl/') ?: []))));
 ?>

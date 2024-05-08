@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2023-10-18
- * For LOVD    : 3.0-29
+ * Modified    : 2024-05-07
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -626,7 +626,7 @@ class LOVD_API_Submissions
                                 $sName = '';
                                 if (empty($aID['@name'])) {
                                     // We don't have text to go with our PMID. Fetching that info should be fast.
-                                    $sResponse = @join('', lovd_php_file('https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json&id=' . $aID['@accession']));
+                                    $sResponse = @join('', (lovd_php_file('https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json&id=' . $aID['@accession']) ?: []));
                                     if ($sResponse) {
                                         $aPubMedData = json_decode($sResponse, true);
                                         if (isset($aPubMedData['result'][$aID['@accession']]) && isset($aPubMedData['result'][$aID['@accession']]['authors'])) {

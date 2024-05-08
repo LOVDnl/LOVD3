@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2022-11-03
- * For LOVD    : 3.0-29
+ * Modified    : 2024-05-07
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -72,11 +72,11 @@ class LOVD_SystemSetting extends LOVD_Object
                 lovd_errorAdd('location_url', 'Please fill in a correct URL in the \'Database URL\' field, if you want this LOVD installation to be included in the global LOVD listing; otherwise empty the field and disable the \'Include in the global LOVD listing\' setting below.');
             } else {
                 // Validate the URL. Failures are fatal since 3.0-28; before, this was an ajax script.
-                $sResponse = implode('',
+                $sResponse = implode('', (
                     lovd_php_file(
                         $_SETT['check_location_URL'] . '?url=' . rawurlencode(rtrim(
                                 (empty($aData['location_url'])? lovd_getInstallURL() : $aData['location_url']), '/') . '/') .
-                        '&signature=' . rawurlencode($_STAT['signature'])));
+                        '&signature=' . rawurlencode($_STAT['signature'])) ?: []));
                 if (strpos($sResponse, 'http') === 0) {
                     // I don't have a nice feedback system, $aData is not passed as reference.
                     // So we'll just overwrite $_POST in this case.

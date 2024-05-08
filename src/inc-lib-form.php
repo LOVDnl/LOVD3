@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2023-07-06
+ * Modified    : 2024-05-07
  * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -691,8 +691,8 @@ function lovd_recaptchaV2_verify ($sUserResponse)
         // Verify reCaptcha V2 user response with Google.
         $aPostVars = array('secret' => '6Lf_XBsUAAAAAIjtOpBdpVyzwsWYO4AtgmgjxDcb',
             'response' => $sUserResponse);
-        $aResponseRaw = lovd_php_file('https://www.recaptcha.net/recaptcha/api/siteverify', false,
-            http_build_query($aPostVars), 'Accept: application/json');
+        $aResponseRaw = (lovd_php_file('https://www.recaptcha.net/recaptcha/api/siteverify', false,
+            http_build_query($aPostVars), 'Accept: application/json') ?: []);
         // Note: "error-codes" in the response object is optional, even when
         // verification fails.
         $aResponse = json_decode(join('', $aResponseRaw), true);
