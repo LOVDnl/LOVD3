@@ -72,7 +72,7 @@ function lovd_getGeneInfoFromHGNC ($sHgncId, $bRecursion = false)
     $sURL .= $sHgncId;
     $nHGNCID = 0;
     $aOutput = lovd_php_file($sURL, false, '', 'Accept: application/json');
-    if ($aOutput && $aOutput = json_decode(implode('', $aOutput), true)) {
+    if ($aOutput && $aOutput = json_decode(implode($aOutput), true)) {
         if (!empty($aOutput['response']['numFound'])) {
             // 2014-08-06; 3.0-11; HGNC *again* changed their output, and once again we need to adapt quickly.
             $nHGNCID = preg_replace('/[^0-9]+/', '', $aOutput['response']['docs'][0]['hgnc_id']);
@@ -80,7 +80,7 @@ function lovd_getGeneInfoFromHGNC ($sHgncId, $bRecursion = false)
             // Not found, previous symbol of...?
             $sURL = str_replace('/symbol/', '/prev_symbol/', $sURL);
             $aOutput = lovd_php_file($sURL, false, '', 'Accept: application/json');
-            if ($aOutput && $aOutput = json_decode(implode('', $aOutput), true)) {
+            if ($aOutput && $aOutput = json_decode(implode($aOutput), true)) {
                 if (!empty($aOutput['response']['numFound'])) {
                     if ($aOutput['response']['numFound'] == 1 && $bRecursion) {
                         // 2014-08-06; 3.0-11; HGNC *again* changed their output, and once again we need to adapt quickly.
@@ -98,7 +98,7 @@ function lovd_getGeneInfoFromHGNC ($sHgncId, $bRecursion = false)
                     // Not found, maybe it's an alias?
                     $sURL = str_replace('/prev_symbol/', '/alias_symbol/', $sURL);
                     $aOutput = lovd_php_file($sURL, false, '', 'Accept: application/json');
-                    if ($aOutput && $aOutput = json_decode(implode('', $aOutput), true)) {
+                    if ($aOutput && $aOutput = json_decode(implode($aOutput), true)) {
                         if (!empty($aOutput['response']['numFound'])) {
                             if ($aOutput['response']['numFound'] == 1 && $bRecursion) {
                                 // 2014-08-06; 3.0-11; HGNC *again* changed their output, and once again we need to adapt quickly.
@@ -135,7 +135,7 @@ function lovd_getGeneInfoFromHGNC ($sHgncId, $bRecursion = false)
 
     // Now that we have an ID, fetch the data. Use HGNC's fetch API.
     $aOutput = lovd_php_file('http://rest.genenames.org/fetch/hgnc_id/' . $nHGNCID, false, '', 'Accept: application/json');
-    if ($aOutput && $aOutput = json_decode(implode('', $aOutput), true)) {
+    if ($aOutput && $aOutput = json_decode(implode($aOutput), true)) {
         if (!empty($aOutput['response']['numFound'])) {
             $aGene = $aOutput['response']['docs'][0];
         } else {

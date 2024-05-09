@@ -244,7 +244,7 @@ function lovd_callJSONService ($sURL, $bArray = false)
     // Call $sURL using lovd_php_file() and return the decoded JSON output.
     // FIXME: Can be replaced by lovd_callMutalyzer().
 
-    $sResponse = @implode('', (lovd_php_file($sURL) ?: []));
+    $sResponse = @implode(lovd_php_file($sURL) ?: []);
     if ($sResponse) {
         return json_decode($sResponse, $bArray);
     }

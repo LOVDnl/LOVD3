@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2022-11-22
- * For LOVD    : 3.0-29
+ * Modified    : 2024-05-07
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -281,7 +281,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                             ),
                         );
 
-                        $aOutput = json_decode(implode('', $aOutput), true);
+                        $aOutput = json_decode(implode($aOutput), true);
                         $aORCID = array_replace_recursive($aORCID, $aOutput);
                         $nID = $aORCID['orcid-identifier']['path'];
                         $sNameComposed = $aORCID['person']['name']['family-name']['value'] . ', ' . $aORCID['person']['name']['given-names']['value'];
@@ -430,7 +430,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                     );
                     $aStopSpamEmailTemplate = $aStopSpamResponse['email'][0];
 
-                    $aOutput = json_decode(implode('', $aOutput), true);
+                    $aOutput = json_decode(implode($aOutput), true);
                     $aStopSpamResponse = array_replace_recursive($aStopSpamResponse, $aOutput);
                     // Since we might have sent multiple email addresses, we need to apply the array_replace() on each email result.
                     foreach ($aStopSpamResponse['email'] as $nKey => $aEmail) {

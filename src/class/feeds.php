@@ -211,7 +211,7 @@ class Feed
     {
         // Publishes the feed, as currently configured, to STDOUT.
         header('Content-type: application/atom+xml;' . ($this->sType == 'entry'? ' type=entry;' : '') . ' charset=UTF-8');
-        $this->sAtomFeed = str_replace('{{ ENTRY }}', implode('', $this->aFeedEntries), $this->sAtomFeed);
+        $this->sAtomFeed = str_replace('{{ ENTRY }}', implode($this->aFeedEntries), $this->sAtomFeed);
         die($this->sAtomFeed);
     }
 }

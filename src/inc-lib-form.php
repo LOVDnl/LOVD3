@@ -695,7 +695,7 @@ function lovd_recaptchaV2_verify ($sUserResponse)
             http_build_query($aPostVars), 'Accept: application/json') ?: []);
         // Note: "error-codes" in the response object is optional, even when
         // verification fails.
-        $aResponse = json_decode(implode('', $aResponseRaw), true);
+        $aResponse = json_decode(implode($aResponseRaw), true);
         return $aResponse['success'];
     } catch (Exception $e) {
         // FIXME: Consider logging debug information here.

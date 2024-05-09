@@ -72,7 +72,7 @@ $bErrorLabID = ($bError && strpos($zFile['process_errors'], 'Another individual 
 
 $sFormUnschedule     = '<FORM id=\'import_scheduler_unschedule_form\'><INPUT type=\'hidden\' name=\'csrf_token\' value=\'{{CSRF_TOKEN}}\'>Are you sure you want to unschedule this file?</FORM>';
 $sFormSetPriority    = '<FORM id=\'import_scheduler_set_priority_form\'><INPUT type=\'hidden\' name=\'csrf_token\' value=\'{{CSRF_TOKEN}}\'>Please select the priority with which the file will be processed.<BR><SELECT name=\'priority\'>' .
-    implode('', array_map(
+    implode(array_map(
             function ($nID, $sValue) {
                 global $nPriority;
                 return '<OPTION value=\'' . $nID . '\'' . ($nID != $nPriority? '' : ' selected') . '>' . $sValue . '</OPTION>';
@@ -411,7 +411,7 @@ if (ACTION == 'new_screening' && POST) {
         die('alert("Error: Could not rename the original file, and I won\'t try to overwrite it.\n");');
     }
 
-    if (!file_put_contents($_INI['paths']['data_files'] . '/' . $sFile, implode('', $aMetaData))) {
+    if (!file_put_contents($_INI['paths']['data_files'] . '/' . $sFile, implode($aMetaData))) {
         // Hmm.... better try and restore previous situation.
         @unlink($_INI['paths']['data_files'] . '/' . $sFile);
         @rename($_INI['paths']['data_files'] . '/' . $sFile . '.ori', $_INI['paths']['data_files'] . '/' . $sFile);

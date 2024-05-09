@@ -72,11 +72,11 @@ class LOVD_SystemSetting extends LOVD_Object
                 lovd_errorAdd('location_url', 'Please fill in a correct URL in the \'Database URL\' field, if you want this LOVD installation to be included in the global LOVD listing; otherwise empty the field and disable the \'Include in the global LOVD listing\' setting below.');
             } else {
                 // Validate the URL. Failures are fatal since 3.0-28; before, this was an ajax script.
-                $sResponse = implode('', (
+                $sResponse = implode(
                     lovd_php_file(
                         $_SETT['check_location_URL'] . '?url=' . rawurlencode(rtrim(
                                 (empty($aData['location_url'])? lovd_getInstallURL() : $aData['location_url']), '/') . '/') .
-                        '&signature=' . rawurlencode($_STAT['signature'])) ?: []));
+                        '&signature=' . rawurlencode($_STAT['signature'])) ?: []);
                 if (strpos($sResponse, 'http') === 0) {
                     // I don't have a nice feedback system, $aData is not passed as reference.
                     // So we'll just overwrite $_POST in this case.
@@ -155,7 +155,7 @@ class LOVD_SystemSetting extends LOVD_Object
                     'Accept: application/json',
                 ));
             if ($aResponse) {
-                $aResponse = json_decode(implode('', $aResponse), true);
+                $aResponse = json_decode(implode($aResponse), true);
             }
             if (!$aResponse || !isset($aResponse['api_key_pass_check']) || !isset($aResponse['api_key_status'])) {
                 lovd_errorAdd('md_apikey', 'While testing the given MobiDetails API key, got an error from MobiDetails.');
