@@ -29,7 +29,7 @@
  *
  *************/
 
-class LOVDScreenshotListener implements PHPUnit_Framework_TestListener
+class LOVDScreenshotListener implements PHPUnit\Framework\TestListener
 {
     // Takes a screenshot on failing tests.
     // Based on PHPUnit's Selenium2TestCase/ScreenshotListener.php
@@ -53,7 +53,7 @@ class LOVDScreenshotListener implements PHPUnit_Framework_TestListener
 
 
 
-    public function addError (PHPUnit_Framework_Test $test, Exception $e, $time)
+    public function addError (PHPUnit\Framework\Test $test, Exception $e, $time)
     {
         $this->storeAScreenshot($test, $e);
     }
@@ -62,7 +62,7 @@ class LOVDScreenshotListener implements PHPUnit_Framework_TestListener
 
 
 
-    public function addFailure (PHPUnit_Framework_Test $test, PHPUnit_Framework_AssertionFailedError $e, $time)
+    public function addFailure (PHPUnit\Framework\Test $test, PHPUnit\Framework\AssertionFailedError $e, $time)
     {
         $this->storeAScreenshot($test, $e);
     }
@@ -71,7 +71,7 @@ class LOVDScreenshotListener implements PHPUnit_Framework_TestListener
 
 
 
-    private function storeAScreenshot (PHPUnit_Framework_Test $test, $e)
+    private function storeAScreenshot (PHPUnit\Framework\Test $test, $e)
     {
         // Store screenshot. Also try to print some information on the error.
         // Unfortunately, we don't seem to have access to the precise location
@@ -101,7 +101,7 @@ class LOVDScreenshotListener implements PHPUnit_Framework_TestListener
 
 
 
-    public function endTestSuite (PHPUnit_Framework_TestSuite $suite)
+    public function endTestSuite (PHPUnit\Framework\TestSuite $suite)
     {
         // Normally run at the end of the test suite, but PHPUnit decides that
         //  every file in our suite is a suite in itself. So, this is run after
@@ -115,13 +115,13 @@ class LOVDScreenshotListener implements PHPUnit_Framework_TestListener
 
 
 
-    // Really dumb, but since PHPUnit_Framework_TestListener doesn't
+    // Really dumb, but since PHPUnit\Framework\TestListener doesn't
     //  implement these, but does define them, we should implement them.
     // Yes, it makes no sense.
-    public function addIncompleteTest (PHPUnit_Framework_Test $test, Exception $e, $time) {}
-    public function addSkippedTest (PHPUnit_Framework_Test $test, Exception $e, $time) {}
-    public function addRiskyTest (PHPUnit_Framework_Test $test, Exception $e, $time) {}
-    public function startTest (PHPUnit_Framework_Test $test) {}
-    public function endTest (PHPUnit_Framework_Test $test, $time) {}
-    public function startTestSuite (PHPUnit_Framework_TestSuite $suite) {}
+    public function addIncompleteTest (PHPUnit\Framework\Test $test, Exception $e, $time) {}
+    public function addSkippedTest (PHPUnit\Framework\Test $test, Exception $e, $time) {}
+    public function addRiskyTest (PHPUnit\Framework\Test $test, Exception $e, $time) {}
+    public function startTest (PHPUnit\Framework\Test $test) {}
+    public function endTest (PHPUnit\Framework\Test $test, $time) {}
+    public function startTestSuite (PHPUnit\Framework\TestSuite $suite) {}
 }

@@ -34,7 +34,7 @@ use \Facebook\WebDriver\WebDriverBy;
 
 class CreateDiseaseIVATest extends LOVDSeleniumWebdriverBaseTestCase
 {
-    protected function setUp ()
+    protected function setUp (): void
     {
         // Test if we have what we need for this test. If not, skip this test.
         parent::setUp();

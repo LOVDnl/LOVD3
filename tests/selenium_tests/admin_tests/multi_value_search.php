@@ -35,7 +35,7 @@ use \Facebook\WebDriver\WebDriverBy;
 
 class MultiValueSearchTest extends LOVDSeleniumWebdriverBaseTestCase
 {
-    protected function setUp ()
+    protected function setUp (): void
     {
         parent::setUp();
         $this->driver->get(ROOT_URL . '/src/genes/NOC2L');

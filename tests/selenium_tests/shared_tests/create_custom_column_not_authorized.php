@@ -34,7 +34,7 @@ use \Facebook\WebDriver\WebDriverBy;
 
 class CreateCustomColumnNotAuthorizedTest extends LOVDSeleniumWebdriverBaseTestCase
 {
-    protected function setUp ()
+    protected function setUp (): void
     {
         parent::setUp();
         $this->driver->get(ROOT_URL . '/src/columns?create');
