@@ -626,7 +626,7 @@ class LOVD_API_Submissions
                                 $sName = '';
                                 if (empty($aID['@name'])) {
                                     // We don't have text to go with our PMID. Fetching that info should be fast.
-                                    $sResponse = @join('', (lovd_php_file('https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json&id=' . $aID['@accession']) ?: []));
+                                    $sResponse = @implode('', (lovd_php_file('https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json&id=' . $aID['@accession']) ?: []));
                                     if ($sResponse) {
                                         $aPubMedData = json_decode($sResponse, true);
                                         if (isset($aPubMedData['result'][$aID['@accession']]) && isset($aPubMedData['result'][$aID['@accession']]['authors'])) {

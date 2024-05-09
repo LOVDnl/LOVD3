@@ -244,7 +244,7 @@ function lovd_callJSONService ($sURL, $bArray = false)
     // Call $sURL using lovd_php_file() and return the decoded JSON output.
     // FIXME: Can be replaced by lovd_callMutalyzer().
 
-    $sResponse = @join('', (lovd_php_file($sURL) ?: []));
+    $sResponse = @implode('', (lovd_php_file($sURL) ?: []));
     if ($sResponse) {
         return json_decode($sResponse, $bArray);
     }
@@ -296,7 +296,7 @@ function lovd_convertDBID ($sLOVD2DBID)
     $nParts = count($aChunks);
     if ($nParts > 1 && ctype_digit($aChunks[$nParts-1])) {
         $aChunks[$nParts-1] = '0' . $aChunks[$nParts-1];
-        return join('_', $aChunks);
+        return implode('_', $aChunks);
     }
     return $sLOVD2DBID;
 }
@@ -438,7 +438,7 @@ function lovd_convertScrTech ($sLOVD2ScreeningTechniques)
         return $sTechnique;
     }, explode(';', $sLOVD2ScreeningTechniques));
 
-    return join(';', $aTechniques);
+    return implode(';', $aTechniques);
 }
 
 

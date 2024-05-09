@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2023-06-29
+ * Modified    : 2024-05-07
  * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -79,7 +79,7 @@ class LOVD_Screening extends LOVD_Custom
         if ($_AUTH) {
             // Construct list of user IDs for current user and users who share access with them.
             $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
-            $sOwnerIDsSQL = join(', ', $aOwnerIDs);
+            $sOwnerIDsSQL = implode(', ', $aOwnerIDs);
         } else {
             $sOwnerIDsSQL = '';
         }

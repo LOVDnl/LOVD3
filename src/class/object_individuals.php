@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2023-06-29
+ * Modified    : 2024-05-07
  * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -108,7 +108,7 @@ class LOVD_Individual extends LOVD_Custom
         if ($_AUTH) {
             // Construct list of user IDs for current user and users who share access with them.
             $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
-            $sOwnerIDsSQL = join(', ', $aOwnerIDs);
+            $sOwnerIDsSQL = implode(', ', $aOwnerIDs);
         } else {
             $sOwnerIDsSQL = '';
         }
@@ -234,7 +234,7 @@ class LOVD_Individual extends LOVD_Custom
 
             $this->aSQLViewList['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (i.id = p.individualid';
             if (!$_AUTH || $_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) { // This check assumes lovd_isAuthorized() has already been called for gene-specific overviews.
-                $this->aSQLViewList['FROM'] .= ' AND (p.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR (p.created_by = "' . $_AUTH['id'] . '" OR p.owned_by IN (' . join(', ', array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL))) . '))') . ')';
+                $this->aSQLViewList['FROM'] .= ' AND (p.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR (p.created_by = "' . $_AUTH['id'] . '" OR p.owned_by IN (' . implode(', ', array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL))) . '))') . ')';
             }
             $this->aSQLViewList['FROM'] .= ')';
 
