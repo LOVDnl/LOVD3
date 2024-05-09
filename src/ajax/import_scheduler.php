@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-11-16
- * Modified    : 2022-11-22
- * For LOVD    : 3.0-29
+ * Modified    : 2024-05-07
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -72,7 +72,7 @@ $bErrorLabID = ($bError && strpos($zFile['process_errors'], 'Another individual 
 
 $sFormUnschedule     = '<FORM id=\'import_scheduler_unschedule_form\'><INPUT type=\'hidden\' name=\'csrf_token\' value=\'{{CSRF_TOKEN}}\'>Are you sure you want to unschedule this file?</FORM>';
 $sFormSetPriority    = '<FORM id=\'import_scheduler_set_priority_form\'><INPUT type=\'hidden\' name=\'csrf_token\' value=\'{{CSRF_TOKEN}}\'>Please select the priority with which the file will be processed.<BR><SELECT name=\'priority\'>' .
-    implode('', array_map(
+    implode(array_map(
             function ($nID, $sValue) {
                 global $nPriority;
                 return '<OPTION value=\'' . $nID . '\'' . ($nID != $nPriority? '' : ' selected') . '>' . $sValue . '</OPTION>';
@@ -361,7 +361,7 @@ if (ACTION == 'new_screening' && POST) {
     // Unfortunately, we cannot easily just remove or edit a line.
     // We have to loop through the contents, edit in memory, and overwrite the entire file.
     // This will take a lot of memory, but oh well.
-    $aMetaData = file($_INI['paths']['data_files'] . '/' . $sFile); // Leaving line endings on purpose.
+    $aMetaData = (file($_INI['paths']['data_files'] . '/' . $sFile) ?: []); // Leaving line endings on purpose.
     $sSection = '';
     $bHeaderPrevRow = false;
     $bSuccess = false;
@@ -411,7 +411,7 @@ if (ACTION == 'new_screening' && POST) {
         die('alert("Error: Could not rename the original file, and I won\'t try to overwrite it.\n");');
     }
 
-    if (!file_put_contents($_INI['paths']['data_files'] . '/' . $sFile, implode('', $aMetaData))) {
+    if (!file_put_contents($_INI['paths']['data_files'] . '/' . $sFile, implode($aMetaData))) {
         // Hmm.... better try and restore previous situation.
         @unlink($_INI['paths']['data_files'] . '/' . $sFile);
         @rename($_INI['paths']['data_files'] . '/' . $sFile . '.ori', $_INI['paths']['data_files'] . '/' . $sFile);

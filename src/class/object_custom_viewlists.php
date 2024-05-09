@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2023-01-27
- * For LOVD    : 3.0-29
+ * Modified    : 2024-05-07
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -274,7 +274,7 @@ class LOVD_CustomViewList extends LOVD_Object
                         if ($_AUTH) {
                             // Construct list of user IDs for current user and users who share access with them.
                             $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
-                            $sOwnerIDsSQL = join(', ', $aOwnerIDs);
+                            $sOwnerIDsSQL = implode(', ', $aOwnerIDs);
                         } else {
                             $sOwnerIDsSQL = '';
                         }
@@ -483,7 +483,7 @@ class LOVD_CustomViewList extends LOVD_Object
                             if ($_AUTH) {
                                 // Construct list of user IDs for current user and users who share access with them.
                                 $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
-                                $sOwnerIDsSQL = join(', ', $aOwnerIDs);
+                                $sOwnerIDsSQL = implode(', ', $aOwnerIDs);
                             } else {
                                 $sOwnerIDsSQL = '';
                             }
@@ -886,7 +886,7 @@ class LOVD_CustomViewList extends LOVD_Object
                 $sSelectFields[] = '`' . $sName . '`';
             }
         }
-        return join(', ', $sSelectFields);
+        return implode(', ', $sSelectFields);
     }
 
 

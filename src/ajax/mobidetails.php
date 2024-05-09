@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-10-01
- * Modified    : 2022-11-22
- * For LOVD    : 3.0-29
+ * Modified    : 2024-05-07
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -121,7 +121,7 @@ if (ACTION == 'check') {
     $aJSON = false;
     $aJSONResponse = lovd_php_file('https://mobidetails.iurc.montp.inserm.fr/MD/api/variant/exists/' . rawurlencode($sVOG));
     if ($aJSONResponse !== false) {
-        $aJSON = json_decode(implode('', $aJSONResponse), true);
+        $aJSON = json_decode(implode($aJSONResponse), true);
     }
 
     if (!empty($aJSON['mobidetails_id']) && !empty($aJSON['url'])) {
@@ -178,7 +178,7 @@ if (ACTION == 'confirm' && POST) {
             'Accept: application/json',
         ));
     if ($aJSONResponse !== false) {
-        $aJSON = json_decode(implode('', $aJSONResponse), true);
+        $aJSON = json_decode(implode($aJSONResponse), true);
     }
 
     if (!empty($aJSON['mobidetails_id']) && !empty($aJSON['url'])) {
@@ -196,7 +196,7 @@ if (ACTION == 'confirm' && POST) {
     // Display the error, with just a close button.
     print('
     $("#mobidetails_dialog").html("Error while requesting MobiDetails to annotate this variant.<BR>' .
-        implode('', array_map(function ($sKey, $sVal) {
+        implode(array_map(function ($sKey, $sVal) {
             return $sKey . ': ' . $sVal . '<BR>';
         }, array_keys($aJSON), array_values($aJSON))) . '");
     

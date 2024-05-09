@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2024-01-24
+ * Modified    : 2024-05-07
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -501,8 +501,10 @@ if (!empty($aVariants)) {
                 }
                 if (empty($aRefseqsTranscript)) {
                     // The HGNC does not have a transcript accession for this gene. Get one from LOVD.
-                    $sGeneLink = @substr($sGeneLink = @implode("\n", @lovd_php_file('http://www.lovd.nl/' . $sSymbol . '?getURL')), 0, @strpos($sGeneLink, "\n"));
-                    $aGeneInfo = @lovd_php_file($sGeneLink . 'api/rest.php/genes/' . $sSymbol);
+                    $sGeneLink = @substr($sGeneLink = implode("\n", (lovd_php_file('http://www.lovd.nl/' . $sSymbol . '?getURL') ?: [])), 0, strpos($sGeneLink, "\n"));
+                    if ($sGeneLink) {
+                        $aGeneInfo = @lovd_php_file($sGeneLink . 'api/rest.php/genes/' . $sSymbol);
+                    }
                     if (!empty($aGeneInfo) && is_array($aGeneInfo)) {
                         foreach ($aGeneInfo as $sLine) {
                             preg_match('/refseq_mrna[\s]*:[\s]*([\S]+\.[\S]+)/', $sLine, $aMatches);

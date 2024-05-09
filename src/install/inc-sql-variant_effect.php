@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-04-13
- * Modified    : 2019-08-28
- * For LOVD    : 3.0-22
+ * Modified    : 2024-05-07
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -42,7 +42,7 @@ foreach ($aEffectSymbols as $k1 => $v1) {
 }
 
 // Generate string of variant effect symbols to be used as part of SQL insert statement.
-$sEffectValuesSQL = join(', ', array_map(
+$sEffectValuesSQL = implode(', ', array_map(
     function ($sID, $sName) {
         return '("' . $sID . '", "' . $sName . '")';
     },

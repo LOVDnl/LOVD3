@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-09
- * Modified    : 2023-12-22
+ * Modified    : 2024-05-07
  * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -200,7 +200,7 @@ class Feed
         }
 
         $sDate = date('c', $t);
-        return($sDate);
+        return $sDate;
     }
 
 
@@ -211,7 +211,7 @@ class Feed
     {
         // Publishes the feed, as currently configured, to STDOUT.
         header('Content-type: application/atom+xml;' . ($this->sType == 'entry'? ' type=entry;' : '') . ' charset=UTF-8');
-        $this->sAtomFeed = str_replace('{{ ENTRY }}', implode('', $this->aFeedEntries), $this->sAtomFeed);
+        $this->sAtomFeed = str_replace('{{ ENTRY }}', implode($this->aFeedEntries), $this->sAtomFeed);
         die($this->sAtomFeed);
     }
 }

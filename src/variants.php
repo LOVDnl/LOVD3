@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2024-01-25
+ * Modified    : 2024-05-07
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1893,7 +1893,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
                                         // Get NG's first.
                                         // FIXME; Implement cache, so we don't request this file for every gene.
-                                        $aLines = lovd_php_file('http://www.lovd.nl/mirrors/ncbi/NG_list.txt');
+                                        $aLines = (lovd_php_file('http://www.lovd.nl/mirrors/ncbi/NG_list.txt') ?: []);
                                         foreach ($aLines as $sLine) {
                                             if (preg_match('/(\w+)\s+(NG_\d+\.\d+)/', $sLine, $aMatches)) {
                                                 $aNgMapping[$aMatches[1]] = $aMatches[2];
