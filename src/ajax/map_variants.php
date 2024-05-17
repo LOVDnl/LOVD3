@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2024-05-07
+ * Modified    : 2024-05-17
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -296,13 +296,14 @@ if (!empty($_GET['variantid'])) {
                              'FROM ' . TABLE_VARIANTS . ' AS vog, (' .
                                  'SELECT chromosome, position_g_start ' .
                                  'FROM ' . TABLE_VARIANTS . ' ' .
-                                 'WHERE mapping_flags & ' . MAPPING_ALLOW . ' AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE | MAPPING_IN_PROGRESS) . ' AND position_g_start IS NOT NULL AND position_g_start != 0 ' .
+                                 'WHERE mapping_flags & ' . MAPPING_ALLOW . ' AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE | MAPPING_IN_PROGRESS) .
+                                 '  AND position_g_start IS NOT NULL AND position_g_start NOT IN (0, 1) AND position_g_end != 4294967295 ' .
                                  (empty($aArgs)? '' : 'AND chromosome = ? AND position_g_start >= ? ') .
                                  ($_SESSION['mapping']['todo'] > 10000? '' : 'ORDER BY RAND() ') .
                                  'LIMIT 1' .
                              ') AS first ' .
-                             'WHERE vog.chromosome = first.chromosome AND vog.position_g_start BETWEEN first.position_g_start AND first.position_g_start + ' . $nRange . ' ' .
-                                 'AND vog.mapping_flags & ' . MAPPING_ALLOW . ' AND NOT vog.mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE | MAPPING_IN_PROGRESS) . ' ' .
+                             'WHERE vog.chromosome = first.chromosome AND vog.position_g_start BETWEEN first.position_g_start AND first.position_g_start + ' . $nRange .
+                             '  AND vog.position_g_end != 4294967295 AND vog.mapping_flags & ' . MAPPING_ALLOW . ' AND NOT vog.mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE | MAPPING_IN_PROGRESS) . ' ' .
                              'ORDER BY vog.position_g_start ' .
                              'LIMIT ' . $nMaxVariants,
                              $aArgs)->fetchAllAssoc();
