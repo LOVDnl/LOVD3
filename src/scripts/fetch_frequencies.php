@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2013-08-11
- * Modified    : 2023-02-03
- * For LOVD    : 3.0-29
+ * Modified    : 2024-05-17
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -48,7 +48,8 @@ $nToFetch = $_DB->q('
     SELECT COUNT(*)
     FROM ' . TABLE_VARIANTS . '
     WHERE average_frequency IS NULL AND chromosome IS NOT NULL AND position_g_start IS NOT NULL
-      AND position_g_start != 0 AND position_g_end IS NOT NULL AND position_g_end != 0')->fetchColumn();
+      AND position_g_start NOT IN (0,1) AND position_g_end != 4294967295
+      ')->fetchColumn();
 if (!$nToFetch) {
     print('All done.');
     $_T->printFooter();
@@ -68,7 +69,7 @@ while ($nDone < $nToFetch && $sVariants) {
         SELECT chromosome, position_g_start, position_g_end, `VariantOnGenome/DNA` AS DNA
         FROM ' . TABLE_VARIANTS . '
         WHERE average_frequency IS NULL AND chromosome IS NOT NULL AND position_g_start IS NOT NULL
-          AND position_g_start != 0 AND position_g_end IS NOT NULL AND position_g_end != 0
+          AND position_g_start NOT IN (0,1) AND position_g_end != 4294967295
         LIMIT ' . $nLimit)->fetchAllAssoc();
     if ($aVariants === array()) {
         // No results.
