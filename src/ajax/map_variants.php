@@ -177,7 +177,7 @@ if (!isset($_SESSION['mapping']['total_todo'])) {
     $_SESSION['mapping']['total_todo'] = 0;
 }
 // 0.5 sec for 1M variants. Add index to mapping_flags and/or position_g_start to speed up?
-$_SESSION['mapping']['todo'] = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE mapping_flags & ' . MAPPING_ALLOW . ' AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE) . ' AND position_g_start IS NOT NULL AND position_g_start != 0')->fetchColumn();
+$_SESSION['mapping']['todo'] = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE mapping_flags & ' . MAPPING_ALLOW . ' AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE) . ' AND position_g_start IS NOT NULL AND position_g_start NOT IN (0, 1) AND position_g_end != 4294967295')->fetchColumn();
 if ($_SESSION['mapping']['todo'] > $_SESSION['mapping']['total_todo']) {
     // We didn't have a total set yet, or more variants were added in the process that now need to be mapped as well.
     $_SESSION['mapping']['total_todo'] = $_SESSION['mapping']['todo'];
