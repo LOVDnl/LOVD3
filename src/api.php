@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2024-04-02
+ * Modified    : 2024-05-17
  * For LOVD    : 3.0-30
  *
  * Supported URIs:
@@ -198,7 +198,7 @@ if ($sDataType == 'variants') {
                   LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid)
                   LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)
                   LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id)') . '
-                WHERE t.geneid = ? AND vog.statusid >= ? AND vog.position_g_start != 0 AND vog.position_g_start IS NOT NULL' .
+                WHERE t.geneid = ? AND vog.statusid >= ? AND vog.position_g_start IS NOT NULL AND vog.position_g_start NOT IN (0,1) AND vog.position_g_end != 4294967295' .
                    (!$bQueryPMID? '' : ' AND (`' . implode('` LIKE "%:' . $nPMID . '}%" OR `', $aPMIDCols) . '` LIKE "%:' . $nPMID . '}%") ') . '
                 GROUP BY vog.`VariantOnGenome/DNA` ORDER BY vog.position_g_start, vog.position_g_end', array($sSymbol, STATUS_MARKED))->fetchAllAssoc();
             $n = count($aData);
