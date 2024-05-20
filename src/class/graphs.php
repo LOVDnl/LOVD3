@@ -471,11 +471,15 @@ class LOVD_Graphs
         $aTypes =
             array(
                 ''       => array('Unknown', '#000'),
+                ';'      => array('Compound', '#600'),
+                '='      => array('No change', '#0AC'),
                 'del'    => array('Deletions', '#A00'),
                 'delins' => array('Deletion-Insertions', '#95F'),
                 'dup'    => array('Duplications', '#F90'),
                 'ins'    => array('Insertions', '#090'),
-                'inv'    => array('Inversions', '#0AC'),
+                'inv'    => array('Inversions', '#969'),
+                'met'    => array('Methylation', '#FD6'),
+                'repeat' => array('Repeat', '#69F'),
                 'subst'  => array('Substitutions', '#00C'),
             );
 
@@ -507,6 +511,12 @@ class LOVD_Graphs
             }
         } else {
             // Using list of variant IDs.
+        }
+
+        // Map '?' to ''.
+        if (isset($aData['?'])) {
+            $aData[''] += $aData['?'];
+            unset($aData['?']);
         }
 
         // Format $aData.
