@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2024-05-17
+ * Modified    : 2024-05-20
  * For LOVD    : 3.0-30
  *
  * Supported URIs:
@@ -293,7 +293,10 @@ if ($sDataType == 'variants') {
                  GROUP_CONCAT(DISTINCT LEFT(vog.effectid, 1) SEPARATOR ";") AS effect_reported,
                  GROUP_CONCAT(DISTINCT RIGHT(vog.effectid, 1) SEPARATOR ";") AS effect_concluded,
                  vog.`VariantOnGenome/DNA`,
-                 GROUP_CONCAT(DISTINCT ' . ($nRefSeqID? '' : 't.id_ncbi, ":", ') . 'REPLACE(vot.`VariantOnTranscript/DNA`, ";;", ";")
+                 GROUP_CONCAT(DISTINCT ' . ($nRefSeqID? '' : '
+                   IF((vot.position_c_start_intron IS NOT NULL AND vot.position_c_start_intron != 0) OR (vot.position_c_end_intron IS NOT NULL AND vot.position_c_end_intron != 0),
+                     CONCAT(c.`' . $_CONF['refseq_build'] . '_id_ncbi`, "(", t.id_ncbi, "):"),
+                     CONCAT(t.id_ncbi, ":")), ') . 'REPLACE(vot.`VariantOnTranscript/DNA`, ";;", ";")
                    ORDER BY t.id_ncbi SEPARATOR ";;") AS `__VariantOnTranscript/DNA`,
                  GROUP_CONCAT(DISTINCT t.id_ncbi, "##", vot.`VariantOnTranscript/DNA`, "##", IFNULL(vot.`VariantOnTranscript/RNA`, "r.(?)"), "##", IFNULL(vot.`VariantOnTranscript/Protein`, "p.?")
                    ORDER BY t.id_ncbi SEPARATOR "$$") AS `__variants_on_transcripts`,
@@ -306,6 +309,7 @@ if ($sDataType == 'variants') {
                FROM ' . TABLE_TRANSCRIPTS . ' AS t
                  INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
                  INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id)
+                 INNER JOIN ' . TABLE_CHROMOSOMES . ' AS c ON (vog.chromosome = c.name)
                  LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid)
                  LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)
                  LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id AND i.statusid >= ' . STATUS_MARKED . ')
