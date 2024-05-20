@@ -633,8 +633,6 @@ class LOVD_Graphs
                 $sType = ';';
             } elseif (strpos($sProteinDescription, '=') !== false) {
                 $sType = 'silent';
-            } elseif (!$sProteinDescription || $sProteinDescription == '-' || strpos($sProteinDescription, '?') !== false) {
-                $sType = '';
             } elseif (strpos($sProteinDescription, 'fs') !== false) {
                 $sType = 'frameshift';
             } elseif (preg_match('/[\*X]/', $sProteinDescription)) {
@@ -662,6 +660,7 @@ class LOVD_Graphs
             } elseif (preg_match('/dup/', $sProteinDescription)) {
                 $sType = 'inframedup';
             } else {
+                // This includes empty protein changes (non-coding transcripts), '-', and 'p.?'.
                 $sType = '';
             }
 
