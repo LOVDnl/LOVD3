@@ -596,9 +596,10 @@ class LOVD_Graphs
                 'inframedup'    => array('In frame duplications', '#F90'),
                 'inframeins'    => array('In frame insertions', '#090'),
                 'missense'      => array('Missense changes', '#00C'),
-                'no_protein'    => array('No protein produced', '#600'),
+                'no_protein'    => array('No protein produced', '#69F'),
                 'silent'        => array('Silent changes', '#0AC'),
                 'stop'          => array('Stop changes', '#969'),
+                ';'             => array('Compound', '#600'),
                 ''              => array('Unknown', '#000'),
             );
 
@@ -628,7 +629,9 @@ class LOVD_Graphs
             // However, make sure that the 'fs' check is always done before the missense and the stop-check, to prevent false positives.
             // Also, del, dup and ins checks must be done before missense checks.
             // The missense check is done a bit later, after more simper comparisons.
-            if (strpos($sProteinDescription, '=') !== false) {
+            if (strpos($sProteinDescription, ';') !== false || strpos($sProteinDescription, ',') !== false) {
+                $sType = ';';
+            } elseif (strpos($sProteinDescription, '=') !== false) {
                 $sType = 'silent';
             } elseif (!$sProteinDescription || $sProteinDescription == '-' || strpos($sProteinDescription, '?') !== false) {
                 $sType = '';
