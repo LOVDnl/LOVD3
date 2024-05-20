@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2024-05-07
+ * Modified    : 2024-05-20
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1403,7 +1403,7 @@ class LOVD_API_GA4GH
                             (SELECT
                                GROUP_CONCAT(
                                  CONCAT(
-                                   t.geneid, "##", t.id_ncbi, "##", REPLACE(vot.`VariantOnTranscript/DNA`, "||", "|"), "##", vot.`VariantOnTranscript/RNA`, "##", t.id_protein_ncbi, "##", vot.`VariantOnTranscript/Protein`)
+                                   t.geneid, "##", t.id_ncbi, "##", REPLACE(vot.`VariantOnTranscript/DNA`, "||", "|"), "##", IFNULL(vot.`VariantOnTranscript/RNA`, "r.(?)"), "##", t.id_protein_ncbi, "##", IFNULL(vot.`VariantOnTranscript/Protein`, "p.?"))
                                  SEPARATOR "$$")
                              FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot
                                INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
