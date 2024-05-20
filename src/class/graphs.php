@@ -339,10 +339,10 @@ class LOVD_Graphs
         $aTypes =
             array(
                 '5UTR'     => array('5\'UTR', '#F90'),        // Orange.
-                'start'    => array('Start codon', '#600'),   // Dark dark red.
+                'start'    => array('Start codon', '#600'),   // Dark, dark red.
                 'coding'   => array('Coding', '#00C'),        // Blue.
                 'splice'   => array('Splice region', '#A00'), // Dark red.
-                'intron'   => array('Intron', '#0AC'),        // Light blue.
+                'intron'   => array('Intron', '#0AC'),        // Teal.
                 '3UTR'     => array('3\'UTR', '#090'),        // Green.
                 'multiple' => array('Multiple', '#95F'),      // Purple.
                 ''         => array('Unknown', '#000'),       // Black.
@@ -470,17 +470,17 @@ class LOVD_Graphs
         // Keys need to be renamed.
         $aTypes =
             array(
-                ''       => array('Unknown', '#000'),
-                ';'      => array('Compound', '#600'),
-                '='      => array('No change', '#0AC'),
-                'del'    => array('Deletions', '#A00'),
-                'delins' => array('Deletion-Insertions', '#95F'),
-                'dup'    => array('Duplications', '#F90'),
-                'ins'    => array('Insertions', '#090'),
-                'inv'    => array('Inversions', '#969'),
-                'met'    => array('Methylation', '#FD6'),
-                'repeat' => array('Repeat', '#69F'),
-                'subst'  => array('Substitutions', '#00C'),
+                ''       => array('Unknown', '#000'),             // Black.
+                ';'      => array('Compound', '#600'),            // Dark, dark red.
+                '='      => array('No change', '#0AC'),           // Teal.
+                'del'    => array('Deletions', '#A00'),           // Dark red.
+                'delins' => array('Deletion-Insertions', '#95F'), // Purple.
+                'dup'    => array('Duplications', '#F90'),        // Orange.
+                'ins'    => array('Insertions', '#090'),          // Green.
+                'inv'    => array('Inversions', '#969'),          // Darker purple.
+                'met'    => array('Methylation', '#FD6'),         // Light yellow.
+                'repeat' => array('Repeat', '#69F'),              // Light blue.
+                'subst'  => array('Substitutions', '#00C'),       // Blue.
             );
 
         if (!is_array($Data)) {
@@ -590,17 +590,17 @@ class LOVD_Graphs
         // Keys need to be renamed.
         $aTypes =
             array(
-                'frameshift'    => array('Frameshifts', '#FD6'),
-                'inframedel'    => array('In frame deletions', '#A00'),
-                'inframedelins' => array('In frame indels', '#95F'),
-                'inframedup'    => array('In frame duplications', '#F90'),
-                'inframeins'    => array('In frame insertions', '#090'),
-                'missense'      => array('Missense changes', '#00C'),
-                'no_protein'    => array('No protein produced', '#69F'),
-                'silent'        => array('Silent changes', '#0AC'),
-                'stop'          => array('Stop changes', '#969'),
-                ';'             => array('Compound', '#600'),
-                ''              => array('Unknown', '#000'),
+                'frameshift'    => array('Frameshifts', '#FD6'),                  // Light yellow.
+                'inframedel'    => array('In frame deletions', '#A00'),           // Dark red.
+                'inframedelins' => array('In frame deletion-insertions', '#95F'), // Purple.
+                'inframedup'    => array('In frame duplications', '#F90'),        // Orange.
+                'inframeins'    => array('In frame insertions', '#090'),          // Green.
+                'missense'      => array('Missense changes', '#00C'),             // Blue.
+                'no_protein'    => array('No protein produced', '#69F'),          // Light blue.
+                'silent'        => array('Silent changes', '#0AC'),               // Teal.
+                'stop'          => array('Stop changes', '#969'),                 // Darker purple.
+                ';'             => array('Compound', '#600'),                     // Dark, dark red.
+                ''              => array('Unknown', '#000'),                      // Black.
             );
 
         if (!is_array($Data)) {
