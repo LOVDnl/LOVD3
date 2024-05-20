@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-02-25
- * Modified    : 2023-02-02
- * For LOVD    : 3.0-29
+ * Modified    : 2024-05-20
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -184,7 +184,7 @@ function lovd_showLicense ()
 
 $aFields = array(
     'commercial' => array(
-        'Do you want to allow others to use your public data for commercial purposes?<BR><I>Selecting \'no\' prohibit uses primarily intended for or directed toward commercial advantage or monetary compensation.</I>',
+        'Do you want to allow others to use your public data for commercial purposes?<BR><I>Selecting \'no\' prohibits uses primarily intended for, or directed toward, commercial advantage or monetary compensation.</I>',
         'yes' => '<B>Yes.</B> Others can use my public data, even for commercial purposes.',
         'no' => '<B>No.</B> Others can not use my public data for commercial purposes.',
     ),
