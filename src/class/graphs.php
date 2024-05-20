@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-11
- * Modified    : 2023-02-01
- * For LOVD    : 3.0-29
+ * Modified    : 2024-05-20
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               David Baux <david.baux@inserm.fr>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -472,7 +472,7 @@ class LOVD_Graphs
             array(
                 ''       => array('Unknown', '#000'),
                 'del'    => array('Deletions', '#A00'),
-                'delins' => array('Indels', '#95F'),
+                'delins' => array('Deletion-Insertions', '#95F'),
                 'dup'    => array('Duplications', '#F90'),
                 'ins'    => array('Insertions', '#090'),
                 'inv'    => array('Inversions', '#0AC'),
@@ -906,7 +906,7 @@ if ($_CURRDB->colExists('Variant/RNA')) {
             $aCounts['complex'] += $nCount;
             $_SESSION['variant_statistics'][$_SESSION['currdb']]['RNA_complex'][] = $nVariantid;
         } elseif (preg_match($sDelIns, $sRNA)) {
-            // variant is an indel
+            // variant is a deletion-insertion
             $aCounts['delins'] += $nCount;
             $_SESSION['variant_statistics'][$_SESSION['currdb']]['RNA_delins'][] = $nVariantid;
         } elseif (preg_match($sInv, $sRNA)) {

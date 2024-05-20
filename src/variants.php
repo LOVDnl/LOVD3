@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2024-05-07
+ * Modified    : 2024-05-20
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1747,7 +1747,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                         exit('</BODY></HTML>');
 
                     } elseif (preg_match('#^[ACGT]+(?:/[ACGT]+)?$#', $aVariant['sampleGenotype'])) {
-                        // All indels, from VCF (VCF-like columns only, though).
+                        // All deletion-insertions, from VCF (VCF-like columns only, though).
                         $aFieldsVariantOnGenome[0]['position_g_start'] = $aVariant['position'];
                         $aFieldsVariantOnGenome[0]['position_g_end'] = $aVariant['position'] + strlen($aVariant['referenceBase']) - 1;
 
@@ -2388,10 +2388,6 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                    array('', '', 'print', '<B>File selection</B>'),
                    'hr',
                    array('File type', '', 'print', ($_GET['type'] == 'VCF'? 'Variant Call Format (VCF) version >= 4.0' : 'SeattleSeq Annotation file')));
-    if ($_GET['type'] == 'SeattleSeq') {
-        array_push($aForm,
-                   array('', '', 'note', 'Files with \'SeattleSeq Annotation original allele columns\' created from indel-only VCF files are <B>not supported</B>.'));
-    }
     array_push($aForm,
                    array('Select the file to import', '', 'file', 'variant_file', 25),
                    array('', 'Current file size limits:<BR>LOVD: ' . ($nMaxSizeLOVD/(1024*1024)) . 'M<BR>PHP (upload_max_filesize): ' . ini_get('upload_max_filesize') . '<BR>PHP (post_max_size): ' . ini_get('post_max_size'), 'note', 'The maximum file size accepted is ' . round($nMaxSize/pow(1024, 2), 1) . ' MB' . ($nMaxSize == $nMaxSizeLOVD? '' : ', due to restrictions on this server. Move your mouse over the help icon on the left to see the server configuration. If you wish to have it increased, contact the server\'s system administrator') . '.'),
