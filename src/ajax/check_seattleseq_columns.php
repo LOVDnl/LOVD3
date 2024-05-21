@@ -73,7 +73,7 @@ foreach ($aVOTCols as $sCol) {
         } else {
             $sColumnMessage .= ' and ';
         }
-        $sColumnMessage .= 'not enabled for new genes (<A href="#" onclick="lovd_setStandardColumn(\'' . $sCol . '\'); return false;">make standard</A>)';
+        $sColumnMessage .= 'not enabled for new genes.';
     }
 }
 
