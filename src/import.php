@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2024-05-07
+ * Modified    : 2024-05-21
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2999,7 +2999,7 @@ if ($_AUTH['level'] == LEVEL_CURATOR) {
     lovd_showInfoTable('Your user level is curator, as a curator you can only simulate an import and check your LOVD tab-delimited file.<BR>To actually import the file, you have to contact the database manager(s): ' . $sManagers . '.', 'information', 760);
 }
 
-lovd_showInfoTable('If you\'re looking for importing data files containing variant data only, like VCF files and SeattleSeq annotated files, please <A href="submit">start a new submission</A>.', 'information', 760);
+lovd_showInfoTable('If you\'re looking for importing data files containing variant data only, like VCF files, please <A href="submit">start a new submission</A>.', 'information', 760);
 
 // FIXME: Since we can increase the memory limit anyways, maybe we can leave this message out if we nicely handle the memory?
 lovd_showInfoTable('In some cases importing big files or importing files into big databases can cause LOVD to run out of available memory. In case this server hides these errors, LOVD would return a blank screen. If this happens, split your import file into smaller chunks or ask your system administrator to allow PHP to use more memory (currently allowed: ' . ini_get('memory_limit') . 'B).', 'warning', 760);
