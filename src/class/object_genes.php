@@ -738,7 +738,7 @@ class LOVD_Gene extends LOVD_Object
                         lovd_getExternalSource($sSource,
                             ($sType == 'id' || $sSource == 'genetests'? $zData[$sColID] :
                                 rawurlencode($zData['id'])), true) . '" target="_blank">' .
-                        ($sType == 'id'? $zData[$sColID] : rawurlencode($zData['id'])) . '</A>';
+                        ($sType == 'id'? ($sSource == 'hgnc'? 'HGNC:' : '') . $zData[$sColID] : $zData['id']) . '</A>';
                 } else {
                     $zData[$sColID . '_'] = '';
                 }
