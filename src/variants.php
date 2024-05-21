@@ -2347,22 +2347,6 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
     if ($_GET['type'] == 'SeattleSeq') {
         lovd_showInfoTable('<B>Warning</B>: Importing large SeattleSeq files may take several hours if genes need to be created. As a rule of thumb, it will take about 10 minutes to import 1500 variants when creating genes,' . "\n" .
                            'as opposed to one minute if no genes are created.<BR>', 'warning');
-        print('<DIV id="column_check"></DIV>' . "\n" .
-              '<SCRIPT type="text/javascript">' . "\n" .
-              '    function lovd_updateColumnMessage (sMessage) {' . "\n" .
-              '        if (sMessage == "' . AJAX_NO_AUTH . '") {' . "\n" .
-              '            alert("Lost your session. Please log in again.");' . "\n" .
-              '        } else if (sMessage != "' . AJAX_FALSE . '") {' . "\n" .
-              '            $("#column_check").html(sMessage);' . "\n" .
-              '        }' . "\n" .
-              '    }' . "\n" .
-              "\n" .
-              '    function lovd_checkColumns () {' . "\n" .
-              '        $.get("' . ROOT_PATH . 'ajax/check_seattleseq_columns.php", lovd_updateColumnMessage);' . "\n" .
-              '    }' . "\n" .
-              "\n" .
-              '    $(lovd_checkColumns);' . "\n" .
-              '</SCRIPT>');
     }
 
     if ($_GET['type'] == 'VCF') {
