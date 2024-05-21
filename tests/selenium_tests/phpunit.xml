@@ -21,7 +21,6 @@
             <file>shared_tests/create_submission_individual_with_IVA.php</file>
             <file>shared_tests/manage_transcripts_for_variant.php</file>
             <file>shared_tests/add_more_data_to_existing_submission.php</file>
-            <file>shared_tests/create_summary_data_upload_seattleseq.php</file>
             <file>shared_tests/create_summary_variant_located_within_gene_with_multiple_transcripts.php</file>
             <file>shared_tests/create_summary_data_upload_vcf.php</file>
             <file>shared_tests/submission_API.php</file>
@@ -76,7 +75,6 @@
             <file>shared_tests/create_submission_individual_with_IVA.php</file>
             <file>shared_tests/manage_transcripts_for_variant.php</file>
             <file>shared_tests/add_more_data_to_existing_submission.php</file>
-            <file>shared_tests/create_summary_data_upload_seattleseq_not_authorized.php</file>
             <file>shared_tests/create_summary_data_upload_vcf_not_authorized.php</file>
             <file>shared_tests/delete_gene_IVD_not_authorized.php</file>
             <file>shared_tests/delete_disease_IVA.php</file>
@@ -105,7 +103,6 @@
             <file>shared_tests/create_submission_individual_with_IVA.php</file>
             <file>shared_tests/manage_transcripts_for_variant.php</file>
             <file>shared_tests/add_more_data_to_existing_submission.php</file>
-            <file>shared_tests/create_summary_data_upload_seattleseq_not_authorized.php</file>
             <file>shared_tests/create_summary_data_upload_vcf_not_authorized.php</file>
             <file>shared_tests/create_summary_variant_located_within_gene_not_authorized.php</file>
             <file>shared_tests/create_summary_variant_on_genomic_level_not_authorized.php</file>
@@ -140,7 +137,6 @@
             <file>shared_tests/manage_transcripts_for_variant.php</file>
             <file>shared_tests/add_more_data_to_existing_submission.php</file>
             <file>shared_tests/set_license_for_submission.php</file>
-            <file>shared_tests/create_summary_data_upload_seattleseq_not_authorized.php</file>
             <file>shared_tests/create_summary_data_upload_vcf_not_authorized.php</file>
             <file>shared_tests/create_summary_variant_located_within_gene_not_authorized.php</file>
             <file>shared_tests/create_summary_variant_on_genomic_level_not_authorized.php</file>
