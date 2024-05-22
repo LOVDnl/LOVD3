@@ -63,6 +63,8 @@ class CheckPHPVersionTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->driver->get(ROOT_URL . '/src/install');
         $aSystemInformation = explode("\n",
             $infoBox = $this->driver->findElement(WebDriverBy::xpath('//table[@class="info"]/tbody/tr/td[@valign="middle"]'))->getText());
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertArrayHasKey(5, $aSystemInformation);
         // Just print PHP and MySQL version, I don't care about the rest.
         print(PHP_EOL . implode(PHP_EOL,
                 array(
