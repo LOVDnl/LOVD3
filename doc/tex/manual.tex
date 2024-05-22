@@ -5,7 +5,7 @@
 % To convert the manual to an html file use: pdf2htmlEX --zoom 1.3 --embed-css 2 manual.pdf
 
 %%%%% SETTINGS FOR THE TITLE PAGE %%%%%
-\setLOVDversion{3.0-27}
+\setLOVDversion{3.0-30}
 \title{LOVD 3.0 user manual \\\vskip 0.2cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema \\ Daan Asscheman}
 \setpointercolor{red}
@@ -89,7 +89,7 @@ It will be possible for different submitters to work together cooperatively on t
 Searching through the data is improved extensively,
 and webservices of many different sources are used to automatically retrieve gene and transcript information.
 Also new in 3.0 is full Next Generation Sequencing (NGS) support,
-with the ability to import VCF or SeattleSeq formats.
+ with the ability to import VCF files.
 For VCF file imports, LOVD allows for automatic annotation of the variants.
 Both formats support the automatic creation of genes and transcripts in the system,
 greatly reducing the amount of work required by curators to get LOVD set up for their research data.
@@ -1570,10 +1570,10 @@ Finally, one can save changes to the bottom table by verifying their password an
 Although in LOVD 3.0 you can enter data into the database without having genes in your installation, the genes still embody an important part of LOVD.
 Configuring genes in LOVD allows you to see the effects of variants on transcript level, and draws submitters with variant data to your installation.
 
-Gene databases can also be created automatically for you, when you are importing VCF or SeattleSeq annotated files in LOVD.
+Gene databases can also be created automatically for you, when you are importing VCF files in LOVD.
 However, this chapter deals with manually creating gene databases.
 %TODO
-%For more information on how to import VCF or SeattleSeq annotated files, see ...
+%For more information on how to import VCF files, see ...
 You can create new genes through the \hyperlink{chap:setup}{LOVD setup area}.
 Editing and deleting genes is done through the ``Genes'' tab.
 Curators assigned to genes can also edit these after they've been created, but can not delete genes.
@@ -2985,8 +2985,7 @@ If successful, you are redirected to the options to submit more variants, or ret
 \subsubsection{Uploading file with genomic variant data}
 If you are a manager or higher, you can upload a file with genomic variant data.
 This option is not displayed for users with levels lower than manager.
-For uploading genomic variant data files two formats are supported:
- Variant Call Format (VCF) version 4.0 or higher and SeattleSeq Annotation files.
+For uploading genomic variant data files, the Variant Call Format (VCF) version 4.0 or higher is supported.
 % STUB: Expand later, with screenhots and extensive explanation, perhaps not here but in a different place
 % (own section in this chapter would seem good).
 

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-21
- * Modified    : 2022-12-14
- * For LOVD    : 3.0-29
+ * Modified    : 2024-05-21
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -962,9 +962,6 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
             if ($zUploadDetails['file_type'] == 'VCF') {
                 // Also don't show the VOT counter for VCF files.
                 unset($a['num_variants_on_transcripts']);
-            } else {
-                // And don't show the mapping flags field for SeattleSeq files.
-                unset($a['mapping_flags_']);
             }
             if (!isset($zUploadDetails['screeningid']) || $_PE[2] == 'screening') {
                 // Hide the screening ID field if the upload is not added to an existing screening.
