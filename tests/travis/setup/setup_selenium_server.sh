@@ -60,7 +60,7 @@ fi;
 if [ "${LOVD_SELENIUM_DRIVER}" == "firefox" ] && [ ! -f "geckodriver" ];
 then
   # https://firefox-source-docs.mozilla.org/testing/geckodriver/Support.html
-  geckoDriverURL="https://github.com/mozilla/geckodriver/releases/download/v0.26.0/geckodriver-v0.26.0-linux64.tar.gz";
+  geckoDriverURL="https://github.com/mozilla/geckodriver/releases/download/v0.34.0/geckodriver-v0.34.0-linux64.tar.gz";
 
   echo "Downloading geckodriver from ${geckoDriverURL}...";
   geckoDriverArchive="${geckoDriverURL##*/}";
