@@ -359,8 +359,8 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit\Framework\TestC
         $element = $this->driver->findElement($locator);
         $nCount = 0;
 
-        while (($bSetChecked && is_null($element->getAttribute('checked'))) ||
-               (!$bSetChecked && !is_null($element->getAttribute('checked')))) {
+        while (($bSetChecked && !$element->isSelected()) ||
+               (!$bSetChecked && $element->isSelected())) {
             if ($nCount > 0) {
                 fwrite(STDERR, 'Failed attempt setting checkbox (' . $locator->getMechanism() .
                                '="' . $locator->getValue() . '")"');
