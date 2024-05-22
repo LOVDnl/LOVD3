@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2024-04-16
+ * Modified    : 2024-05-21
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -195,6 +195,9 @@ class LOVD_Gene extends LOVD_Object
                 'id_' => array(
                     'view' => array('Symbol', 100),
                     'db'   => array('g.id', 'ASC', true)),
+                'id_hgnc_' => array(
+                    'view' => array('HGNC ID', 85),
+                    'db' => array('CONCAT("HGNC:", g.id_hgnc)', 'ASC', true)), // 'CONCAT("HGNC:", g.id_hgnc)' allows for searching for HGNC:..., but kills the sorting, numeric searching, etc.
                 'name' => array(
                     'view' => array('Gene', 300),
                     'db'   => array('g.name', 'ASC', true)),
@@ -513,6 +516,7 @@ class LOVD_Gene extends LOVD_Object
         $zData = parent::prepareData($zData, $sView);
 
         if ($sView == 'list') {
+            $zData['id_hgnc_'] = (!$zData['id_hgnc']? '' : 'HGNC:' . $zData['id_hgnc']);
             $zData['updated_date_'] = substr($zData['updated_date'], 0, 10);
         } else {
             $zData['imprinting_'] = $_SETT['gene_imprinting'][$zData['imprinting']];
@@ -734,7 +738,7 @@ class LOVD_Gene extends LOVD_Object
                         lovd_getExternalSource($sSource,
                             ($sType == 'id' || $sSource == 'genetests'? $zData[$sColID] :
                                 rawurlencode($zData['id'])), true) . '" target="_blank">' .
-                        ($sType == 'id'? $zData[$sColID] : rawurlencode($zData['id'])) . '</A>';
+                        ($sType == 'id'? ($sSource == 'hgnc'? 'HGNC:' : '') . $zData[$sColID] : $zData['id']) . '</A>';
                 } else {
                     $zData[$sColID . '_'] = '';
                 }

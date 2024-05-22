@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2024-05-07
+ * Modified    : 2024-05-20
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1036,7 +1036,9 @@ function lovd_getCurrentPageTitle ()
             list($sVOG, $sVOT) =
                 $_DB->q('
                     SELECT CONCAT(c.`' . $_CONF['refseq_build'] . '_id_ncbi`, ":", vog.`VariantOnGenome/DNA`) AS VOG_DNA,
-                        CONCAT(t.geneid, "(", t.id_ncbi, "):", vot.`VariantOnTranscript/DNA`) AS VOT_DNA
+                      IF((vot.position_c_start_intron IS NOT NULL AND vot.position_c_start_intron != 0) OR (vot.position_c_end_intron IS NOT NULL AND vot.position_c_end_intron != 0),
+                        CONCAT(c.`' . $_CONF['refseq_build'] . '_id_ncbi`, "(", t.id_ncbi, "):", vot.`VariantOnTranscript/DNA`, " (", t.geneid, ")"),
+                        CONCAT(t.id_ncbi, ":", vot.`VariantOnTranscript/DNA`, " (", t.geneid, ")")) AS VOT_DNA
                     FROM ' . TABLE_VARIANTS . ' AS vog
                       INNER JOIN ' . TABLE_CHROMOSOMES . ' AS c ON (vog.chromosome = c.name)
                       LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id)

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-11
- * Modified    : 2023-02-01
- * For LOVD    : 3.0-29
+ * Modified    : 2024-05-20
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               David Baux <david.baux@inserm.fr>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -339,10 +339,10 @@ class LOVD_Graphs
         $aTypes =
             array(
                 '5UTR'     => array('5\'UTR', '#F90'),        // Orange.
-                'start'    => array('Start codon', '#600'),   // Dark dark red.
+                'start'    => array('Start codon', '#600'),   // Dark, dark red.
                 'coding'   => array('Coding', '#00C'),        // Blue.
                 'splice'   => array('Splice region', '#A00'), // Dark red.
-                'intron'   => array('Intron', '#0AC'),        // Light blue.
+                'intron'   => array('Intron', '#0AC'),        // Teal.
                 '3UTR'     => array('3\'UTR', '#090'),        // Green.
                 'multiple' => array('Multiple', '#95F'),      // Purple.
                 ''         => array('Unknown', '#000'),       // Black.
@@ -470,13 +470,17 @@ class LOVD_Graphs
         // Keys need to be renamed.
         $aTypes =
             array(
-                ''       => array('Unknown', '#000'),
-                'del'    => array('Deletions', '#A00'),
-                'delins' => array('Indels', '#95F'),
-                'dup'    => array('Duplications', '#F90'),
-                'ins'    => array('Insertions', '#090'),
-                'inv'    => array('Inversions', '#0AC'),
-                'subst'  => array('Substitutions', '#00C'),
+                ''       => array('Unknown', '#000'),             // Black.
+                ';'      => array('Compound', '#600'),            // Dark, dark red.
+                '='      => array('No change', '#0AC'),           // Teal.
+                'del'    => array('Deletions', '#A00'),           // Dark red.
+                'delins' => array('Deletion-Insertions', '#95F'), // Purple.
+                'dup'    => array('Duplications', '#F90'),        // Orange.
+                'ins'    => array('Insertions', '#090'),          // Green.
+                'inv'    => array('Inversions', '#969'),          // Darker purple.
+                'met'    => array('Methylation', '#FD6'),         // Light yellow.
+                'repeat' => array('Repeat', '#69F'),              // Light blue.
+                'subst'  => array('Substitutions', '#00C'),       // Blue.
             );
 
         if (!is_array($Data)) {
@@ -507,6 +511,12 @@ class LOVD_Graphs
             }
         } else {
             // Using list of variant IDs.
+        }
+
+        // Map '?' to ''.
+        if (isset($aData['?'])) {
+            $aData[''] += $aData['?'];
+            unset($aData['?']);
         }
 
         // Format $aData.
@@ -580,16 +590,17 @@ class LOVD_Graphs
         // Keys need to be renamed.
         $aTypes =
             array(
-                'frameshift'    => array('Frameshifts', '#FD6'),
-                'inframedel'    => array('In frame deletions', '#A00'),
-                'inframedelins' => array('In frame indels', '#95F'),
-                'inframedup'    => array('In frame duplications', '#F90'),
-                'inframeins'    => array('In frame insertions', '#090'),
-                'missense'      => array('Missense changes', '#00C'),
-                'no_protein'    => array('No protein produced', '#600'),
-                'silent'        => array('Silent changes', '#0AC'),
-                'stop'          => array('Stop changes', '#969'),
-                ''              => array('Unknown', '#000'),
+                'frameshift'    => array('Frameshifts', '#FD6'),                  // Light yellow.
+                'inframedel'    => array('In frame deletions', '#A00'),           // Dark red.
+                'inframedelins' => array('In frame deletion-insertions', '#95F'), // Purple.
+                'inframedup'    => array('In frame duplications', '#F90'),        // Orange.
+                'inframeins'    => array('In frame insertions', '#090'),          // Green.
+                'missense'      => array('Missense changes', '#00C'),             // Blue.
+                'no_protein'    => array('No protein produced', '#69F'),          // Light blue.
+                'silent'        => array('Silent changes', '#0AC'),               // Teal.
+                'stop'          => array('Stop changes', '#969'),                 // Darker purple.
+                ';'             => array('Compound', '#600'),                     // Dark, dark red.
+                ''              => array('Unknown', '#000'),                      // Black.
             );
 
         if (!is_array($Data)) {
@@ -618,10 +629,10 @@ class LOVD_Graphs
             // However, make sure that the 'fs' check is always done before the missense and the stop-check, to prevent false positives.
             // Also, del, dup and ins checks must be done before missense checks.
             // The missense check is done a bit later, after more simper comparisons.
-            if (strpos($sProteinDescription, '=') !== false) {
+            if (strpos($sProteinDescription, ';') !== false || strpos($sProteinDescription, ',') !== false) {
+                $sType = ';';
+            } elseif (strpos($sProteinDescription, '=') !== false) {
                 $sType = 'silent';
-            } elseif (!$sProteinDescription || $sProteinDescription == '-' || strpos($sProteinDescription, '?') !== false) {
-                $sType = '';
             } elseif (strpos($sProteinDescription, 'fs') !== false) {
                 $sType = 'frameshift';
             } elseif (preg_match('/[\*X]/', $sProteinDescription)) {
@@ -649,6 +660,7 @@ class LOVD_Graphs
             } elseif (preg_match('/dup/', $sProteinDescription)) {
                 $sType = 'inframedup';
             } else {
+                // This includes empty protein changes (non-coding transcripts), '-', and 'p.?'.
                 $sType = '';
             }
 
@@ -906,7 +918,7 @@ if ($_CURRDB->colExists('Variant/RNA')) {
             $aCounts['complex'] += $nCount;
             $_SESSION['variant_statistics'][$_SESSION['currdb']]['RNA_complex'][] = $nVariantid;
         } elseif (preg_match($sDelIns, $sRNA)) {
-            // variant is an indel
+            // variant is a deletion-insertion
             $aCounts['delins'] += $nCount;
             $_SESSION['variant_statistics'][$_SESSION['currdb']]['RNA_delins'][] = $nVariantid;
         } elseif (preg_match($sInv, $sRNA)) {

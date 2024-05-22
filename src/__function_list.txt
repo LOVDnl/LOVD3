@@ -57,7 +57,6 @@
 4.0.0 floor
 4.0.0 flush
 4.0.0 fopen
-4.0.0 foreach
 4.0.0 fputs
 4.0.0 fsockopen
 4.0.0 function_exists
@@ -67,7 +66,6 @@
 4.0.0 gethostbyaddr
 4.0.0 getimagesize
 4.0.0 get_magic_quotes_gpc
-4.0.0 get_object_vars
 4.0.0 gettimeofday
 4.0.0 gmdate
 4.0.0 header
@@ -75,7 +73,6 @@
 4.0.0 htmlspecialchars
 5.1.0 htmlspecialchars_decode
 5.0.0 http_build_query
-4.0.0 if
 4.0.0 ignore_user_abort
 4.0.0 implode
 4.0.0 in_array
@@ -93,7 +90,6 @@
 4.0.0 isset
 4.0.0 is_string
 4.0.0 is_writable
-4.0.0 join
 5.2.0 json_decode
 5.2.0 json_encode
 4.0.0 ksort
@@ -131,7 +127,6 @@
 4.0.0 register_shutdown_function
 4.0.0 rename
 4.0.0 reset
-4.0.0 return
 4.0.0 round
 4.0.0 rtrim
 4.0.0 serialize
@@ -179,7 +174,6 @@
 4.0.0 usleep
 4.0.0 utf8_encode
 4.0.0 var_dump
-4.0.0 while
 4.0.2 wordwrap
 
 5.0.0 file() with FILE_IGNORE_NEW_LINES.
@@ -194,10 +188,10 @@
 5.3.3 PDO::inTransaction() (already in use, but we check for it)
 5.4.0 JSON_PRETTY_PRINT is available (now I'm using it if available)
 5.4.0 Short array notation is available; array() => [].
-5.4.0 Array dereferencing; $sWord = explode(' ', $sSentence)[5]; now solved using list() or current().
+5.4.0 Array dereferencing; $sWord = explode(' ', $sSentence)[5]; now solved using list() or current(). (I've started to use this)
 5.5.0 foreach (... as list(...)) <- Using this already.
 5.6.0 Argument unpacking; array_merge(...$a) == array_merge($a[0], $a[1], $a[2]); now solved using call_user_func_array().
-7.0.0 Null coalescing operator available, e.g., ($a['missing_key'] ?? 'default_value'); <- Already in use in ajax/licenses.php and scripts/fix_position_fields.php.
+7.0.0 Null coalescing operator available, e.g., ($a['missing_key'] ?? 'default_value'); (Already in use in many places)
 7.1.0 Negative string array access, e.g., $s[-1] instead of substr($s, -1).
 7.3.0 setcookie() accepts an array for options, allowing us to set 'SameSite=Lax'. Otherwise, we'd need to directly send a header. That's complicated, so I'm not even trying now.
 7.4.0 Return value declaration for functions.
@@ -221,6 +215,7 @@ MySQL:
 4.1.00  BOOLEAN column type
 4.1. 1  VALUES() in: INSERT INTO ... ON DUPLICATE KEY UPDATE ... VALUES()
 4.1. 2  ENGINE (instead of TYPE) not really necessary but since we're at 4.1.1 already...
+5.0. 2  CREATE TRIGGER. I want to use this, but can't use this, because the LOVD user in general doesn't have the SUPER privilege and binary logging is on by default (which causes the SUPER requirement).
 8.0.00  REGEXP_REPLACE() - should make F&R so much easier to implement...
 =======-========
 4.1. 2  REQUIRED
