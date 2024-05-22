@@ -34,7 +34,7 @@ use \Facebook\WebDriver\WebDriverBy;
 
 class CheckPHPVersionTest extends LOVDSeleniumWebdriverBaseTestCase
 {
-    protected function setUp()
+    protected function setUp(): void
     {
         // Test if we have what we need for this test. If not, skip this test.
         parent::setUp();
@@ -42,7 +42,7 @@ class CheckPHPVersionTest extends LOVDSeleniumWebdriverBaseTestCase
         $bodyElement = $this->driver->findElement(WebDriverBy::tagName('body'));
         if (preg_match('/This installer will create/', $bodyElement->getText())) {
             // Not installed already, all good!
-            return true;
+            return;
         }
 
         // We're installed already!
