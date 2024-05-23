@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-15
- * Modified    : 2020-11-27
- * For LOVD    : 3.0-26
+ * Modified    : 2024-05-23
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -229,6 +229,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
             // Travis' Chrome keeps failing here with a StaleElementReferenceException without refreshes.
             $this->enterValue('search_id_', 'IVD' . WebDriverKeys::ENTER);
         } catch (StaleElementReferenceException $e) {}
+        sleep(1);
         $this->driver->findElement(WebDriverBy::xpath('//tr[@id="IVD"]/td[1]'))->click();
 
         $this->waitForURLContains('/src/variants?create&reference=Transcript&geneid=IVD&target=0000');
