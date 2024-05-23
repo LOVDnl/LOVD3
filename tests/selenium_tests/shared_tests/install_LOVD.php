@@ -85,7 +85,7 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
         }
 
         $bodyElement = $this->driver->findElement(WebDriverBy::tagName('body'));
-        $this->assertContains('This installer will create', $bodyElement->getText());
+        $this->assertStringContainsString('This installer will create', $bodyElement->getText());
 
         // Start installation procedure.
         $this->submitForm('Start');

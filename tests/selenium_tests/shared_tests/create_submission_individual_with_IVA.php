@@ -124,7 +124,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
      */
     public function testAddPhenotypeRecord ($nUserID)
     {
-        $this->assertContains('/src/submit/individual/0000', $this->driver->getCurrentURL());
+        $this->assertStringContainsString('/src/submit/individual/0000', $this->driver->getCurrentURL());
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to add phenotype information")]'))->click();
 
@@ -159,7 +159,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
      */
     public function testAddScreening ($nUserID)
     {
-        $this->assertContains('/src/submit/individual/0000', $this->driver->getCurrentURL());
+        $this->assertStringContainsString('/src/submit/individual/0000', $this->driver->getCurrentURL());
 
         // This click often timeouts for no reason.
         $oLocator = WebDriverBy::xpath(
@@ -207,7 +207,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
      */
     public function testAddVariantWithinIVD ($nUserID)
     {
-        $this->assertContains('/src/submit/screening/0000', $this->driver->getCurrentURL());
+        $this->assertStringContainsString('/src/submit/screening/0000', $this->driver->getCurrentURL());
 
         // This click often timeouts for no reason.
         $oLocator = WebDriverBy::xpath(
@@ -276,7 +276,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
      */
     public function testAddVariantOnGenomicLevel ($nUserID)
     {
-        $this->assertContains('/src/submit/screening/0000', $this->driver->getCurrentURL());
+        $this->assertStringContainsString('/src/submit/screening/0000', $this->driver->getCurrentURL());
 
         // This click often timeouts for no reason.
         $oLocator = WebDriverBy::xpath(
@@ -328,7 +328,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
      */
     public function testFinishSubmission ()
     {
-        $this->assertContains('/src/submit/screening/0000', $this->driver->getCurrentURL());
+        $this->assertStringContainsString('/src/submit/screening/0000', $this->driver->getCurrentURL());
 
         // This click often timeouts for no reason.
         $oLocator = WebDriverBy::xpath(

@@ -62,8 +62,8 @@ class VerifyFullDownloadTest extends LOVDSeleniumWebdriverBaseTestCase
         //  to actually trigger a failure.
         $sStatistics = $this->driver->findElement(
             WebDriverBy::xpath('//table[@class="setup"][1]'))->getText();
-        $this->assertContains('Individuals : 2', $sStatistics);
-        $this->assertContains('Total : 167', $sStatistics);
+        $this->assertStringContainsString('Individuals : 2', $sStatistics);
+        $this->assertStringContainsString('Total : 167', $sStatistics);
 
         // The download location is set to "/tmp"
         //  in getWebDriverInstance() @ inc-lib-test.php.

@@ -76,7 +76,7 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
         $aResult = json_decode($sResult, true);
 
         $this->assertEquals(array(), $aResult['messages']);
-        $this->assertContains('VarioML error: LSDB ID in file does not match this LSDB.',
+        $this->assertStringContainsString('VarioML error: LSDB ID in file does not match this LSDB.',
             implode(';', $aResult['errors']));
         $this->assertStringEndsWith ('422 Unprocessable Entity', $http_response_header[0]);
     }
@@ -169,7 +169,7 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
         $aResult = json_decode($sResult, true);
 
         $this->assertEquals(array(), $aResult['messages']);
-        $this->assertContains('VarioML error: Authentication denied.',
+        $this->assertStringContainsString('VarioML error: Authentication denied.',
             implode(';', $aResult['errors']));
         $this->assertStringEndsWith('401 Unauthorized', $http_response_header[0]);
     }
@@ -212,7 +212,7 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
         $aResult = json_decode($sResult, true);
 
         $this->assertEquals(array(), $aResult['errors']);
-        $this->assertContains('Data successfully stored for import.',
+        $this->assertStringContainsString('Data successfully stored for import.',
             implode(';', $aResult['messages']));
         $this->assertStringEndsWith ('202 Accepted', $http_response_header[0]);
     }
@@ -246,7 +246,7 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
     public function testImportSubmission ()
     {
         $this->driver->get(ROOT_URL . '/src/import?autoupload_scheduled_file');
-        $this->assertContains('Success!', $this->driver->getPageSource());
+        $this->assertStringContainsString('Success!', $this->driver->getPageSource());
     }
 
 

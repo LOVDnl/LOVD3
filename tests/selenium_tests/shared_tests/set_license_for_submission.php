@@ -65,14 +65,14 @@ class SetDefaultLicenseTest extends LOVDSeleniumWebdriverBaseTestCase
     public function testFindSubmission ()
     {
         $this->driver->findElement(WebDriverBy::xpath('//a[contains(@href, "users/0000")]/b[text()="Your account"]'))->click();
-        $this->assertContains('/src/users/0000', $this->driver->getCurrentURL());
+        $this->assertStringContainsString('/src/users/0000', $this->driver->getCurrentURL());
 
         // XPath doesn't accept "Has created", only that it contains
         //  "Has" and that it contains "created".
         $this->driver->findElement(
             WebDriverBy::xpath(
                 '//table[@class="data"]//th[contains(., "Has") and contains(., "created")]/../td/a[contains(., "individual")]'))->click();
-        $this->assertContains('/src/individuals?search_created_by=', $this->driver->getCurrentURL());
+        $this->assertStringContainsString('/src/individuals?search_created_by=', $this->driver->getCurrentURL());
 
         $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"]/tbody/tr[1]/td[1]'))->click();
     }
@@ -107,7 +107,7 @@ class SetDefaultLicenseTest extends LOVDSeleniumWebdriverBaseTestCase
         // Yes, allow derivatives, but only SA.
         $this->driver->findElement(WebDriverBy::xpath('//div[@id="licenses_dialog"]/form/table[2]/tbody/tr[3]/td/input'))->click();
         // Verify that license has been shown.
-        $this->assertContains('Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International',
+        $this->assertStringContainsString('Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International',
             $this->driver->findElement(WebDriverBy::id('selected_license'))->getText());
         // Submit.
         $this->driver->findElement(WebDriverBy::xpath('//div[@id="licenses_dialog"]/../div[last()]//button[text()="Save settings"]'))->click();

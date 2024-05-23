@@ -84,7 +84,7 @@ class CreateCustomColumnPhenotypeTest extends LOVDSeleniumWebdriverBaseTestCase
 
         // Data wizard.
         $this->driver->switchTo()->window($sPopupWindowHandler);
-        $this->assertContains('/src/columns?data_type_wizard&workID=', $this->driver->getCurrentURL());
+        $this->assertStringContainsString('/src/columns?data_type_wizard&workID=', $this->driver->getCurrentURL());
         $this->selectValue('form_type', 'text');
         $this->submitForm('Next');
 

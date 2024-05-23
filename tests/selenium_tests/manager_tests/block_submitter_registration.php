@@ -139,7 +139,7 @@ class BlockSubmitterRegistrationTest extends LOVDSeleniumWebdriverBaseTestCase
         // Log out, and check if registration is allowed again.
         $this->logout();
 
-        $this->assertContains('Register as submitter',
+        $this->assertStringContainsString('Register as submitter',
             $this->driver->findElement(WebDriverBy::xpath(
                 '//table[@class="logo"]//td[contains(., "LOVD v.3.0")]'))->getText());
 

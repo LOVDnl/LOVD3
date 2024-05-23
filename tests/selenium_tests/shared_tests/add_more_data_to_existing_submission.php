@@ -127,7 +127,7 @@ class AddMoreDataToExistingSubmissionTest extends LOVDSeleniumWebdriverBaseTestC
      */
     public function testConfirmVariant ()
     {
-        $this->assertContains('/src/submit/screening/0000', $this->driver->getCurrentURL());
+        $this->assertStringContainsString('/src/submit/screening/0000', $this->driver->getCurrentURL());
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to add a variant to")]'))->click();
 
@@ -154,7 +154,7 @@ class AddMoreDataToExistingSubmissionTest extends LOVDSeleniumWebdriverBaseTestC
      */
     public function testFinishSubmission ()
     {
-        $this->assertContains('/src/submit/screening/0000', $this->driver->getCurrentURL());
+        $this->assertStringContainsString('/src/submit/screening/0000', $this->driver->getCurrentURL());
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to finish this submission")]'))->click();
 
@@ -174,7 +174,7 @@ class AddMoreDataToExistingSubmissionTest extends LOVDSeleniumWebdriverBaseTestC
     {
         // We really don't need to double-test everything. If the link is there,
         //  and we get to the right page, we've tested enough.
-        $this->assertContains('/src/screenings/0000', $this->driver->getCurrentURL());
+        $this->assertStringContainsString('/src/screenings/0000', $this->driver->getCurrentURL());
         $this->driver->findElement(WebDriverBy::id('viewentryOptionsButton_Screenings'))->click();
         $this->driver->findElement(WebDriverBy::linkText('Add variant to screening'))->click();
 
