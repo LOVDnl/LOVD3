@@ -104,6 +104,10 @@ class CreateSummaryDataUploadVCFTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->assertStringStartsWith('Successfully processed your submission',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
 
+        // Wait for redirect first, because I want to change the URL.
+        // I should not rush that, to prevent a race condition.
+        $this->waitForURLContains('/src/variants/upload/');
+
         // Now map the variants. Note that tabs are replaced by spaces,
         //  because we work with the browser's interpretation of the text.
         $bRepeated = false;
@@ -126,14 +130,12 @@ class CreateSummaryDataUploadVCFTest extends LOVDSeleniumWebdriverBaseTestCase
                 $bRepeated = false;
             }
         } while (substr($sBody, 0, 5) != '0 99 ');
-        // Travis sometimes reports a "There are no variants to map in the
+        // Because we repeat the call, we usually get a "There are no variants to map in the
         //  database" instead of the expected "Successfully mapped 25 variants".
-        $this->assertContains(
-            $this->driver->findElement(WebDriverBy::tagName('body'))->getText(),
-            array(
-              '0 99 Successfully mapped ',
-              '0 99 There are no variants to map in the database',
-            ));
+        $this->assertRegExp(
+            '/^0 99 (Successfully mapped |There are no variants to map in the database)/',
+            $this->driver->findElement(WebDriverBy::tagName('body'))->getText()
+        );
     }
 }
 ?>
