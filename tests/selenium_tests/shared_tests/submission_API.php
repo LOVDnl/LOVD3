@@ -90,6 +90,8 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
      */
     public function testCreateToken ()
     {
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertTrue($this->isElementPresent(WebDriverBy::linkText('Your account')));
         $this->driver->findElement(WebDriverBy::linkText('Your account'))->click();
         $this->driver->findElement(WebDriverBy::linkText('Show / More information'))->click();
         $this->waitForElement(WebDriverBy::xpath('//button[.="Create new token"]'));
@@ -259,7 +261,7 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
     public function testVerifySubmission ()
     {
         $this->driver->get(ROOT_URL . '/src/variants/IVD');
-        $this->assertNotNull($this->driver->findElement(WebDriverBy::xpath('//td[.="c.465+1G>A"]')));
+        $this->assertTrue($this->isElementPresent(WebDriverBy::xpath('//td[.="c.465+1G>A"]')));
     }
 }
 ?>
