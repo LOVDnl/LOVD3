@@ -21,6 +21,7 @@
             <file>shared_tests/create_submission_individual_with_IVA.php</file>
             <file>shared_tests/manage_transcripts_for_variant.php</file>
             <file>shared_tests/add_more_data_to_existing_submission.php</file>
+            <file>shared_tests/add_transcript_to_gene_IVD.php</file>
             <file>shared_tests/create_summary_variant_located_within_gene_with_multiple_transcripts.php</file>
             <file>shared_tests/create_summary_data_upload_vcf.php</file>
             <file>shared_tests/submission_API.php</file>
