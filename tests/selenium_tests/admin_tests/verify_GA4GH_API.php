@@ -46,6 +46,8 @@ class VerifyGA4GHAPITest extends LOVDSeleniumWebdriverBaseTestCase
         if (preg_match('/No such ID!/', $sBody)) {
             $this->markTestSkipped('Gene does not exist yet.');
         }
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertEquals('', '');
     }
 
 

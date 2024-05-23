@@ -68,6 +68,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
         // HREF was relative, but WebDriver returns it as absolute.
         $aHref = explode('/', $sHref);
         $nUserID = (int) array_pop($aHref);
+        $this->assertGreaterThan(0, $nUserID);
 
         // This is the only way PHPUnit allows us to share data between tests.
         return $nUserID;

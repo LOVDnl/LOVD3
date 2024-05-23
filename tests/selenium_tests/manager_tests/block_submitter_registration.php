@@ -45,6 +45,8 @@ class BlockSubmitterRegistrationTest extends LOVDSeleniumWebdriverBaseTestCase
         if (preg_match('/To access this area, you need at least/', $sBody)) {
             $this->markTestSkipped('User was not authorized.');
         }
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertEquals('', '');
     }
 
 

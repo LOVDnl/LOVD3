@@ -46,6 +46,7 @@ class CurateSubmissionStepByStepTest extends LOVDSeleniumWebdriverBaseTestCase
         if (preg_match('/To access this area, you need at least/', $sBody)) {
             $this->markTestSkipped('User was not authorized.');
         }
+        $this->assertStringContainsString('IVD configuration', $sBody);
     }
 
 

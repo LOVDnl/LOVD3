@@ -35,7 +35,7 @@ use \Facebook\WebDriver\WebDriverExpectedCondition;
 
 class ManageTranscriptsForVariantTest extends LOVDSeleniumWebdriverBaseTestCase
 {
-    public function testSetUp()
+    public function testSetUp ()
     {
         // A normal setUp() runs for every test in this file. We only need this once,
         //  so we disguise this setUp() as a test that we depend on just once.
@@ -54,6 +54,8 @@ class ManageTranscriptsForVariantTest extends LOVDSeleniumWebdriverBaseTestCase
         if (!$this->isElementPresent(WebDriverBy::xpath('//a[contains(@href, "users/0000")]/b[text()="Your account"]'))) {
             $this->markTestSkipped('User was not authorized.');
         }
+        $sBody = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
+        $this->assertStringContainsString('g.40702876G>T', $sBody);
     }
 
 
@@ -63,7 +65,7 @@ class ManageTranscriptsForVariantTest extends LOVDSeleniumWebdriverBaseTestCase
     /**
      * @depends testSetUp
      */
-    public function testFindVariant()
+    public function testFindVariant ()
     {
         $this->driver->get(ROOT_URL . '/src/variants/chr15');
         $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"]//td[.="g.40702876G>T"]'))->click();
@@ -82,7 +84,7 @@ class ManageTranscriptsForVariantTest extends LOVDSeleniumWebdriverBaseTestCase
     /**
      * @depends testFindVariant
      */
-    public function testAddTranscript()
+    public function testAddTranscript ()
     {
         $this->waitForURLRegExp('/\/src\/variants\/[0-9]+\?map$/');
         $this->driver->findElement(WebDriverBy::xpath('//td[contains(text(), "NM_002225.3")]'))->click();
@@ -100,7 +102,7 @@ class ManageTranscriptsForVariantTest extends LOVDSeleniumWebdriverBaseTestCase
     /**
      * @depends testAddTranscript
      */
-    public function testAddVOTAnnotation()
+    public function testAddVOTAnnotation ()
     {
         $this->waitForURLRegExp('/\/src\/variants\/[0-9]+\?edit\#[0-9]+$/');
         $this->driver->findElement(WebDriverBy::cssSelector('button.proteinChange'))->click();
@@ -119,13 +121,15 @@ class ManageTranscriptsForVariantTest extends LOVDSeleniumWebdriverBaseTestCase
     /**
      * @depends testAddVOTAnnotation
      */
-    public function testVerifyAddedTranscript()
+    public function testVerifyAddedTranscript ()
     {
         $this->waitForURLContains('/src/variants/0000');
         $this->driver->findElement(WebDriverBy::xpath('//td[text()="NM_002225.3"]'));
         $this->driver->findElement(WebDriverBy::xpath('//td[contains(text(), "p.(")]'));
         $this->driver->findElement(WebDriverBy::id('viewentryOptionsButton_Variants'))->click();
-        $this->driver->findElement(WebDriverBy::linkText('Manage transcripts for this variant'))->click();
+        $e = $this->driver->findElement(WebDriverBy::linkText('Manage transcripts for this variant'));
+        $this->assertNotNull($e);
+        $e->click();
     }
 
 
@@ -135,7 +139,7 @@ class ManageTranscriptsForVariantTest extends LOVDSeleniumWebdriverBaseTestCase
     /**
      * @depends testVerifyAddedTranscript
      */
-    public function testRemoveTranscript()
+    public function testRemoveTranscript ()
     {
         $this->waitForURLRegExp('/\/src\/variants\/[0-9]+\?map$/');
         $this->driver->findElement(WebDriverBy::xpath('//tr[td[contains(text(), "NM_002225.3")]]/td/a'))->click();
@@ -156,7 +160,7 @@ class ManageTranscriptsForVariantTest extends LOVDSeleniumWebdriverBaseTestCase
     /**
      * @depends testRemoveTranscript
      */
-    public function testVerifyRemovedTranscript()
+    public function testVerifyRemovedTranscript ()
     {
         $this->waitForURLRegExp('/\/src\/variants\/[0-9]+$/');
         $this->assertEquals('No variants on transcripts found!',

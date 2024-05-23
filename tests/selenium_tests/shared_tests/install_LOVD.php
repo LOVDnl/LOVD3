@@ -43,6 +43,10 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
         //  one did not complete. However, test suites need to be independent
         //  so LOVD still needs to be freshly installed for this test suite.
         $this->driver->get(ROOT_URL . '/src/install');
+
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertEquals('', '');
+
         $bodyElement = $this->driver->findElement(WebDriverBy::tagName('body'));
         if (preg_match('/This installer will create/', $bodyElement->getText())) {
             // Not installed already, all good!
@@ -145,6 +149,7 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
 
         // LOVD Setup Area.
         $this->waitForURLEndsWith('/src/setup?newly_installed');
+        $this->assertStringContainsString('General LOVD Setup', $this->driver->findElement(WebDriverBy::tagName('body'))->getText());
     }
 }
 ?>

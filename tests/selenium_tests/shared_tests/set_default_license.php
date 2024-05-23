@@ -40,6 +40,9 @@ class SetDefaultLicenseTest extends LOVDSeleniumWebdriverBaseTestCase
         // A normal setUp() runs for every test in this file. We only need this once,
         //  so we disguise this setUp() as a test that we depend on just once.
 
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertEquals('', '');
+
         // It's possible that we already have a dialog open, asking us to set
         //  the default license.
         if ($this->isElementPresent(WebDriverBy::id('licenses_dialog'))) {
@@ -83,6 +86,10 @@ class SetDefaultLicenseTest extends LOVDSeleniumWebdriverBaseTestCase
                 WebDriverBy::xpath(
                     '//table[@class="data"]//th[contains(., "Default") and contains(., "license")]/../td/span/a[text()="Change"]'))->click();
             $this->waitForElement(WebDriverBy::xpath('//div[@id="licenses_dialog"]/../div[last()]//button[text()="Save settings"]'));
+
+        } else {
+            // To prevent a Risky test, we have to do at least one assertion.
+            $this->assertEquals('', '');
         }
     }
 

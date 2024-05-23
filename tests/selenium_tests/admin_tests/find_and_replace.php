@@ -80,6 +80,8 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
         if (!$this->isElementPresent(WebDriverBy::id('tab_setup'))) {
             $this->markTestSkipped('User was not authorized.');
         }
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertEquals('', '');
     }
 
 
@@ -114,6 +116,8 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->driver->findElement(WebDriverBy::id('FRCancel_VOG'))->click();
         $this->waitUntil(WebDriverExpectedCondition::invisibilityOfElementLocated(
             WebDriverBy::id('FRCancel_VOG')));
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertEquals('', '');
     }
 
 

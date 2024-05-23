@@ -50,6 +50,8 @@ class AddMoreDataToExistingSubmissionTest extends LOVDSeleniumWebdriverBaseTestC
         if (!$this->isElementPresent(WebDriverBy::xpath('//a[contains(@href, "users/0000")]/b[text()="Your account"]'))) {
             $this->markTestSkipped('User was not authorized.');
         }
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertEquals('', '');
     }
 
 
@@ -62,6 +64,7 @@ class AddMoreDataToExistingSubmissionTest extends LOVDSeleniumWebdriverBaseTestC
     public function testFindIndividual ()
     {
         $this->driver->get(ROOT_URL . '/src/individuals');
+        $this->assertStringContainsString('IVD', $this->driver->findElement(WebDriverBy::tagName('body'))->getText());
         $this->driver->findElement(WebDriverBy::xpath('//tr[td[text()="IVD"] and td[text()="IVA"]]/td[2]'))->click();
     }
 

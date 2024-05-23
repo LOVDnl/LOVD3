@@ -47,6 +47,7 @@ class CreateSummaryDataUploadVCFTest extends LOVDSeleniumWebdriverBaseTestCase
         if (!$this->isElementPresent(WebDriverBy::xpath('//a[contains(@href, "users/0000")]/b[text()="Your account"]'))) {
             $this->markTestSkipped('User was not authorized.');
         }
+        $this->assertStringContainsString('No, I will only submit summary variant data', $sBody);
     }
 
 

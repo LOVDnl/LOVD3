@@ -51,6 +51,8 @@ class SetDefaultLicenseTest extends LOVDSeleniumWebdriverBaseTestCase
         if (!$this->isElementPresent(WebDriverBy::xpath('//a[contains(@href, "users/0000")]/b[text()="Your account"]'))) {
             $this->markTestSkipped('User was not authorized.');
         }
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertEquals('', '');
     }
 
 

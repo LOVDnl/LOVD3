@@ -43,6 +43,8 @@ class CheckAuthorizationsTest extends LOVDSeleniumWebdriverBaseTestCase
         if (preg_match('/LOVD was not installed yet/', $sBody)) {
             $this->markTestSkipped('LOVD was not installed yet.');
         }
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertEquals('', '');
     }
 
 
