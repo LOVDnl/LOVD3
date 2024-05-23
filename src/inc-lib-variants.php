@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2024-05-07
+ * Modified    : 2024-05-23
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -968,7 +968,7 @@ function lovd_getRNAProteinPrediction ($sReference, $sGene, $sNCBITranscriptID, 
         '?name=' . urlencode($sFullVariantDescription) . '&standalone=1';
 
     // Make call to mutalyzer to check variant description.
-    $aResponse = lovd_callMutalyzer('runMutalyzer', array('variant' => $sFullVariantDescription));
+    $aResponse = lovd_callMutalyzer('runMutalyzerLight', array('variant' => $sFullVariantDescription));
     if ($aResponse === false) {
         $aMutalyzerData['mutalyzer_error'] = 'Unexpected response from Mutalyzer. Please try again later.';
         return $aMutalyzerData;
