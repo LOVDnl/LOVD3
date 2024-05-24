@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-07-14
- * Modified    : 2024-05-23
+ * Modified    : 2024-05-24
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -245,7 +245,7 @@ class VerifyGA4GHAPITest extends LOVDSeleniumWebdriverBaseTestCase
         $this->assertRegExp('/^HTTP\/1\.. 200 OK$/', $http_response_header[0]);
         $this->assertArrayHasKey('data_model', $aResult);
         $this->assertArrayHasKey('data', $aResult);
-        $this->assertCount(2, $aResult['data']);
+        $this->assertCount(3, $aResult['data']);
         $this->assertArrayHasKey('pagination', $aResult);
         $this->assertArrayHasKey('next_page_url', $aResult['pagination']);
         $this->assertCount(1, $aResult['pagination']);
