@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2024-05-23
+ * Modified    : 2024-05-24
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -31,7 +31,6 @@
 require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
-use \Facebook\WebDriver\WebDriverExpectedCondition;
 
 class CreateSummaryDataUploadVCFTest extends LOVDSeleniumWebdriverBaseTestCase
 {
@@ -98,38 +97,38 @@ class CreateSummaryDataUploadVCFTest extends LOVDSeleniumWebdriverBaseTestCase
 
         $this->assertEquals('25 variants were imported, 1 variant could not be imported.',
             $this->driver->findElement(WebDriverBy::id('lovd__progress_message'))->getText());
-        $this->submitForm('Continue');
 
-        $this->waitForURLContains('/src/submit/finish/upload/');
-        $this->assertStringStartsWith('Successfully processed your submission',
-            $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
-
-        // Wait for redirect first, because I want to change the URL.
-        // I should not rush that, to prevent a race condition.
-        $this->waitForURLContains('/src/variants/upload/');
+        // Don't continue here. That will just try to send an email that we don't care about,
+        //  but it will also cause random mapping of the variants. That will be a problem if we want to compare the
+        //  contents of the database, so we're not letting that happen.
 
         // Now map the variants. Note that tabs are replaced by spaces,
         //  because we work with the browser's interpretation of the text.
-        $bRepeated = false;
-        do {
-            $this->driver->get(ROOT_URL . '/src/ajax/map_variants.php');
-            // We get failures sometimes in the download verification test,
-            //  because the mapping apparently did not complete.
-            // For now, log the output that we get. Maybe there's a pattern.
-            $sBody = rtrim($this->driver->findElement(WebDriverBy::tagName('body'))->getText());
-            fwrite(STDERR, PHP_EOL . 'Mapping output: ' . $sBody);
+        // Loop through the chromosomes to force a certain order of mapping,
+        //  so that the created transcripts are always in the same order.
+        // That is a requirement for the full download comparison test.
+        foreach (array('X', 'Y', '1') as $sChromosome) {
+            $bRepeated = false;
+            do {
+                $this->driver->get(ROOT_URL . '/src/ajax/map_variants.php?position=chr' . $sChromosome . ':1');
+                // We get failures sometimes in the download verification test,
+                //  because the mapping apparently did not complete.
+                // For now, log the output that we get. Maybe there's a pattern.
+                $sBody = rtrim($this->driver->findElement(WebDriverBy::tagName('body'))->getText());
+                fwrite(STDERR, PHP_EOL . 'Mapping output: ' . $sBody);
 
-            // We sometimes get failures, when LOVD says we're done mapping,
-            //  but we're actually not.
-            if (substr($sBody, 0, 5) == '0 99 ' && !$bRepeated) {
-                // Just one more time, please!
-                $sBody = '';
-                $bRepeated = true;
-            } elseif (substr($sBody, 0, 5) != '0 99 ') {
-                // Reset timer in case we are again mapping.
-                $bRepeated = false;
-            }
-        } while (substr($sBody, 0, 5) != '0 99 ');
+                // We sometimes get failures, when LOVD says we're done mapping,
+                //  but we're actually not.
+                if (substr($sBody, 0, 5) == '0 99 ' && !$bRepeated) {
+                    // Just one more time, please!
+                    $sBody = '';
+                    $bRepeated = true;
+                } elseif (substr($sBody, 0, 5) != '0 99 ') {
+                    // Reset timer in case we are again mapping.
+                    $bRepeated = false;
+                }
+            } while (substr($sBody, 0, 5) != '0 99 ');
+        }
         // Because we repeat the call, we usually get a "There are no variants to map in the
         //  database" instead of the expected "Successfully mapped 25 variants".
         $this->assertRegExp(
