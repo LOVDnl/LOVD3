@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-11-10
- * Modified    : 2021-08-16
- * For LOVD    : 3.0-27
+ * Modified    : 2024-05-24
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -38,7 +38,7 @@ class MultiValueSearchTest extends LOVDSeleniumWebdriverBaseTestCase
     protected function setUp (): void
     {
         parent::setUp();
-        $this->driver->get(ROOT_URL . '/src/genes/NOC2L');
+        $this->driver->get(ROOT_URL . '/src/genes/IVD');
         $sBody = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
         if (preg_match('/LOVD was not installed yet/', $sBody)) {
             $this->markTestSkipped('LOVD was not installed yet.');
@@ -57,7 +57,7 @@ class MultiValueSearchTest extends LOVDSeleniumWebdriverBaseTestCase
 
     public function test ()
     {
-        $this->driver->get(ROOT_URL . '/src/variants/NOC2L/unique');
+        $this->driver->get(ROOT_URL . '/src/variants/IVD/unique');
 
         // First, determine which field is the protein field.
         $aColumns = $this->driver->findElements(
@@ -72,7 +72,7 @@ class MultiValueSearchTest extends LOVDSeleniumWebdriverBaseTestCase
 
         // Start the process.
         $this->driver->findElement(WebDriverBy::id(
-            'viewlistOptionsButton_CustomVL_VOTunique_VOG_NOC2L'))->click();
+            'viewlistOptionsButton_CustomVL_VOTunique_VOG_IVD'))->click();
         $this->driver->findElement(WebDriverBy::linkText(
             'Enable or disable filtering on multivalued rows'))->click();
 
@@ -85,11 +85,11 @@ class MultiValueSearchTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->driver->findElement(WebDriverBy::xpath(
             '//div[@class="vl_overlay"][' . $iProteinColumn . ']'))->click();
 
-        // Wait until the viewlist contains 2 rows (2 is the number of
+        // Wait until the viewlist contains 1 row (the number of
         //  variants with >1 protein description).
         $this->waitUntil(function ($driver) {
             return (count($driver->findElements(
-                WebDriverBy::xpath('//table[@class="data"]/tbody/tr'))) == 2);
+                WebDriverBy::xpath('//table[@class="data"]/tbody/tr'))) == 1);
         });
     }
 }
