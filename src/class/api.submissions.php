@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2024-05-07
+ * Modified    : 2024-05-24
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -827,7 +827,8 @@ class LOVD_API_Submissions
                         // Has RNA been checked?
                         $bRNAChecked = false;
                         foreach ($aData['Screenings'] as $aScreening) {
-                            if (strpos($aScreening['Screening/Template'], 'RNA') !== false) {
+                            if ($aScreening['individualid'] == $nIndividualID
+                                && strpos($aScreening['Screening/Template'], 'RNA') !== false) {
                                 $bRNAChecked = true;
                                 break;
                             }
