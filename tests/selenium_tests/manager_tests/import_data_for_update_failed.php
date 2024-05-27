@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-06-23
- * Modified    : 2020-05-28
- * For LOVD    : 3.0-24
+ * Modified    : 2024-05-27
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -77,14 +77,16 @@ Error (Columns, line 9): ID "Individual/Age_of_death" already defined at line 8.
 Error (Genes, line 15): Will not update gene IVD, too many fields are different from the database (chrom_band, refseq_genomic). There is a maximum of 1 difference to prevent accidental updates.
 Error (Genes, line 15): Can\'t update name for gene entry IVD: Not allowed to change the gene name. Value is currently "isovaleryl-CoA dehydrogenase" and value in the import file is "isovaleryl-CoA dehydrogenase1".
 Error (Genes, line 15): Can\'t update chromosome for gene entry IVD: Not allowed to change the chromosome. Value is currently "15" and value in the import file is "151".
-Error (Genes, line 15): Can\'t update refseq_UD for gene entry IVD: Not allowed to change the Mutalyzer UD refseq ID. Value is currently "UD_144371086438" and value in the import file is "UD_142663684045".
+Error (Genes, line 15): Can\'t update refseq_UD for gene entry IVD: Not allowed to change the Mutalyzer UD refseq ID. Value is currently "NC_000015.9" and value in the import file is "UD_142663684045".
 Error (Genes, line 15): Please select a valid entry from the \'refseq_genomic\' selection box, \'NG_011986.1\' is not a valid value. Please choose from these options: \'NG_011986.2\'.
 Error (Genes, line 15): The \'chromosome\' field is limited to 2 characters, you entered 3.
 Error (Genes, line 16): This line refers to a non-existing entry. When the import mode is set to update, no new inserts can be done.
+Error (Transcripts, line 22): Can\'t update id_mutalyzer for transcript entry 00001: Not allowed to change the Mutalyzer ID. Value is currently "004" and value in the import file is "001".
 Error (Transcripts, line 22): Can\'t update id_ncbi for transcript entry 00001: Not allowed to change the NCBI ID. Value is currently "NM_002225.3" and value in the import file is "NM_999999.3".
 Error (Transcripts, line 22): Can\'t update position_g_mrna_start for transcript entry 00001: Not allowed to change the genomic start position. Value is currently "40697686" and value in the import file is "40405485".
 Error (Transcripts, line 22): Can\'t update position_g_mrna_end for transcript entry 00001: Not allowed to change the genomic end position. Value is currently "40713512" and value in the import file is "40421313".
 Error (Transcripts, line 22): Transcript "00001" does not match the same gene and/or the same NCBI ID as in the database.
+Error (Transcripts, line 23): Can\'t update id_mutalyzer for transcript entry 00001: Not allowed to change the Mutalyzer ID. Value is currently "004" and value in the import file is "001".
 Error (Transcripts, line 23): Can\'t update position_g_mrna_start for transcript entry 00001: Not allowed to change the genomic start position. Value is currently "40697686" and value in the import file is "40405485".
 Error (Transcripts, line 23): Can\'t update position_g_mrna_end for transcript entry 00001: Not allowed to change the genomic end position. Value is currently "40713512" and value in the import file is "40421313".
 Error (Transcripts, line 23): ID "00001" already defined at line 22.
