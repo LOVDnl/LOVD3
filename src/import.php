@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2024-05-21
+ * Modified    : 2024-05-24
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -643,7 +643,7 @@ function lovd_calculateFieldDifferences ($zData, &$aLine)
                 continue;
             }
             if (!empty($sValue) &&
-                ctype_digit($sValue) &&
+                (is_int($sValue) || ctype_digit($sValue)) &&
                 (int) $sValue === (int) $aLine[$sCol]) {
                 // Database and import file have the same value, continue to the next field.
                 continue;
