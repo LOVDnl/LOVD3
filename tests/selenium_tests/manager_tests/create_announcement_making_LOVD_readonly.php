@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-08-30
- * Modified    : 2024-05-23
+ * Modified    : 2024-05-27
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -92,7 +92,7 @@ class CreateAnnouncementMakingLOVDReadOnlyTest extends LOVDSeleniumWebdriverBase
         $this->logout();
 
         // There should be no link to register yourself.
-        $this->assertNotContains('Register as submitter',
+        $this->assertStringNotContainsString('Register as submitter',
             $this->driver->findElement(WebDriverBy::xpath(
                 '//table[@class="logo"]//td[contains(., "LOVD v.3.0")]'))->getText());
 
