@@ -562,7 +562,7 @@ if (!empty($aVariants)) {
                                                        'name' => str_replace($sGeneName . ', ', '', $aTranscriptInUD['product']),
                                                        'id_mutalyzer' => str_replace($sSymbol . '_v', '', $aTranscriptInUD['name']),
                             // FIXME: Using this and the modification of the if above, we allow different versions of NMs to be matched.
-                            // This happens when the mapping database doesn't catch up with the UD, or possiby when the UD is getting too old.
+                            // This happens when the mapping database doesn't catch up with the UD, or possibly when the UD is getting too old.
                             // We need a better solution for this, though. First, try and find full match, otherwise match w/ different version number.
 //                                                       'id_ncbi' => $aTranscriptInUD['id'],
                                                        'id_ncbi' => $sTranscriptNM,
@@ -573,8 +573,8 @@ if (!empty($aVariants)) {
                                                        'position_c_mrna_start' => $aTranscriptInUD['cTransStart'],
                                                        'position_c_mrna_end' => $aTranscriptInUD['sortableTransEnd'],
                                                        'position_c_cds_end' => $aTranscriptInUD['cCDSStop'],
-                                                       'position_g_mrna_start' => $aTranscriptData[substr($sTranscriptNM, 0, strpos($sTranscriptNM, '.'))]['start'],
-                                                       'position_g_mrna_end' => $aTranscriptData[substr($sTranscriptNM, 0, strpos($sTranscriptNM, '.'))]['end'],
+                                                       'position_g_mrna_start' => $aTranscriptInUD['chromTransStart'],
+                                                       'position_g_mrna_end' => $aTranscriptInUD['chromTransEnd'],
                                                        'created_by' => 0,
                                                        'created_date' => date('Y-m-d H:i:s'));
                             break 2;
