@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-09-22
- * Modified    : 2023-01-27
- * For LOVD    : 3.0-29
+ * Modified    : 2024-05-27
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -31,7 +31,6 @@
 require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
-use \Facebook\WebDriver\WebDriverKeys;
 
 class CheckCustomLinks extends LOVDSeleniumWebdriverBaseTestCase
 {
@@ -61,22 +60,8 @@ class CheckCustomLinks extends LOVDSeleniumWebdriverBaseTestCase
         // We take the last custom link, because sometimes the first one(s)
         //  are covered by a tab's dropdown menu that's somehow open.
         $oCustomLink = $this->driver->findElement(WebDriverBy::xpath(
-            '//table[@class="data"]/tbody/tr[td/span[text()="dbSNP"]][last()]/td/span[text()="dbSNP"]'));
+            '//table[@class="data"]/tbody/tr[td/span[text()="Fokkema et al (2011)"]][last()]/td/span[text()="Fokkema et al (2011)"]'));
         $this->driver->scrollToElement($oCustomLink);
-        $this->driver->getMouse()->mouseMove($oCustomLink->getCoordinates());
-
-        // Now find the tooltip that should have shown.
-        $sToolTipLinkText = $this->driver->findElement(WebDriverBy::xpath('//div[@id="tooltip"]/a'))->getText();
-        $this->assertStringStartsWith('https://www.ncbi.nlm.nih.gov/snp/', $sToolTipLinkText);
-
-        // This test data does not have many links, try and find a PubMed link.
-        $this->driver->get(ROOT_URL . '/src/variants/in_gene');
-        $this->enterValue('search_VariantOnGenome/Reference', 'Fokkema' . WebDriverKeys::ENTER);
-        $this->waitForElement(WebDriverBy::xpath('//table[@class="data"]/tbody/tr/td/span[text()="Fokkema et al (2011)"]'));
-
-        // Find a custom link, and move the mouse over it.
-        $oCustomLink = $this->driver->findElement(WebDriverBy::xpath(
-            '//table[@class="data"]/tbody/tr/td/span[text()="Fokkema et al (2011)"]'));
         $this->driver->getMouse()->mouseMove($oCustomLink->getCoordinates());
 
         // Now find the tooltip that should have shown.
