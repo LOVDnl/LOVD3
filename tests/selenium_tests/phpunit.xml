@@ -2,7 +2,7 @@
     <testsuites>
         <testsuite name="admin_tests">
             <!-- Administrator tests; nearly all basic functionality.
-                 Takes ~5 minutes. -->
+                 Takes ~4.5 minutes. -->
             <file>shared_tests/check_PHP_version.php</file>
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/set_default_license.php</file>
@@ -58,7 +58,7 @@
         </testsuite>
         <testsuite name="curator_tests">
             <!-- Curator tests; authorization, disease settings, submission.
-                 Takes ~2.5 minutes. -->
+                 Takes ~3 minutes. -->
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/create_gene_IVD.php</file>
             <file>shared_tests/create_user_manager.php</file>
@@ -83,7 +83,7 @@
         </testsuite>
         <testsuite name="collaborator_tests">
             <!-- Collaborator tests; authorization, submission.
-                 Takes ~2.5 minutes.-->
+                 Takes ~3 minutes.-->
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/create_gene_IVD.php</file>
             <file>shared_tests/create_disease_IVA.php</file>
@@ -114,7 +114,7 @@
         <testsuite name="submitter_tests">
             <!-- Submitter tests; authorization, submission, access sharing,
                  LOVD2 data file conversion, simple curation by a Curator, checkHGVS interface.
-                 Takes ~3.5 minutes. -->
+                 Takes ~4.5 minutes. -->
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/create_gene_IVD.php</file>
             <file>shared_tests/create_disease_IVA.php</file>
