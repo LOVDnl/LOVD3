@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2022-09-06
- * Modified    : 2022-10-21
- * For LOVD    : 3.0-29
+ * Modified    : 2024-05-28
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -201,14 +201,15 @@ class CheckHGVSInterfaceTest extends LOVDSeleniumWebdriverBaseTestCase
 
         // The download location is set to "/tmp"
         //  in getWebDriverInstance() @ inc-lib-test.php.
-        $aFilesBefore = scandir('/tmp');
+        $sTempDir = '/tmp/';
+        $aFilesBefore = scandir($sTempDir);
         $this->clickButton('Download this result');
-        $this->waitUntil(function () use ($aFilesBefore) {
+        $this->waitUntil(function () use ($aFilesBefore, $sTempDir) {
             // Let's hope nothing gets deleted now,
             //  and no new files get added that aren't the download file.
-            return (count(scandir('/tmp')) > count($aFilesBefore));
+            return (count(scandir($sTempDir)) > count($aFilesBefore));
         });
-        $aPossibleDownloadFiles = array_diff(scandir('/tmp'), $aFilesBefore);
+        $aPossibleDownloadFiles = array_diff(scandir($sTempDir), $aFilesBefore);
         $this->assertGreaterThanOrEqual(1, count($aPossibleDownloadFiles));
 
         if (count($aPossibleDownloadFiles) == 1) {
@@ -246,7 +247,7 @@ class CheckHGVSInterfaceTest extends LOVDSeleniumWebdriverBaseTestCase
                 }, explode(
                     "\r\n",
                     rtrim(
-                        file_get_contents('/tmp/' . $sDownloadFile)
+                        file_get_contents($sTempDir . $sDownloadFile)
                     )
                 )
             )
