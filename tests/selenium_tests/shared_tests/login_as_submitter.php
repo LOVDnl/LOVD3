@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2020-10-09
- * For LOVD    : 3.0-25
+ * Modified    : 2024-05-28
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -58,6 +58,7 @@ class LoginAsSubmitterTest extends LOVDSeleniumWebdriverBaseTestCase
     {
         $this->logout();
         $this->login('submitter', 'test1234');
+        $this->assertStringContainsString('/src/genes', $this->driver->getCurrentURL());
     }
 }
 ?>
