@@ -30,7 +30,6 @@
  *************/
 
 require_once 'inc-lib-test.php';
-require_once 'RefreshingWebDriverElement.php';
 
 use \Facebook\WebDriver\Exception\NoSuchAlertException;
 use \Facebook\WebDriver\Exception\NoSuchElementException;

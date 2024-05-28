@@ -29,8 +29,6 @@
  *
  *************/
 
-require_once 'RefreshingWebDriverElement.php';
-
 use \Facebook\WebDriver\Exception\NoSuchElementException;
 use \Facebook\WebDriver\Remote\RemoteWebDriver;
 use \Facebook\WebDriver\WebDriverBy;
