@@ -42,29 +42,9 @@ use \Facebook\WebDriver\WebDriverElement;
 
 class LOVDWebDriver extends RemoteWebDriver {
     /**
-     * Sub class of RemoteWebDriver. Overloading its findElement method
-     * to make use of RefreshingWebDriverElement.
+     * Subclass of RemoteWebDriver. Overloading its findElement method to not
+     *  throw an Exception immediately when an element can't be found yet.
      */
-
-    public function execute ($command_name, $params = [])
-    {
-        // This WebDriver/GeckoDriver/Selenium combination is so confusing.
-        // The JSON-to-Web3C change is causing problems here, so I have to
-        //  overload the execute() function to fix issues. Once GeckoDriver (??)
-        //  is updated and fixed to work with Selenium properly, then we can
-        //  remove this.
-        if (getenv('LOVD_SELENIUM_DRIVER') == 'firefox'
-            && $command_name == 'switchToWindow') {
-            // FF needs "handle", while Chrome needs "name".
-            return parent::execute($command_name, ['handle' => $params['name']]);
-        } else {
-            return parent::execute($command_name, $params);
-        }
-    }
-
-
-
-
 
     public function findElement (WebDriverBy $by)
     {
