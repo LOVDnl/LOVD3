@@ -7,8 +7,7 @@
         "PHP WebDriver 1.8 changes code making our findElement() overloading fail.",
         "WebDriverBy::name() doesn't work anymore then. For more information, see:",
         "https://github.com/php-webdriver/php-webdriver/issues/774",
-        "Updating WebDriver will require us to rewrite that function somewhat, or perhaps toss it.",
-        "findElements() (plural) can then also go."
+        "Updating WebDriver will require us to rewrite that function somewhat, or perhaps toss it."
     ],
     "require-dev": {
         "phpunit/phpunit": "8.*",

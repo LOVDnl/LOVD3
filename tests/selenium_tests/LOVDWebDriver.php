@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-09-28
- * Modified    : 2020-05-22
- * For LOVD    : 3.0-24
+ * Modified    : 2024-05-28
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -97,32 +97,6 @@ class LOVDWebDriver extends RemoteWebDriver {
         $element->setLocator($by);
         $element->setWebDriver($this);
         return $element;
-    }
-
-
-
-
-
-    public function findElements (WebDriverBy $by)
-    {
-        // This method is similar to RemoteWebDriver::findElements() but
-        //  it fixes the RemoteWebDriver's bug of using the wrong index.
-        // Undefined index: ELEMENT.
-        // Caused by using $raw_element['ELEMENT'], which doesn't exist.
-        // WARNING: This function is NOT compatible with WebDriver 1.8.
-        $params = array('using' => $by->getMechanism(), 'value' => $by->getValue());
-
-        $raw_elements = $this->execute(
-            DriverCommand::FIND_ELEMENTS,
-            $params
-        );
-
-        $elements = array();
-        foreach ($raw_elements as $raw_element) {
-            $elements[] = $this->newElement(current($raw_element));
-        }
-
-        return $elements;
     }
 
 
