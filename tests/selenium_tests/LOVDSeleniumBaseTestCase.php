@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2024-05-22
+ * Modified    : 2024-05-28
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -32,7 +32,7 @@
 require_once 'inc-lib-test.php';
 require_once 'RefreshingWebDriverElement.php';
 
-use \Facebook\WebDriver\Exception\NoAlertOpenException;
+use \Facebook\WebDriver\Exception\NoSuchAlertException;
 use \Facebook\WebDriver\Exception\NoSuchElementException;
 use \Facebook\WebDriver\Exception\WebDriverException;
 use \Facebook\WebDriver\Remote\LocalFileDetector;
@@ -208,7 +208,7 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit\Framework\TestC
         try {
             $this->driver->switchTo()->alert()->getText();
             return true;
-        } catch (NoAlertOpenException $e) {
+        } catch (NoSuchAlertException $e) {
             return false;
         }
     }
