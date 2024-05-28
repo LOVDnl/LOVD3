@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-21
- * Modified    : 2024-05-23
+ * Modified    : 2024-05-28
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -33,7 +33,7 @@ require_once 'LOVDSeleniumBaseTestCase.php';
 use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
 
-class SetDefaultLicenseTest extends LOVDSeleniumWebdriverBaseTestCase
+class SetLicenseForSubmissionTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     public function testSetUp ()
     {
@@ -91,6 +91,9 @@ class SetDefaultLicenseTest extends LOVDSeleniumWebdriverBaseTestCase
             WebDriverBy::xpath(
                 '//table[@class="data"]//th[contains(., "Database") and contains(., "license")]/../td/span/a[text()="Change"]'))->click();
         $this->waitForElement(WebDriverBy::xpath('//div[@id="licenses_dialog"]/../div[last()]//button[text()="Save settings"]'));
+
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertEquals('', '');
     }
 
 
@@ -127,12 +130,12 @@ class SetDefaultLicenseTest extends LOVDSeleniumWebdriverBaseTestCase
     public function testValidateResults ()
     {
         $this->driver->get($this->driver->getCurrentURL()); // Reload.
-        $this->driver->findElement(
+        $this->assertTrue($this->isElementPresent(
             WebDriverBy::xpath(
-                '//table[@class="data"]//th[contains(., "Database") and contains(., "license")]/../td/a[@href="https://creativecommons.org/licenses/by-nc-sa/4.0/"]'));
-        $this->driver->findElement(
+                '//table[@class="data"]//th[contains(., "Database") and contains(., "license")]/../td/a[@href="https://creativecommons.org/licenses/by-nc-sa/4.0/"]')));
+        $this->assertTrue($this->isElementPresent(
             WebDriverBy::xpath(
-                '//table[@class="data"]//th[contains(., "Database") and contains(., "license")]/../td/a/img[@src="gfx/cc_by-nc-sa_80x15.png"]'));
+                '//table[@class="data"]//th[contains(., "Database") and contains(., "license")]/../td/a/img[@src="gfx/cc_by-nc-sa_80x15.png"]')));
 
         $this->driver->findElement(
             WebDriverBy::xpath(
