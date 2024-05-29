@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2024-05-07
+ * Modified    : 2024-05-24
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -827,14 +827,15 @@ class LOVD_API_Submissions
                         // Has RNA been checked?
                         $bRNAChecked = false;
                         foreach ($aData['Screenings'] as $aScreening) {
-                            if (strpos($aScreening['Screening/Template'], 'RNA') !== false) {
+                            if ($aScreening['individualid'] == $nIndividualID
+                                && strpos($aScreening['Screening/Template'], 'RNA') !== false) {
                                 $bRNAChecked = true;
                                 break;
                             }
                         }
                         if (count($aRNAs) == 1) {
                             // When RNA has not been checked, the RNA field description requires parentheses.
-                            $sRNA = (!$bRNAChecked && preg_match('/^r.[^(]/', $aRNAs[0])?
+                            $sRNA = (!$bRNAChecked && preg_match('/^r.[^(]/', $aRNAs[0]) && !in_array($aRNAs[0], array('r.?', 'r.0?', 'r.spl', 'r.spl?'))?
                                 'r.(' . substr($aRNAs[0], 2) . ')' :
                                 $aRNAs[0]);
                         } elseif (!$aRNAs) {
@@ -856,7 +857,7 @@ class LOVD_API_Submissions
                         // Store Protein.
                         if (count($aProteins) == 1) {
                             // When RNA has not been checked, the protein description requires parentheses.
-                            $sProtein = (!$bRNAChecked && preg_match('/^p.[^(]/', $aProteins[0])?
+                            $sProtein = (!$bRNAChecked && preg_match('/^p.[^(]/', $aProteins[0]) && !in_array($aProteins[0], array('p.?', 'p.0?'))?
                                 'p.(' . substr($aProteins[0], 2) . ')' :
                                 $aProteins[0]);
                         } elseif (!$aProteins) {

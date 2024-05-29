@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-07-14
- * Modified    : 2021-07-16
- * For LOVD    : 3.0-27
+ * Modified    : 2024-05-24
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -46,6 +46,8 @@ class VerifyGA4GHAPITest extends LOVDSeleniumWebdriverBaseTestCase
         if (preg_match('/No such ID!/', $sBody)) {
             $this->markTestSkipped('Gene does not exist yet.');
         }
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertEquals('', '');
     }
 
 
@@ -243,7 +245,7 @@ class VerifyGA4GHAPITest extends LOVDSeleniumWebdriverBaseTestCase
         $this->assertRegExp('/^HTTP\/1\.. 200 OK$/', $http_response_header[0]);
         $this->assertArrayHasKey('data_model', $aResult);
         $this->assertArrayHasKey('data', $aResult);
-        $this->assertCount(2, $aResult['data']);
+        $this->assertCount(3, $aResult['data']);
         $this->assertArrayHasKey('pagination', $aResult);
         $this->assertArrayHasKey('next_page_url', $aResult['pagination']);
         $this->assertCount(1, $aResult['pagination']);

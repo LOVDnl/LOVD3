@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-21
- * Modified    : 2023-02-14
- * For LOVD    : 3.0-29
+ * Modified    : 2024-05-28
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -33,7 +33,7 @@ require_once 'LOVDSeleniumBaseTestCase.php';
 use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
 
-class SetDefaultLicenseTest extends LOVDSeleniumWebdriverBaseTestCase
+class SetLicenseForSubmissionTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     public function testSetUp ()
     {
@@ -51,6 +51,8 @@ class SetDefaultLicenseTest extends LOVDSeleniumWebdriverBaseTestCase
         if (!$this->isElementPresent(WebDriverBy::xpath('//a[contains(@href, "users/0000")]/b[text()="Your account"]'))) {
             $this->markTestSkipped('User was not authorized.');
         }
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertEquals('', '');
     }
 
 
@@ -63,14 +65,14 @@ class SetDefaultLicenseTest extends LOVDSeleniumWebdriverBaseTestCase
     public function testFindSubmission ()
     {
         $this->driver->findElement(WebDriverBy::xpath('//a[contains(@href, "users/0000")]/b[text()="Your account"]'))->click();
-        $this->assertContains('/src/users/0000', $this->driver->getCurrentURL());
+        $this->assertStringContainsString('/src/users/0000', $this->driver->getCurrentURL());
 
         // XPath doesn't accept "Has created", only that it contains
         //  "Has" and that it contains "created".
         $this->driver->findElement(
             WebDriverBy::xpath(
                 '//table[@class="data"]//th[contains(., "Has") and contains(., "created")]/../td/a[contains(., "individual")]'))->click();
-        $this->assertContains('/src/individuals?search_created_by=', $this->driver->getCurrentURL());
+        $this->assertStringContainsString('/src/individuals?search_created_by=', $this->driver->getCurrentURL());
 
         $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"]/tbody/tr[1]/td[1]'))->click();
     }
@@ -89,6 +91,9 @@ class SetDefaultLicenseTest extends LOVDSeleniumWebdriverBaseTestCase
             WebDriverBy::xpath(
                 '//table[@class="data"]//th[contains(., "Database") and contains(., "license")]/../td/span/a[text()="Change"]'))->click();
         $this->waitForElement(WebDriverBy::xpath('//div[@id="licenses_dialog"]/../div[last()]//button[text()="Save settings"]'));
+
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertEquals('', '');
     }
 
 
@@ -105,7 +110,7 @@ class SetDefaultLicenseTest extends LOVDSeleniumWebdriverBaseTestCase
         // Yes, allow derivatives, but only SA.
         $this->driver->findElement(WebDriverBy::xpath('//div[@id="licenses_dialog"]/form/table[2]/tbody/tr[3]/td/input'))->click();
         // Verify that license has been shown.
-        $this->assertContains('Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International',
+        $this->assertStringContainsString('Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International',
             $this->driver->findElement(WebDriverBy::id('selected_license'))->getText());
         // Submit.
         $this->driver->findElement(WebDriverBy::xpath('//div[@id="licenses_dialog"]/../div[last()]//button[text()="Save settings"]'))->click();
@@ -125,12 +130,12 @@ class SetDefaultLicenseTest extends LOVDSeleniumWebdriverBaseTestCase
     public function testValidateResults ()
     {
         $this->driver->get($this->driver->getCurrentURL()); // Reload.
-        $this->driver->findElement(
+        $this->assertTrue($this->isElementPresent(
             WebDriverBy::xpath(
-                '//table[@class="data"]//th[contains(., "Database") and contains(., "license")]/../td/a[@href="https://creativecommons.org/licenses/by-nc-sa/4.0/"]'));
-        $this->driver->findElement(
+                '//table[@class="data"]//th[contains(., "Database") and contains(., "license")]/../td/a[@href="https://creativecommons.org/licenses/by-nc-sa/4.0/"]')));
+        $this->assertTrue($this->isElementPresent(
             WebDriverBy::xpath(
-                '//table[@class="data"]//th[contains(., "Database") and contains(., "license")]/../td/a/img[@src="gfx/cc_by-nc-sa_80x15.png"]'));
+                '//table[@class="data"]//th[contains(., "Database") and contains(., "license")]/../td/a/img[@src="gfx/cc_by-nc-sa_80x15.png"]')));
 
         $this->driver->findElement(
             WebDriverBy::xpath(

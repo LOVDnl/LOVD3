@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-15
- * Modified    : 2020-11-27
- * For LOVD    : 3.0-26
+ * Modified    : 2024-05-23
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -68,6 +68,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
         // HREF was relative, but WebDriver returns it as absolute.
         $aHref = explode('/', $sHref);
         $nUserID = (int) array_pop($aHref);
+        $this->assertGreaterThan(0, $nUserID);
 
         // This is the only way PHPUnit allows us to share data between tests.
         return $nUserID;
@@ -123,7 +124,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
      */
     public function testAddPhenotypeRecord ($nUserID)
     {
-        $this->assertContains('/src/submit/individual/0000', $this->driver->getCurrentURL());
+        $this->assertStringContainsString('/src/submit/individual/0000', $this->driver->getCurrentURL());
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to add phenotype information")]'))->click();
 
@@ -158,7 +159,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
      */
     public function testAddScreening ($nUserID)
     {
-        $this->assertContains('/src/submit/individual/0000', $this->driver->getCurrentURL());
+        $this->assertStringContainsString('/src/submit/individual/0000', $this->driver->getCurrentURL());
 
         // This click often timeouts for no reason.
         $oLocator = WebDriverBy::xpath(
@@ -206,7 +207,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
      */
     public function testAddVariantWithinIVD ($nUserID)
     {
-        $this->assertContains('/src/submit/screening/0000', $this->driver->getCurrentURL());
+        $this->assertStringContainsString('/src/submit/screening/0000', $this->driver->getCurrentURL());
 
         // This click often timeouts for no reason.
         $oLocator = WebDriverBy::xpath(
@@ -228,6 +229,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
             // Travis' Chrome keeps failing here with a StaleElementReferenceException without refreshes.
             $this->enterValue('search_id_', 'IVD' . WebDriverKeys::ENTER);
         } catch (StaleElementReferenceException $e) {}
+        sleep(1);
         $this->driver->findElement(WebDriverBy::xpath('//tr[@id="IVD"]/td[1]'))->click();
 
         $this->waitForURLContains('/src/variants?create&reference=Transcript&geneid=IVD&target=0000');
@@ -275,7 +277,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
      */
     public function testAddVariantOnGenomicLevel ($nUserID)
     {
-        $this->assertContains('/src/submit/screening/0000', $this->driver->getCurrentURL());
+        $this->assertStringContainsString('/src/submit/screening/0000', $this->driver->getCurrentURL());
 
         // This click often timeouts for no reason.
         $oLocator = WebDriverBy::xpath(
@@ -327,7 +329,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
      */
     public function testFinishSubmission ()
     {
-        $this->assertContains('/src/submit/screening/0000', $this->driver->getCurrentURL());
+        $this->assertStringContainsString('/src/submit/screening/0000', $this->driver->getCurrentURL());
 
         // This click often timeouts for no reason.
         $oLocator = WebDriverBy::xpath(

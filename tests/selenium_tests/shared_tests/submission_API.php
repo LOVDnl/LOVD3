@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-20
- * Modified    : 2020-09-28
- * For LOVD    : 3.0-25
+ * Modified    : 2024-05-23
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -49,6 +49,8 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
         if (!$this->isElementPresent(WebDriverBy::xpath('//a[contains(@href, "users/0000")]/b[text()="Your account"]'))) {
             $this->markTestSkipped('User was not authorized.');
         }
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertEquals('', '');
     }
 
 
@@ -74,7 +76,7 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
         $aResult = json_decode($sResult, true);
 
         $this->assertEquals(array(), $aResult['messages']);
-        $this->assertContains('VarioML error: LSDB ID in file does not match this LSDB.',
+        $this->assertStringContainsString('VarioML error: LSDB ID in file does not match this LSDB.',
             implode(';', $aResult['errors']));
         $this->assertStringEndsWith ('422 Unprocessable Entity', $http_response_header[0]);
     }
@@ -88,6 +90,8 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
      */
     public function testCreateToken ()
     {
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertTrue($this->isElementPresent(WebDriverBy::linkText('Your account')));
         $this->driver->findElement(WebDriverBy::linkText('Your account'))->click();
         $this->driver->findElement(WebDriverBy::linkText('Show / More information'))->click();
         $this->waitForElement(WebDriverBy::xpath('//button[.="Create new token"]'));
@@ -167,7 +171,7 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
         $aResult = json_decode($sResult, true);
 
         $this->assertEquals(array(), $aResult['messages']);
-        $this->assertContains('VarioML error: Authentication denied.',
+        $this->assertStringContainsString('VarioML error: Authentication denied.',
             implode(';', $aResult['errors']));
         $this->assertStringEndsWith('401 Unauthorized', $http_response_header[0]);
     }
@@ -210,7 +214,7 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
         $aResult = json_decode($sResult, true);
 
         $this->assertEquals(array(), $aResult['errors']);
-        $this->assertContains('Data successfully stored for import.',
+        $this->assertStringContainsString('Data successfully stored for import.',
             implode(';', $aResult['messages']));
         $this->assertStringEndsWith ('202 Accepted', $http_response_header[0]);
     }
@@ -244,7 +248,7 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
     public function testImportSubmission ()
     {
         $this->driver->get(ROOT_URL . '/src/import?autoupload_scheduled_file');
-        $this->assertContains('Success!', $this->driver->getPageSource());
+        $this->assertStringContainsString('Success!', $this->driver->getPageSource());
     }
 
 
@@ -257,7 +261,7 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
     public function testVerifySubmission ()
     {
         $this->driver->get(ROOT_URL . '/src/variants/IVD');
-        $this->driver->findElement(WebDriverBy::xpath('//td[.="c.465+1G>A"]'));
+        $this->assertTrue($this->isElementPresent(WebDriverBy::xpath('//td[.="c.465+1G>A"]')));
     }
 }
 ?>

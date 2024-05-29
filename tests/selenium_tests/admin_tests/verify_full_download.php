@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-21
- * Modified    : 2023-02-22
- * For LOVD    : 3.0-29
+ * Modified    : 2024-05-29
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -62,20 +62,21 @@ class VerifyFullDownloadTest extends LOVDSeleniumWebdriverBaseTestCase
         //  to actually trigger a failure.
         $sStatistics = $this->driver->findElement(
             WebDriverBy::xpath('//table[@class="setup"][1]'))->getText();
-        $this->assertContains('Individuals : 2', $sStatistics);
-        $this->assertContains('Total : 167', $sStatistics);
+        $this->assertStringContainsString('Individuals : 3', $sStatistics);
+        $this->assertStringContainsString('Total : 30', $sStatistics);
 
         // The download location is set to "/tmp"
         //  in getWebDriverInstance() @ inc-lib-test.php.
-        $aFilesBefore = scandir('/tmp');
+        $sTempDir = TMPDIR;
+        $aFilesBefore = scandir($sTempDir);
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="setup"]//td[contains(text(), "Download all data")]'))->click();
-        $this->waitUntil(function () use ($aFilesBefore) {
+        $this->waitUntil(function () use ($aFilesBefore, $sTempDir) {
             // Let's hope nothing gets deleted now,
             //  and no new files get added that aren't the download file.
-            return (count(scandir('/tmp')) > count($aFilesBefore));
+            return (count(scandir($sTempDir)) > count($aFilesBefore));
         });
-        $aPossibleDownloadFiles = array_diff(scandir('/tmp'), $aFilesBefore);
+        $aPossibleDownloadFiles = array_diff(scandir($sTempDir), $aFilesBefore);
         $this->assertGreaterThanOrEqual(1, count($aPossibleDownloadFiles));
 
         if (count($aPossibleDownloadFiles) == 1) {
@@ -94,7 +95,7 @@ class VerifyFullDownloadTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->assertEquals(
             file_get_contents(ROOT_PATH . '../tests/test_data_files/AdminTestSuiteResult.txt'),
             preg_replace('/^### LOVD-version [0-9]{4}-[0-9a-z]{3} /', '### LOVD-version ????-??? ',
-                preg_replace('/\b[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\b/', '0000-00-00 00:00:00', file_get_contents('/tmp/' . $sDownloadFile)))
+                preg_replace('/\b[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\b/', '0000-00-00 00:00:00', file_get_contents($sTempDir . $sDownloadFile)))
         );
     }
 }

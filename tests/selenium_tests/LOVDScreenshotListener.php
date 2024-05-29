@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-04-21
- * Modified    : 2020-05-12
- * For LOVD    : 3.0-24
+ * Modified    : 2024-05-22
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2016-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -53,7 +53,7 @@ class LOVDScreenshotListener implements PHPUnit\Framework\TestListener
 
 
 
-    public function addError (PHPUnit\Framework\Test $test, Exception $e, $time)
+    public function addError (PHPUnit\Framework\Test $test, Throwable $e, $time): void
     {
         $this->storeAScreenshot($test, $e);
     }
@@ -62,7 +62,16 @@ class LOVDScreenshotListener implements PHPUnit\Framework\TestListener
 
 
 
-    public function addFailure (PHPUnit\Framework\Test $test, PHPUnit\Framework\AssertionFailedError $e, $time)
+    public function addFailure (PHPUnit\Framework\Test $test, PHPUnit\Framework\AssertionFailedError $e, $time): void
+    {
+        $this->storeAScreenshot($test, $e);
+    }
+
+
+
+
+
+    public function addWarning (PHPUnit\Framework\Test $test, PHPUnit\Framework\Warning $e, $time): void
     {
         $this->storeAScreenshot($test, $e);
     }
@@ -101,7 +110,7 @@ class LOVDScreenshotListener implements PHPUnit\Framework\TestListener
 
 
 
-    public function endTestSuite (PHPUnit\Framework\TestSuite $suite)
+    public function endTestSuite (PHPUnit\Framework\TestSuite $suite): void
     {
         // Normally run at the end of the test suite, but PHPUnit decides that
         //  every file in our suite is a suite in itself. So, this is run after
@@ -118,10 +127,10 @@ class LOVDScreenshotListener implements PHPUnit\Framework\TestListener
     // Really dumb, but since PHPUnit\Framework\TestListener doesn't
     //  implement these, but does define them, we should implement them.
     // Yes, it makes no sense.
-    public function addIncompleteTest (PHPUnit\Framework\Test $test, Exception $e, $time) {}
-    public function addSkippedTest (PHPUnit\Framework\Test $test, Exception $e, $time) {}
-    public function addRiskyTest (PHPUnit\Framework\Test $test, Exception $e, $time) {}
-    public function startTest (PHPUnit\Framework\Test $test) {}
-    public function endTest (PHPUnit\Framework\Test $test, $time) {}
-    public function startTestSuite (PHPUnit\Framework\TestSuite $suite) {}
+    public function addIncompleteTest (PHPUnit\Framework\Test $test, Throwable $e, $time): void {}
+    public function addSkippedTest (PHPUnit\Framework\Test $test, Throwable $e, $time): void {}
+    public function addRiskyTest (PHPUnit\Framework\Test $test, Throwable $e, $time): void {}
+    public function startTest (PHPUnit\Framework\Test $test): void {}
+    public function endTest (PHPUnit\Framework\Test $test, $time): void {}
+    public function startTestSuite (PHPUnit\Framework\TestSuite $suite): void {}
 }

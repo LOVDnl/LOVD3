@@ -1,21 +1,11 @@
 {
     "_readme": [
-        "We're using quite an old PHPUnit version; 5.7 while 9 is already out.",
-        "PHPUnit 6.5 breaks all of our tests.",
-        "We currently can't go higher than 6.5 anyway, so I'm leaving it for now.",
-        "PHPUnit 6.5 still supports PHP 7.0 (from our Travis Xenial build).",
-        "If we switch to Bionic (PHP 7.2), then we can go to 8.*.",
         "For PHPUnit versions and their supported PHP versions, check:",
         "https://phpunit.de/supported-versions.html",
-
-        "PHP WebDriver 1.8 changes code making our findElement() overloading fail.",
-        "WebDriverBy::name() doesn't work anymore then. For more information, see:",
-        "https://github.com/php-webdriver/php-webdriver/issues/774",
-        "Updating WebDriver will require us to rewrite that function somewhat, or perhaps toss it.",
-        "findElements() (plural) can then also go."
+        "PHPUnit 8.* requires PHP7.2."
     ],
     "require-dev": {
         "phpunit/phpunit": "8.*",
-        "php-webdriver/webdriver": "1.9.*"
+        "php-webdriver/webdriver": "1.11.*"
     }
 }

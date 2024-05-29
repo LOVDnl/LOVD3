@@ -8,7 +8,7 @@
             "genes": [
                 {
                     "source": "HGNC",
-                    "accession": "6186",
+                    "accession": 6186,
                     "phenotypes": [
                         {
                             "term": "isovaleric acidemia (IVA)",
@@ -649,6 +649,213 @@
                 ],
                 "panels": [],
                 "variants": []
+            }
+        },
+        {
+            "type": "DNA",
+            "genes": [
+                {
+                    "source": "HGNC",
+                    "accession": 6186,
+                    "phenotypes": [
+                        {
+                            "term": "isovaleric acidemia (IVA)",
+                            "source": "MIM",
+                            "accession": "243500"
+                        }
+                    ],
+                    "db_xrefs": [
+                        {
+                            "source": "HGNC.symbol",
+                            "accession": "IVD"
+                        },
+                        {
+                            "source": "MIM",
+                            "accession": "607036"
+                        }
+                    ]
+                }
+            ],
+            "ref_seq": {
+                "source": "genbank",
+                "accession": "NC_000015.9"
+            },
+            "name": {
+                "scheme": "HGVS",
+                "value": "g.40708307A>T"
+            },
+            "locations": [
+                {
+                    "chr": "15",
+                    "start": 40708307,
+                    "end": 40708307
+                }
+            ],
+            "pathogenicities": [
+                {
+                    "scope": "individual",
+                    "source": "LOVD",
+                    "term": "unknown",
+                    "data_source": {
+                        "name": "submitter"
+                    }
+                }
+            ],
+            "creation_date": {
+                "value": "0000-00-00T00:00:00+00:00"
+            },
+            "modification_date": {
+                "value": "0000-00-00T00:00:00+00:00"
+            },
+            "panel": {
+                "individuals": [],
+                "panels": [],
+                "variants": [
+                    {
+                        "id": "0000000003",
+                        "type": "DNA",
+                        "ref_seq": {
+                            "source": "genbank",
+                            "accession": "NC_000015.9"
+                        },
+                        "name": {
+                            "scheme": "HGVS",
+                            "value": "g.40708307A>T"
+                        },
+                        "pathogenicities": [
+                            {
+                                "scope": "individual",
+                                "source": "LOVD",
+                                "term": "unknown",
+                                "data_source": {
+                                    "name": "submitter"
+                                }
+                            }
+                        ],
+                        "creation_date": {
+                            "value": "0000-00-00T00:00:00+00:00"
+                        },
+                        "modification_date": {
+                            "value": "0000-00-00T00:00:00+00:00"
+                        },
+                        "db_xrefs": [
+                            {
+                                "source": "pubmed",
+                                "accession": "21520333",
+                                "name": "Fokkema et al (2011)"
+                            }
+                        ],
+                        "seq_changes": {
+                            "variants": [
+                                {
+                                    "type": "cDNA",
+                                    "gene": {
+                                        "source": "HGNC",
+                                        "accession": "IVD"
+                                    },
+                                    "ref_seq": {
+                                        "source": "genbank",
+                                        "accession": "NM_002225.3"
+                                    },
+                                    "name": {
+                                        "scheme": "HGVS",
+                                        "value": "c.1000A>T"
+                                    },
+                                    "seq_changes": {
+                                        "variants": [
+                                            {
+                                                "type": "RNA",
+                                                "name": {
+                                                    "scheme": "HGVS",
+                                                    "value": "r.(?)"
+                                                },
+                                                "seq_changes": {
+                                                    "variants": [
+                                                        {
+                                                            "type": "AA",
+                                                            "ref_seq": {
+                                                                "source": "genbank",
+                                                                "accession": "NP_002216.2"
+                                                            },
+                                                            "name": {
+                                                                "scheme": "HGVS",
+                                                                "value": "p.(Thr334Ser)"
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "type": "cDNA",
+                                    "gene": {
+                                        "source": "HGNC",
+                                        "accession": "IVD"
+                                    },
+                                    "ref_seq": {
+                                        "source": "genbank",
+                                        "accession": "NM_001159508.1"
+                                    },
+                                    "name": {
+                                        "scheme": "HGVS",
+                                        "value": "c.910A>T"
+                                    },
+                                    "seq_changes": {
+                                        "variants": [
+                                            {
+                                                "type": "RNA",
+                                                "name": {
+                                                    "scheme": "HGVS",
+                                                    "value": "r.(?)"
+                                                },
+                                                "seq_changes": {
+                                                    "variants": [
+                                                        {
+                                                            "type": "AA",
+                                                            "ref_seq": {
+                                                                "source": "genbank",
+                                                                "accession": "NP_001152980.1"
+                                                            },
+                                                            "name": {
+                                                                "scheme": "HGVS",
+                                                                "value": "p.(Thr304Ser)"
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        "data_source": {
+                            "contacts": [
+                                {
+                                    "role": "submitter",
+                                    "name": "LOVD3 Admin",
+                                    "email": "test@lovd.nl"
+                                },
+                                {
+                                    "role": "owner",
+                                    "name": "LOVD3 Admin",
+                                    "email": "test@lovd.nl"
+                                }
+                            ]
+                        },
+                        "sharing_policy": {
+                            "type": "OpenAccess",
+                            "use_permission": {
+                                "term": "Creative Commons Attribution 4.0 International",
+                                "source": "CC",
+                                "accession": "cc_by_4.0",
+                                "uri": "https:\/\/creativecommons.org\/licenses\/by\/4.0"
+                            }
+                        }
+                    }
+                ]
             }
         }
     ],

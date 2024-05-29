@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2020-10-08
- * For LOVD    : 3.0-25
+ * Modified    : 2024-05-23
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -41,7 +41,7 @@ class CreateSummaryVariantLocatedWithinGeneWithMultipleTranscriptsTest extends L
     {
         // A normal setUp() runs for every test in this file. We only need this once,
         //  so we disguise this setUp() as a test that we depend on just once.
-        $this->driver->get(ROOT_URL . '/src/genes/ARSD');
+        $this->driver->get(ROOT_URL . '/src/genes/IVD');
         $sBody = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
         if (preg_match('/LOVD was not installed yet/', $sBody)) {
             $this->markTestSkipped('LOVD was not installed yet.');
@@ -52,6 +52,8 @@ class CreateSummaryVariantLocatedWithinGeneWithMultipleTranscriptsTest extends L
         if (!$this->isElementPresent(WebDriverBy::xpath('//a[contains(@href, "users/0000")]/b[text()="Your account"]'))) {
             $this->markTestSkipped('User was not authorized.');
         }
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertEquals('', '');
     }
 
 
@@ -73,12 +75,13 @@ class CreateSummaryVariantLocatedWithinGeneWithMultipleTranscriptsTest extends L
 
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "A variant that is located within a gene")]'))->click();
-        // We probably don't need to search for ARSD, but we might as well.
+        // We probably don't need to search for IVD, but we might as well.
         try {
             // Travis' Chrome keeps failing here with a StaleElementReferenceException without refreshes.
-            $this->enterValue('search_id_', 'ARSD' . WebDriverKeys::ENTER);
+            $this->enterValue('search_id_', 'IVD' . WebDriverKeys::ENTER);
         } catch (StaleElementReferenceException $e) {}
-        $this->driver->findElement(WebDriverBy::xpath('//tr[@id="ARSD"]/td[1]'))->click();
+        sleep(1);
+        $this->driver->findElement(WebDriverBy::xpath('//tr[@id="IVD"]/td[1]'))->click();
     }
 
 
@@ -88,41 +91,42 @@ class CreateSummaryVariantLocatedWithinGeneWithMultipleTranscriptsTest extends L
     /**
      * @depends testNavigateMenu
      */
-    public function testCreateVariantWithinARSD ()
+    public function testCreateVariantWithinIVD ()
     {
-        $this->waitForURLEndsWith('/src/variants?create&reference=Transcript&geneid=ARSD');
-        // We'll be using transcript IDs 2 and 3, while 4 and 5 will be ignored.
-        $this->check('ignore_00000004');
-        $this->check('ignore_00000005');
-        $this->assertTrue($this->driver->findElement(WebDriverBy::xpath('//input[@name="00000002_VariantOnTranscript/DNA"]'))->isEnabled());
-        $this->assertTrue($this->driver->findElement(WebDriverBy::xpath('//input[@name="00000003_VariantOnTranscript/DNA"]'))->isEnabled());
-        $this->assertFalse($this->driver->findElement(WebDriverBy::xpath('//input[@name="00000004_VariantOnTranscript/DNA"]'))->isEnabled());
-        $this->assertFalse($this->driver->findElement(WebDriverBy::xpath('//input[@name="00000005_VariantOnTranscript/DNA"]'))->isEnabled());
+        $this->waitForURLContains('/src/variants?create&reference=Transcript&geneid=IVD');
+        // Test if ignoring a transcript works.
+        $this->check('ignore_00000001');
+        $this->assertFalse($this->driver->findElement(WebDriverBy::xpath('//input[@name="00000001_VariantOnTranscript/DNA"]'))->isEnabled());
+        $this->unCheck('ignore_00000001');
+        $this->assertTrue($this->driver->findElement(WebDriverBy::xpath('//input[@name="00000001_VariantOnTranscript/DNA"]'))->isEnabled());
 
-        // Fill in NM_001669.3 transcript (ID #00000002).
-        $this->enterValue('00000002_VariantOnTranscript/Exon', '7');
-        $this->enterValue('00000002_VariantOnTranscript/DNA', 'c.1100A>T');
-        $this->driver->findElement(WebDriverBy::cssSelector('button.mapVariant'))->click();
+        // Fill in NM_002225.3 transcript (ID #00000001).
+        $this->enterValue('00000001_VariantOnTranscript/Exon', '10');
+        $this->enterValue('00000001_VariantOnTranscript/DNA', 'c.1000A>T');
+        // We can't use the normal button selector, because there are multiple transcripts and not all buttons are visible.
+        // $this->driver->findElement(WebDriverBy::cssSelector('button.mapVariant'))->click();
+        $this->driver->findElement(WebDriverBy::xpath('//input[@name="00000001_VariantOnTranscript/DNA"]/../button'))->click();
 
         // Wait until RNA description field is filled after AJAX request, and check all values.
-        $this->waitForValueContains('00000002_VariantOnTranscript/RNA', 'r.');
-        $this->assertValue('r.(?)', '00000002_VariantOnTranscript/RNA');
-        $this->assertValue('p.(His367Leu)', '00000002_VariantOnTranscript/Protein');
-        $this->selectValue('00000002_effect_reported', 'Effect unknown');
-        $this->selectValue('00000002_effect_concluded', 'Not classified');
+        $this->waitForValueContains('00000001_VariantOnTranscript/RNA', 'r.');
+        $this->assertValue('r.(?)', '00000001_VariantOnTranscript/RNA');
+        $this->assertValue('p.(Thr334Ser)', '00000001_VariantOnTranscript/Protein');
+        $this->selectValue('00000001_effect_reported', 'Effect unknown');
+        $this->selectValue('00000001_effect_concluded', 'Not classified');
 
-        // Fill in XM_005274514.1 transcript (ID #00000003).
-        $this->enterValue('00000003_VariantOnTranscript/Exon', '6i');
-        $this->waitForValueContains('00000003_VariantOnTranscript/RNA', 'r.');
-        $this->assertValue('c.1001-715A>T', '00000003_VariantOnTranscript/DNA');
-        $this->assertValue('r.(=)', '00000003_VariantOnTranscript/RNA');
-        $this->assertValue('p.(=)', '00000003_VariantOnTranscript/Protein');
-        $this->selectValue('00000003_effect_reported', 'Probably does not affect function');
-        $this->selectValue('00000003_effect_concluded', 'Probably does not affect function');
+        // Fill in NM_001159508.1 transcript, but first get the ID.
+        $eTR = $this->driver->findElement(WebDriverBy::xpath('//b[@class="transcript"][contains(.,"NM_001159508.1")]'));
+        $nTranscriptID = $eTR->getAttribute('transcriptid');
+        $this->enterValue($nTranscriptID . '_VariantOnTranscript/Exon', '9');
+        $this->assertValue('c.910A>T', $nTranscriptID . '_VariantOnTranscript/DNA');
+        $this->assertValue('r.(?)', $nTranscriptID . '_VariantOnTranscript/RNA');
+        $this->assertValue('p.(Thr304Ser)', $nTranscriptID . '_VariantOnTranscript/Protein');
+        $this->selectValue($nTranscriptID . '_effect_reported', 'Effect unknown');
+        $this->selectValue($nTranscriptID . '_effect_concluded', 'Not classified');
 
         // Genomic fields.
         $this->selectValue('allele', 'Maternal (confirmed)');
-        $this->assertValue('g.2828735T>A', 'VariantOnGenome/DNA');
+        $this->assertValue('g.40708307A>T', 'VariantOnGenome/DNA');
         $this->enterValue('VariantOnGenome/Reference', '{PMID:Fokkema et al (2011):21520333}');
         $this->assertFalse($this->isElementPresent(WebDriverBy::name('effect_reported')));
         $this->assertFalse($this->isElementPresent(WebDriverBy::name('effect_concluded')));
@@ -140,7 +144,7 @@ class CreateSummaryVariantLocatedWithinGeneWithMultipleTranscriptsTest extends L
 
 
     /**
-     * @depends testCreateVariantWithinARSD
+     * @depends testCreateVariantWithinIVD
      */
     public function testResult ()
     {

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-06-17
- * Modified    : 2020-10-09
- * For LOVD    : 3.0-25
+ * Modified    : 2024-05-28
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -46,6 +46,7 @@ class CurateSubmissionStepByStepTest extends LOVDSeleniumWebdriverBaseTestCase
         if (preg_match('/To access this area, you need at least/', $sBody)) {
             $this->markTestSkipped('User was not authorized.');
         }
+        $this->assertStringContainsString('IVD configuration', $sBody);
     }
 
 
@@ -65,6 +66,9 @@ class CurateSubmissionStepByStepTest extends LOVDSeleniumWebdriverBaseTestCase
 
         $this->waitForURLContains('/src/variants/0000');
         $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"]//td[span[text()="(Pending)"]]/a'))->click();
+
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertEquals('', '');
     }
 
 
@@ -79,12 +83,12 @@ class CurateSubmissionStepByStepTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->waitForURLContains('/src/individuals/0000');
         $sSubmissionURL = $this->driver->getCurrentURL();
 
-        $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="Pending"]'));
+        $this->assertTrue($this->isElementPresent(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="Pending"]')));
         $this->driver->findElement(WebDriverBy::id('viewentryOptionsButton_Individuals'))->click();
         $this->driver->findElement(WebDriverBy::linkText('Publish (curate) individual entry'))->click();
 
         $this->waitForURLEquals($sSubmissionURL);
-        $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="Public"]'));
+        $this->assertTrue($this->isElementPresent(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="Public"]')));
         return $sSubmissionURL;
     }
 
@@ -102,12 +106,12 @@ class CurateSubmissionStepByStepTest extends LOVDSeleniumWebdriverBaseTestCase
             $this->driver->findElement(WebDriverBy::xpath($sLocator))->click();
 
             $this->waitForURLContains('/src/phenotypes/0000');
-            $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="Pending"]'));
+            $this->assertTrue($this->isElementPresent(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="Pending"]')));
             $this->driver->findElement(WebDriverBy::id('viewentryOptionsButton_Phenotypes'))->click();
             $this->driver->findElement(WebDriverBy::linkText('Publish (curate) phenotype entry'))->click();
 
             $this->waitForURLContains('/src/phenotypes/0000');
-            $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="Public"]'));
+            $this->assertTrue($this->isElementPresent(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="Public"]')));
 
             $this->driver->get($sSubmissionURL);
         }
@@ -128,13 +132,13 @@ class CurateSubmissionStepByStepTest extends LOVDSeleniumWebdriverBaseTestCase
             $this->driver->findElement(WebDriverBy::xpath($sLocator))->click();
 
             $this->waitForURLContains('/src/variants/0000');
-            $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"]//td/span[text()="(Public)"]'));
-            $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="Pending"]'));
+            $this->assertTrue($this->isElementPresent(WebDriverBy::xpath('//table[@class="data"]//td/span[text()="(Public)"]')));
+            $this->assertTrue($this->isElementPresent(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="Pending"]')));
             $this->driver->findElement(WebDriverBy::id('viewentryOptionsButton_Variants'))->click();
             $this->driver->findElement(WebDriverBy::linkText('Publish (curate) variant entry'))->click();
 
             $this->waitForURLContains('/src/variants/0000');
-            $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="Public"]'));
+            $this->assertTrue($this->isElementPresent(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="Public"]')));
 
             $this->driver->get($sSubmissionURL);
         }

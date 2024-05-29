@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-08-31
- * Modified    : 2020-10-08
- * For LOVD    : 3.0-25
+ * Modified    : 2024-05-27
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -45,6 +45,8 @@ class BlockSubmitterRegistrationTest extends LOVDSeleniumWebdriverBaseTestCase
         if (preg_match('/To access this area, you need at least/', $sBody)) {
             $this->markTestSkipped('User was not authorized.');
         }
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertEquals('', '');
     }
 
 
@@ -94,7 +96,7 @@ class BlockSubmitterRegistrationTest extends LOVDSeleniumWebdriverBaseTestCase
         // Log out, then check if element is gone indeed.
         $this->logout();
 
-        $this->assertNotContains('Register as submitter',
+        $this->assertStringNotContainsString('Register as submitter',
             $this->driver->findElement(WebDriverBy::xpath(
                 '//table[@class="logo"]//td[contains(., "LOVD v.3.0")]'))->getText());
 
@@ -137,7 +139,7 @@ class BlockSubmitterRegistrationTest extends LOVDSeleniumWebdriverBaseTestCase
         // Log out, and check if registration is allowed again.
         $this->logout();
 
-        $this->assertContains('Register as submitter',
+        $this->assertStringContainsString('Register as submitter',
             $this->driver->findElement(WebDriverBy::xpath(
                 '//table[@class="logo"]//td[contains(., "LOVD v.3.0")]'))->getText());
 

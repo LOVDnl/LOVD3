@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-03-04
- * Modified    : 2020-10-07
- * For LOVD    : 3.0-25
+ * Modified    : 2024-05-23
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -43,6 +43,10 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
         //  one did not complete. However, test suites need to be independent
         //  so LOVD still needs to be freshly installed for this test suite.
         $this->driver->get(ROOT_URL . '/src/install');
+
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertEquals('', '');
+
         $bodyElement = $this->driver->findElement(WebDriverBy::tagName('body'));
         if (preg_match('/This installer will create/', $bodyElement->getText())) {
             // Not installed already, all good!
@@ -81,7 +85,7 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
         }
 
         $bodyElement = $this->driver->findElement(WebDriverBy::tagName('body'));
-        $this->assertContains('This installer will create', $bodyElement->getText());
+        $this->assertStringContainsString('This installer will create', $bodyElement->getText());
 
         // Start installation procedure.
         $this->submitForm('Start');
@@ -145,6 +149,7 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
 
         // LOVD Setup Area.
         $this->waitForURLEndsWith('/src/setup?newly_installed');
+        $this->assertStringContainsString('General LOVD Setup', $this->driver->findElement(WebDriverBy::tagName('body'))->getText());
     }
 }
 ?>

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-13
- * Modified    : 2020-05-13
- * For LOVD    : 3.0-24
+ * Modified    : 2024-05-23
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -34,7 +34,7 @@ use \Facebook\WebDriver\WebDriverBy;
 
 class CheckPHPVersionTest extends LOVDSeleniumWebdriverBaseTestCase
 {
-    protected function setUp()
+    protected function setUp(): void
     {
         // Test if we have what we need for this test. If not, skip this test.
         parent::setUp();
@@ -42,7 +42,7 @@ class CheckPHPVersionTest extends LOVDSeleniumWebdriverBaseTestCase
         $bodyElement = $this->driver->findElement(WebDriverBy::tagName('body'));
         if (preg_match('/This installer will create/', $bodyElement->getText())) {
             // Not installed already, all good!
-            return true;
+            return;
         }
 
         // We're installed already!
@@ -63,6 +63,8 @@ class CheckPHPVersionTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->driver->get(ROOT_URL . '/src/install');
         $aSystemInformation = explode("\n",
             $infoBox = $this->driver->findElement(WebDriverBy::xpath('//table[@class="info"]/tbody/tr/td[@valign="middle"]'))->getText());
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertArrayHasKey(5, $aSystemInformation);
         // Just print PHP and MySQL version, I don't care about the rest.
         print(PHP_EOL . implode(PHP_EOL,
                 array(

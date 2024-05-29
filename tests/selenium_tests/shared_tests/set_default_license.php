@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-21
- * Modified    : 2023-02-14
- * For LOVD    : 3.0-29
+ * Modified    : 2024-05-23
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -39,6 +39,9 @@ class SetDefaultLicenseTest extends LOVDSeleniumWebdriverBaseTestCase
     {
         // A normal setUp() runs for every test in this file. We only need this once,
         //  so we disguise this setUp() as a test that we depend on just once.
+
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertEquals('', '');
 
         // It's possible that we already have a dialog open, asking us to set
         //  the default license.
@@ -76,13 +79,17 @@ class SetDefaultLicenseTest extends LOVDSeleniumWebdriverBaseTestCase
         if (!$bSkip) {
             $this->driver->findElement(WebDriverBy::xpath('//a[contains(@href, "users/0000")]/b[text()="Your account"]'))->click();
 
-            $this->assertContains('/src/users/0000', $this->driver->getCurrentURL());
+            $this->assertStringContainsString('/src/users/0000', $this->driver->getCurrentURL());
             // XPath doesn't accept "Default license", only that it contains
             //  "Default" and that it contains "license".
             $this->driver->findElement(
                 WebDriverBy::xpath(
                     '//table[@class="data"]//th[contains(., "Default") and contains(., "license")]/../td/span/a[text()="Change"]'))->click();
             $this->waitForElement(WebDriverBy::xpath('//div[@id="licenses_dialog"]/../div[last()]//button[text()="Save settings"]'));
+
+        } else {
+            // To prevent a Risky test, we have to do at least one assertion.
+            $this->assertEquals('', '');
         }
     }
 
@@ -100,7 +107,7 @@ class SetDefaultLicenseTest extends LOVDSeleniumWebdriverBaseTestCase
         // Yes, allow derivatives.
         $this->driver->findElement(WebDriverBy::xpath('//div[@id="licenses_dialog"]/form/table[2]/tbody/tr[2]/td/input'))->click();
         // Verify that license has been shown.
-        $this->assertContains('Creative Commons Attribution 4.0 International',
+        $this->assertStringContainsString('Creative Commons Attribution 4.0 International',
             $this->driver->findElement(WebDriverBy::id('selected_license'))->getText());
         // Submit.
         $this->driver->findElement(WebDriverBy::xpath('//div[@id="licenses_dialog"]/../div[last()]//button[text()="Save settings"]'))->click();
@@ -121,7 +128,7 @@ class SetDefaultLicenseTest extends LOVDSeleniumWebdriverBaseTestCase
     {
         $this->driver->findElement(WebDriverBy::xpath('//a[contains(@href, "users/0000")]/b[text()="Your account"]'))->click();
 
-        $this->assertContains('/src/users/0000', $this->driver->getCurrentURL());
+        $this->assertStringContainsString('/src/users/0000', $this->driver->getCurrentURL());
         $this->driver->findElement(
             WebDriverBy::xpath(
                 '//table[@class="data"]//th[contains(., "Default") and contains(., "license")]/../td/a[@href="https://creativecommons.org/licenses/by/4.0/"]'));

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-06-05
- * Modified    : 2020-05-28
- * For LOVD    : 3.0-24
+ * Modified    : 2024-05-27
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -48,6 +48,17 @@ class ImportDataFileFailedTest extends LOVDSeleniumWebdriverBaseTestCase
         if (!$this->isElementPresent(WebDriverBy::id('tab_setup'))) {
             $this->markTestSkipped('User was not authorized.');
         }
+
+        // To make sure we have always the same results, we have to run the variant mapper at least once. It'll trigger
+        //  the variant mapper to double-check transcripts and fill in Mutalyzer IDs for the ones that are missing one.
+        // We can't be sure if the mapper has already run during the test, so make sure it does.
+        do {
+            $this->driver->get(ROOT_URL . '/src/ajax/map_variants.php');
+            // We get failures sometimes in the download verification test,
+            //  because the mapping apparently did not complete.
+            // For now, log the output that we get. Maybe there's a pattern.
+            $sBody = rtrim($this->driver->findElement(WebDriverBy::tagName('body'))->getText());
+        } while (substr($sBody, 0, 5) != '0 99 ');
     }
 
 

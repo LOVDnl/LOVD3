@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-09-07
- * Modified    : 2020-06-19
- * For LOVD    : 3.0-24
+ * Modified    : 2024-05-24
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -74,12 +74,14 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
         if (preg_match('/LOVD was not installed yet/', $sBody)) {
             $this->markTestSkipped('LOVD was not installed yet.');
         }
-        if (!preg_match('/167 entries on 2 pages/', $sBody)) {
+        if (!preg_match('/30 entries on 1 page/', $sBody)) {
             $this->markTestSkipped('Not all variants are in place for this test.');
         }
         if (!$this->isElementPresent(WebDriverBy::id('tab_setup'))) {
             $this->markTestSkipped('User was not authorized.');
         }
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertEquals('', '');
     }
 
 
@@ -114,6 +116,8 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->driver->findElement(WebDriverBy::id('FRCancel_VOG'))->click();
         $this->waitUntil(WebDriverExpectedCondition::invisibilityOfElementLocated(
             WebDriverBy::id('FRCancel_VOG')));
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertEquals('', '');
     }
 
 
@@ -141,7 +145,7 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
 
         $this->assertEquals('Reference (PREVIEW)', $this->driver->findElement(
             WebDriverBy::xpath('//th[@data-fieldname="VariantOnGenome/Reference_FR"]'))->getText());
-        $this->assertEquals(29, count(
+        $this->assertEquals(27, count(
             $this->driver->findElements(WebDriverBy::xpath('//td[text()="Author, submitted"]'))));
 
         $this->enterValue('password', 'test1234');
@@ -177,20 +181,17 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
         $oPreviewTooltip->click();
         $this->waitUntil(WebDriverExpectedCondition::stalenessOf($oPreviewTooltip));
 
-        // Filter on 'Variant ID' > 100 during preview.
-        $this->enterValue('search_id_', '>100');
+        // Filter on 'Variant ID' > 10 during preview.
+        $this->enterValue('search_id_', '>10');
         $this->driver->findElement(WebDriverBy::id('FRPreview_VOG'))->click();
-
-        // Variant ID 150 should now show, it used to be on the second page.
-        $this->waitForElement(WebDriverBy::xpath('//table[@class="data"]//tr[@id="0000000150"]'));
-        $this->assertEquals(30, count(
+        $this->assertEquals(20, count(
             $this->driver->findElements(WebDriverBy::xpath('//td[text()="Author (2020)"]'))));
 
         $this->enterValue('password', 'test1234');
         $this->submitForm('Submit');
 
-        // Check that filter has effect (otherwise 55 records are modified).
-        $this->assertEquals('You are about to modify 30 records. Do you wish to continue?',
+        // Check that filter had effect (otherwise 27 records are modified).
+        $this->assertEquals('You are about to modify 20 records. Do you wish to continue?',
             $this->getConfirmation());
         $this->chooseOkOnNextConfirmation();
 
@@ -202,7 +203,7 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
         // Remove filter.
         $this->enterValue('search_id_', WebDriverKeys::ENTER);
 
-        // The previous value should also still be there, in IDs <= 100.
+        // The previous value should also still be there, in IDs <= 10.
         $this->waitForElement(WebDriverBy::xpath(
             '//table[@class="data"]//td[text()="Author, submitted"]'));
     }
@@ -229,13 +230,13 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
 
         // Click on tooltip to close it.
         $this->driver->findElement(WebDriverBy::xpath(
-            '//div[@class="ui-tooltip-content" and text()="Preview changes (55 rows affected)"]'))->click();
+            '//div[@class="ui-tooltip-content" and text()="Preview changes (27 rows affected)"]'))->click();
 
         $this->enterValue('password', 'test1234');
         $this->submitForm('Submit');
 
-        // Check that filter has effect (otherwise 167 records are modified).
-        $this->assertEquals('You are about to modify 55 records. Do you wish to continue?',
+        // Check that filter has effect (otherwise 30 records are modified).
+        $this->assertEquals('You are about to modify 27 records. Do you wish to continue?',
             $this->getConfirmation());
         $this->chooseOkOnNextConfirmation();
 

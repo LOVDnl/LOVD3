@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-20
- * Modified    : 2020-10-08
- * For LOVD    : 3.0-25
+ * Modified    : 2024-05-23
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -50,6 +50,8 @@ class AddMoreDataToExistingSubmissionTest extends LOVDSeleniumWebdriverBaseTestC
         if (!$this->isElementPresent(WebDriverBy::xpath('//a[contains(@href, "users/0000")]/b[text()="Your account"]'))) {
             $this->markTestSkipped('User was not authorized.');
         }
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertEquals('', '');
     }
 
 
@@ -62,6 +64,7 @@ class AddMoreDataToExistingSubmissionTest extends LOVDSeleniumWebdriverBaseTestC
     public function testFindIndividual ()
     {
         $this->driver->get(ROOT_URL . '/src/individuals');
+        $this->assertStringContainsString('IVD', $this->driver->findElement(WebDriverBy::tagName('body'))->getText());
         $this->driver->findElement(WebDriverBy::xpath('//tr[td[text()="IVD"] and td[text()="IVA"]]/td[2]'))->click();
     }
 
@@ -124,7 +127,7 @@ class AddMoreDataToExistingSubmissionTest extends LOVDSeleniumWebdriverBaseTestC
      */
     public function testConfirmVariant ()
     {
-        $this->assertContains('/src/submit/screening/0000', $this->driver->getCurrentURL());
+        $this->assertStringContainsString('/src/submit/screening/0000', $this->driver->getCurrentURL());
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to add a variant to")]'))->click();
 
@@ -151,7 +154,7 @@ class AddMoreDataToExistingSubmissionTest extends LOVDSeleniumWebdriverBaseTestC
      */
     public function testFinishSubmission ()
     {
-        $this->assertContains('/src/submit/screening/0000', $this->driver->getCurrentURL());
+        $this->assertStringContainsString('/src/submit/screening/0000', $this->driver->getCurrentURL());
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to finish this submission")]'))->click();
 
@@ -171,7 +174,7 @@ class AddMoreDataToExistingSubmissionTest extends LOVDSeleniumWebdriverBaseTestC
     {
         // We really don't need to double-test everything. If the link is there,
         //  and we get to the right page, we've tested enough.
-        $this->assertContains('/src/screenings/0000', $this->driver->getCurrentURL());
+        $this->assertStringContainsString('/src/screenings/0000', $this->driver->getCurrentURL());
         $this->driver->findElement(WebDriverBy::id('viewentryOptionsButton_Screenings'))->click();
         $this->driver->findElement(WebDriverBy::linkText('Add variant to screening'))->click();
 

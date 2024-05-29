@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2024-05-17
+ * Modified    : 2024-05-24
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -299,7 +299,7 @@ if (!empty($_GET['variantid'])) {
                                  'WHERE mapping_flags & ' . MAPPING_ALLOW . ' AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE | MAPPING_IN_PROGRESS) .
                                  '  AND position_g_start IS NOT NULL AND position_g_start NOT IN (0, 1) AND position_g_end != 4294967295 ' .
                                  (empty($aArgs)? '' : 'AND chromosome = ? AND position_g_start >= ? ') .
-                                 ($_SESSION['mapping']['todo'] > 10000? '' : 'ORDER BY RAND() ') .
+                                 (!empty($aArgs) || $_SESSION['mapping']['todo'] > 10000? 'ORDER BY id ' : 'ORDER BY RAND() ') .
                                  'LIMIT 1' .
                              ') AS first ' .
                              'WHERE vog.chromosome = first.chromosome AND vog.position_g_start BETWEEN first.position_g_start AND first.position_g_start + ' . $nRange .
@@ -562,7 +562,7 @@ if (!empty($aVariants)) {
                                                        'name' => str_replace($sGeneName . ', ', '', $aTranscriptInUD['product']),
                                                        'id_mutalyzer' => str_replace($sSymbol . '_v', '', $aTranscriptInUD['name']),
                             // FIXME: Using this and the modification of the if above, we allow different versions of NMs to be matched.
-                            // This happens when the mapping database doesn't catch up with the UD, or possiby when the UD is getting too old.
+                            // This happens when the mapping database doesn't catch up with the UD, or possibly when the UD is getting too old.
                             // We need a better solution for this, though. First, try and find full match, otherwise match w/ different version number.
 //                                                       'id_ncbi' => $aTranscriptInUD['id'],
                                                        'id_ncbi' => $sTranscriptNM,
@@ -573,8 +573,8 @@ if (!empty($aVariants)) {
                                                        'position_c_mrna_start' => $aTranscriptInUD['cTransStart'],
                                                        'position_c_mrna_end' => $aTranscriptInUD['sortableTransEnd'],
                                                        'position_c_cds_end' => $aTranscriptInUD['cCDSStop'],
-                                                       'position_g_mrna_start' => $aTranscriptData[substr($sTranscriptNM, 0, strpos($sTranscriptNM, '.'))]['start'],
-                                                       'position_g_mrna_end' => $aTranscriptData[substr($sTranscriptNM, 0, strpos($sTranscriptNM, '.'))]['end'],
+                                                       'position_g_mrna_start' => $aTranscriptInUD['chromTransStart'],
+                                                       'position_g_mrna_end' => $aTranscriptInUD['chromTransEnd'],
                                                        'created_by' => 0,
                                                        'created_date' => date('Y-m-d H:i:s'));
                             break 2;

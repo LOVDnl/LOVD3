@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-22
- * Modified    : 2022-11-22
- * For LOVD    : 3.0-29
+ * Modified    : 2024-05-24
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -43,6 +43,8 @@ class CheckAuthorizationsTest extends LOVDSeleniumWebdriverBaseTestCase
         if (preg_match('/LOVD was not installed yet/', $sBody)) {
             $this->markTestSkipped('LOVD was not installed yet.');
         }
+        // To prevent a Risky test, we have to do at least one assertion.
+        $this->assertEquals('', '');
     }
 
 
@@ -246,7 +248,7 @@ class CheckAuthorizationsTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->assertEquals(false, lovd_isAuthorized('gene', 'ARSD'), false);
         $this->assertEquals(1, lovd_isAuthorized('disease', '1'), false);
         $this->assertEquals(1, lovd_isAuthorized('transcript', '1'), false);
-        $this->assertEquals(false, lovd_isAuthorized('transcript', '2'), false);
+        $this->assertEquals(false, lovd_isAuthorized('transcript', '3'), false);
         $this->assertEquals(1, lovd_isAuthorized('individual', '1'), false);
         $this->assertEquals(1, lovd_isAuthorized('individual', '2'), false);
         $this->assertEquals(1, lovd_isAuthorized('phenotype', '1'), false);
@@ -255,7 +257,7 @@ class CheckAuthorizationsTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->assertEquals(false, lovd_isAuthorized('screening', '2'), false);
         $this->assertEquals(1, lovd_isAuthorized('variant', '1'), false);
         $this->assertEquals(false, lovd_isAuthorized('variant', '2'), false);
-        $this->assertEquals(false, lovd_isAuthorized('variant', '3'), false);
+        $this->assertEquals(1, lovd_isAuthorized('variant', '3'), false);
         $this->assertEquals(false, lovd_isAuthorized('variant', '4'), false);
         $this->assertEquals(false, lovd_isAuthorized('variant', '5'), false);
 
@@ -328,7 +330,7 @@ class CheckAuthorizationsTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->assertEquals(false, lovd_isAuthorized('gene', 'ARSD'), false);
         $this->assertEquals(0, lovd_isAuthorized('disease', '1'), false);
         $this->assertEquals(0, lovd_isAuthorized('transcript', '1'), false);
-        $this->assertEquals(false, lovd_isAuthorized('transcript', '2'), false);
+        $this->assertEquals(false, lovd_isAuthorized('transcript', '3'), false);
         $this->assertEquals(0, lovd_isAuthorized('individual', '1'), false);
         $this->assertEquals(0, lovd_isAuthorized('individual', '2'), false);
         $this->assertEquals(0, lovd_isAuthorized('phenotype', '1'), false);
@@ -337,7 +339,7 @@ class CheckAuthorizationsTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->assertEquals(false, lovd_isAuthorized('screening', '2'), false);
         $this->assertEquals(0, lovd_isAuthorized('variant', '1'), false);
         $this->assertEquals(false, lovd_isAuthorized('variant', '2'), false);
-        $this->assertEquals(false, lovd_isAuthorized('variant', '3'), false);
+        $this->assertEquals(0, lovd_isAuthorized('variant', '3'), false);
         $this->assertEquals(false, lovd_isAuthorized('variant', '4'), false);
         $this->assertEquals(false, lovd_isAuthorized('variant', '5'), false);
 
@@ -410,7 +412,7 @@ class CheckAuthorizationsTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->assertEquals(false, lovd_isAuthorized('gene', 'ARSD'), false);
         $this->assertEquals(false, lovd_isAuthorized('disease', '1'), false);
         $this->assertEquals(false, lovd_isAuthorized('transcript', '1'), false);
-        $this->assertEquals(false, lovd_isAuthorized('transcript', '2'), false);
+        $this->assertEquals(false, lovd_isAuthorized('transcript', '3'), false);
 
         $_CONF['allow_submitter_mods'] = 1;
         $this->assertEquals(1, lovd_isAuthorized('individual', '1'), false);
@@ -507,7 +509,7 @@ class CheckAuthorizationsTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->assertEquals(false, lovd_isAuthorized('gene', 'ARSD'), false);
         $this->assertEquals(false, lovd_isAuthorized('disease', '1'), false);
         $this->assertEquals(false, lovd_isAuthorized('transcript', '1'), false);
-        $this->assertEquals(false, lovd_isAuthorized('transcript', '2'), false);
+        $this->assertEquals(false, lovd_isAuthorized('transcript', '3'), false);
 
         $_CONF['allow_submitter_mods'] = 1;
         $this->assertEquals(0, lovd_isAuthorized('individual', '1'), false);

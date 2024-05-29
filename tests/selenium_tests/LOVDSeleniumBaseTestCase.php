@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2020-10-09
- * For LOVD    : 3.0-25
+ * Modified    : 2024-05-28
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -30,9 +30,8 @@
  *************/
 
 require_once 'inc-lib-test.php';
-require_once 'RefreshingWebDriverElement.php';
 
-use \Facebook\WebDriver\Exception\NoAlertOpenException;
+use \Facebook\WebDriver\Exception\NoSuchAlertException;
 use \Facebook\WebDriver\Exception\NoSuchElementException;
 use \Facebook\WebDriver\Exception\WebDriverException;
 use \Facebook\WebDriver\Remote\LocalFileDetector;
@@ -208,7 +207,7 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit\Framework\TestC
         try {
             $this->driver->switchTo()->alert()->getText();
             return true;
-        } catch (NoAlertOpenException $e) {
+        } catch (NoSuchAlertException $e) {
             return false;
         }
     }
@@ -359,8 +358,8 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit\Framework\TestC
         $element = $this->driver->findElement($locator);
         $nCount = 0;
 
-        while (($bSetChecked && is_null($element->getAttribute('checked'))) ||
-               (!$bSetChecked && !is_null($element->getAttribute('checked')))) {
+        while (($bSetChecked && !$element->isSelected()) ||
+               (!$bSetChecked && $element->isSelected())) {
             if ($nCount > 0) {
                 fwrite(STDERR, 'Failed attempt setting checkbox (' . $locator->getMechanism() .
                                '="' . $locator->getValue() . '")"');

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-04-21
- * Modified    : 2024-05-07
+ * Modified    : 2024-05-23
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -72,7 +72,7 @@ EMAILDOC
 define('EMAIL_SHARER_NEW_COLLEAGUE', <<<EMAILDOC
 Dear %1\$s,
 
-%2\$s (%3\s) has granted access to your data to the following people:
+%2\$s (%3\$s) has granted access to your data to the following people:
 %5\$s
 
 If you think this was a mistake, please contact %2\$s (%4\$s).

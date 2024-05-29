@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-19
- * Modified    : 2020-10-07
- * For LOVD    : 3.0-25
+ * Modified    : 2024-05-23
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -84,7 +84,7 @@ class CreateCustomColumnPhenotypeTest extends LOVDSeleniumWebdriverBaseTestCase
 
         // Data wizard.
         $this->driver->switchTo()->window($sPopupWindowHandler);
-        $this->assertContains('/src/columns?data_type_wizard&workID=', $this->driver->getCurrentURL());
+        $this->assertStringContainsString('/src/columns?data_type_wizard&workID=', $this->driver->getCurrentURL());
         $this->selectValue('form_type', 'text');
         $this->submitForm('Next');
 

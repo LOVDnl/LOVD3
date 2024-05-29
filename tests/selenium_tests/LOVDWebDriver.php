@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-09-28
- * Modified    : 2020-05-22
- * For LOVD    : 3.0-24
+ * Modified    : 2024-05-28
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -29,10 +29,7 @@
  *
  *************/
 
-require_once 'RefreshingWebDriverElement.php';
-
 use \Facebook\WebDriver\Exception\NoSuchElementException;
-use \Facebook\WebDriver\Remote\DriverCommand;
 use \Facebook\WebDriver\Remote\RemoteWebDriver;
 use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver\WebDriverElement;
@@ -43,86 +40,30 @@ use \Facebook\WebDriver\WebDriverElement;
 
 class LOVDWebDriver extends RemoteWebDriver {
     /**
-     * Sub class of RemoteWebDriver. Overloading its findElement method
-     * to make use of RefreshingWebDriverElement.
+     * Subclass of RemoteWebDriver. Overloading its findElement method to not
+     *  throw an Exception immediately when an element can't be found yet.
      */
-
-    public function execute ($command_name, $params = [])
-    {
-        // This WebDriver/GeckoDriver/Selenium combination is so confusing.
-        // The JSON-to-Web3C change is causing problems here, so I have to
-        //  overload the execute() function to fix issues. Once GeckoDriver (??)
-        //  is updated and fixed to work with Selenium properly, then we can
-        //  remove this.
-        if (getenv('LOVD_SELENIUM_DRIVER') == 'firefox'
-            && $command_name == 'switchToWindow') {
-            // FF needs "handle", while Chrome needs "name".
-            return parent::execute($command_name, ['handle' => $params['name']]);
-        } else {
-            return parent::execute($command_name, $params);
-        }
-    }
-
-
-
-
 
     public function findElement (WebDriverBy $by)
     {
         // This method is similar to RemoteWebDriver::findElement() but
-        // returns an instance of RefreshingWebElement.
-        // WARNING: This function is NOT compatible with WebDriver 1.8.
-        $params = array('using' => $by->getMechanism(), 'value' => $by->getValue());
+        //  runs a loop to keep trying for up to one second to find the element.
 
         // Try up to 1 second to find the element.
         $t = microtime(true);
         while ((microtime(true) - $t) < 1) {
             try {
-                $raw_element = $this->execute(
-                    DriverCommand::FIND_ELEMENT,
-                    $params
-                );
+                $element = parent::findElement($by);
                 break;
             } catch (NoSuchElementException $e) {
                 usleep(100000);
             }
         }
-        if (!isset($raw_element)) {
+        if (!isset($element)) {
             throw $e;
         }
 
-        // Create a RefreshingWebElement and set resources needed to let the
-        // element refresh in the future.
-        $element = new RefreshingWebElement($this->getExecuteMethod(), current($raw_element));
-        $element->setLocator($by);
-        $element->setWebDriver($this);
         return $element;
-    }
-
-
-
-
-
-    public function findElements (WebDriverBy $by)
-    {
-        // This method is similar to RemoteWebDriver::findElements() but
-        //  it fixes the RemoteWebDriver's bug of using the wrong index.
-        // Undefined index: ELEMENT.
-        // Caused by using $raw_element['ELEMENT'], which doesn't exist.
-        // WARNING: This function is NOT compatible with WebDriver 1.8.
-        $params = array('using' => $by->getMechanism(), 'value' => $by->getValue());
-
-        $raw_elements = $this->execute(
-            DriverCommand::FIND_ELEMENTS,
-            $params
-        );
-
-        $elements = array();
-        foreach ($raw_elements as $raw_element) {
-            $elements[] = $this->newElement(current($raw_element));
-        }
-
-        return $elements;
     }
 
 
