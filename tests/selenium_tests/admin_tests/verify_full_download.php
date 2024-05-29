@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-21
- * Modified    : 2024-05-24
+ * Modified    : 2024-05-29
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -67,7 +67,7 @@ class VerifyFullDownloadTest extends LOVDSeleniumWebdriverBaseTestCase
 
         // The download location is set to "/tmp"
         //  in getWebDriverInstance() @ inc-lib-test.php.
-        $sTempDir = '/tmp/';
+        $sTempDir = TMPDIR;
         $aFilesBefore = scandir($sTempDir);
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="setup"]//td[contains(text(), "Download all data")]'))->click();

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-07-13
- * Modified    : 2020-05-25
- * For LOVD    : 3.0-24
+ * Modified    : 2024-05-29
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -47,8 +47,17 @@ function getWebDriverInstance ()
     global $_INI;
     static $webDriver;
 
-    if (!isset($webDriver)) {
+    // Get temporary directory given by us.
+    if (!defined('TMPDIR')) {
+        $sTmpDir = getenv('TMPDIR');
+        if ($sTmpDir && is_dir($sTmpDir) && is_readable($sTmpDir) && is_writable($sTmpDir)) {
+            define('TMPDIR', $sTmpDir);
+        } else {
+            define('TMPDIR', '/tmp/');
+        }
+    }
 
+    if (!isset($webDriver)) {
         $driverType = getenv('LOVD_SELENIUM_DRIVER');
         $host = 'http://localhost:4444/wd/hub';
         $capabilities = null;
@@ -59,16 +68,17 @@ function getWebDriverInstance ()
             $options = new ChromeOptions();
             $options->addArguments(array('--no-sandbox'));
             $options->setExperimentalOption('prefs', array(
-                'download.default_directory' => '/tmp/',
+                'download.default_directory' => TMPDIR,
             ));
             $capabilities = DesiredCapabilities::chrome();
             $capabilities->setCapability(ChromeOptions::CAPABILITY, $options);
+
         } else {
             // Create Firefox webdriver.
             fwrite(STDERR, 'Connecting to Firefox driver via Selenium at ' . $host . PHP_EOL);
             $profile = new FirefoxProfile();
             $profile->setPreference('browser.download.folderList', 2);
-            $profile->setPreference('browser.download.dir', '/tmp/');
+            $profile->setPreference('browser.download.dir', TMPDIR);
             $profile->setPreference('browser.helperApps.neverAsk.saveToDisk', 'text/plain');
             $capabilities = DesiredCapabilities::firefox();
             $capabilities->setCapability(FirefoxDriver::PROFILE, $profile);

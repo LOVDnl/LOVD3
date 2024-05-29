@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2022-09-06
- * Modified    : 2024-05-28
+ * Modified    : 2024-05-29
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -201,7 +201,7 @@ class CheckHGVSInterfaceTest extends LOVDSeleniumWebdriverBaseTestCase
 
         // The download location is set to "/tmp"
         //  in getWebDriverInstance() @ inc-lib-test.php.
-        $sTempDir = '/tmp/';
+        $sTempDir = TMPDIR;
         $aFilesBefore = scandir($sTempDir);
         $this->clickButton('Download this result');
         $this->waitUntil(function () use ($aFilesBefore, $sTempDir) {
