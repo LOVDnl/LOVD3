@@ -5,6 +5,15 @@
 # Selenium is then started and quickly tested.
 # When the selenium server is not started, this script returns a status of 1.
 
+# To fix issues with running tests locally on our Firefox within a snap container,
+#  we have to set a temporary directory that's accessible to snap.
+if [[ "$(hostname)" == "elim-2020" ]];
+then
+    export TMPDIR=/home/ifokkema/tmp/firefox_dont_remove/;
+else
+    export TMPDIR=/tmp/;
+fi
+
 # When running locally, we usually miss this variable.
 if [ ! "${LOVD_SELENIUM_DRIVER}" ];
 then
@@ -84,6 +93,7 @@ echo "Starting Selenium...";
 java -Djava.net.preferIPv4Stack=true \
     -Dwebdriver.chrome.driver=chromedriver \
     -Dwebdriver.gecko.driver=geckodriver \
+    -Djava.io.tmpdir="$TMPDIR" \
     -jar "${seleniumJAR}" -port 4444 \
     > /tmp/selenium.log 2> /tmp/selenium_error.log &
 sleep 3;
