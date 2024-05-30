@@ -5,6 +5,57 @@
  *************/
 
 /***************************
+ * 3.0 Build 30 (tag:3.0-30)
+ * 2024-05-30
+ *********/
+ * Updated the VariantValidator library.
+   - Added support for more warnings and errors.
+   - Standardize the handling of reference sequences in DNA descriptions.
+ * Fixed bug in the checkHGVS script, when a transcript was given that we didn't
+   have in the database.
+ * Fixed several notices and warnings occurring with unexpected input.
+ * Fixed an incorrect table name in code handling the deletion of an individual.
+ * Improved the connectivity debugging script.
+ * All records should have their date fields publicly visible.
+ * Also added record dates to the GA4GH API output.
+ * For date values entered through forms or an import, enforced a valid date.
+ * Added several improvements to the submission API.
+ * We are now using VariantValidator for fetching transcript information. For
+   MT genes, we are creating fake transcripts since MT genes don't have them.
+   Select transcripts are labeled as such to make it easier to select the right
+   transcript.
+   Closes #639: "Use VV for the creation of all transcripts".
+ * Removed the LRG functionality from LOVD. It will still be recognized, but new
+   genes can't be linked to LRGs anymore.
+ * Now allowing genes to be created using the HGNC ID with a "HGNC:" prefix.
+ * Update code to handle newer PHP versions.
+ * Fixed bugs in the mapper caused by genes with changed gene symbols and by
+   variants with unknown positions. Variants with unknown positions are also no
+   longer shared in BED files. The mapper also didn't store positions well of
+   transcripts located on the reverse strand.
+ * Update the variant mapper; it can now map variants in consecutive order.
+ * Fixed position matching in the LOVD2-style API.
+ * Fixed broken links to Orphanet; they changed their URL structure.
+   Closes #645: "Links to Orphanet no longer work".
+ * Improved the HGVS functions. Over 1000 lines of code have been added and
+   hundreds of lines of code have been updated. This handles dozens of bug fixes
+   as well as new features. For details, see:
+   https://github.com/LOVDnl/LOVD3/pull/647
+ * Fixed automated tests.
+   - Updated PHPUnit; the older version doesn't run anymore on our machines.
+   - Updated WebDriver and geckodriver, too.
+   - Updated all tests to handle these new versions. Also updated our testing
+     abstraction classes; in general, they are simpler now.
+ * Remove all uses of "indel", it's a confusing term now, and update the graphs.
+   It recognizes more types of variants now.
+ * Fix variant page titles; the GENE(NM):c format is not valid. Also fix invalid
+   descriptions in the API.
+ * Removed the SeattleSeq feature. The service has been down for a while now.
+ * Use runMutalyzerLight, not runMutalyzer. Now that we don't have UDs anymore,
+   the NC is passed to Mutalyzer which causes failures.
+
+
+/***************************
  * 3.0 Build 29 (tag:3.0-29)
  * 2023-02-22
  *********/
