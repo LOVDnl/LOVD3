@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2022-12-14
- * For LOVD    : 3.0-29
+ * Modified    : 2024-06-05
+ * For LOVD    : 3.0-31
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -51,11 +51,9 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
     if (!empty($_PE[1])) {
         $sGene = $_DB->q('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array($_PE[1]))->fetchColumn();
         if ($sGene) {
-            // We need the authorization call if we would show the screenings with VARIANTS in gene X, not before!
-//            lovd_isAuthorized('gene', $sGene); // To show non public entries.
-
-            // FIXME; This doesn't work; searching for gene X also finds XYZ.
-            $_GET['search_genes'] = $sGene;
+            // Will show screenings from public individuals that have been linked to the selected gene.
+            // It won't check for screenings finding variants in the selected gene.
+            $_GET['search_genes_searched'] = '="' . $sGene . '"';
         } else {
             // Command or gene not understood.
             // FIXME; perhaps a HTTP/1.0 501 Not Implemented? If so, provide proper output (gene not found) and

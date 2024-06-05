@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2024-05-07
- * For LOVD    : 3.0-30
+ * Modified    : 2024-06-05
+ * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -147,6 +147,9 @@ class LOVD_Screening extends LOVD_Custom
                       ),
                  $this->buildViewList(),
                  array(
+                        'genes_searched' => array(
+                            'view' => false, // This is just used to filter the table for the /screenings/GENE view.
+                            'db'   => array('s2g.geneid', false, true)),
                         'genes' => array(
                                     'view' => array('Genes screened', 20),
                                     'db'   => array('genes', 'ASC', 'TEXT')),
