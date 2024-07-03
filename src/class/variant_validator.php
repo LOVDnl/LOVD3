@@ -131,7 +131,8 @@ class LOVD_VV
             // EREF error.
             $aData['errors']['EREF'] = $sFault;
         } elseif (strpos($sFault, 'is not associated with genome build') !== false
-            || strpos($sFault, 'No transcript definition for') !== false) {
+            || strpos($sFault, 'No transcript definition for') !== false
+            || strpos($sFault, 'is not in our database. Please check the transcript') !== false) {
             // EREFSEQ error.
             $aData['errors']['EREFSEQ'] = $sFault;
         } elseif (substr($sFault, 0, 5) == 'char '
