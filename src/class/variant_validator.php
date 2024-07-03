@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2024-01-25
- * For LOVD    : 3.0-30
+ * Modified    : 2024-07-03
+ * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -131,7 +131,8 @@ class LOVD_VV
             // EREF error.
             $aData['errors']['EREF'] = $sFault;
         } elseif (strpos($sFault, 'is not associated with genome build') !== false
-            || strpos($sFault, 'No transcript definition for') !== false) {
+            || strpos($sFault, 'No transcript definition for') !== false
+            || strpos($sFault, 'is not in our database. Please check the transcript') !== false) {
             // EREFSEQ error.
             $aData['errors']['EREFSEQ'] = $sFault;
         } elseif (substr($sFault, 0, 5) == 'char '
@@ -152,6 +153,11 @@ class LOVD_VV
             $sFault, $aRegs)) {
             // This is not that important, but we won't completely discard it, either.
             $aData['messages']['IREFSEQUPDATED'] = 'Reference sequence ' . $aRegs[1] . ' can be updated to ' . $aRegs[2] . '.';
+        } elseif (preg_match(
+            '/^The following versions of the requested transcript are available in our database: (.+)$/',
+            $sFault, $aRegs)) {
+            // This is not that important, but we won't completely discard it, either.
+            $aData['messages']['IREFSEQUPDATED'] = 'Reference sequence can be updated to one of: ' . str_replace('|', ', ', $aRegs[1]) . '.';
         } elseif (strpos($sFault, 'Caution should be used when reporting the displayed variant descriptions') !== false
             || strpos($sFault, 'The displayed variants may be artefacts of aligning') !== false) {
             // Both these warnings are thrown at the same time when there are mismatches between the
@@ -199,6 +205,7 @@ class LOVD_VV
             if (!$hCurl) {
                 $hCurl = curl_init();
                 curl_setopt($hCurl, CURLOPT_RETURNTRANSFER, true); // Return the result as a string.
+                curl_setopt($hCurl, CURLOPT_FOLLOWLOCATION, true); // Make sure we follow redirects.
                 if (!empty($_SETT['system']['version'])) {
                     curl_setopt($hCurl, CURLOPT_USERAGENT, 'LOVDv.' . $_SETT['system']['version']); // Return the result as a string.
                 }
