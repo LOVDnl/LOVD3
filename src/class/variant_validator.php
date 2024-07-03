@@ -153,6 +153,11 @@ class LOVD_VV
             $sFault, $aRegs)) {
             // This is not that important, but we won't completely discard it, either.
             $aData['messages']['IREFSEQUPDATED'] = 'Reference sequence ' . $aRegs[1] . ' can be updated to ' . $aRegs[2] . '.';
+        } elseif (preg_match(
+            '/^The following versions of the requested transcript are available in our database: (.+)$/',
+            $sFault, $aRegs)) {
+            // This is not that important, but we won't completely discard it, either.
+            $aData['messages']['IREFSEQUPDATED'] = 'Reference sequence can be updated to one of: ' . str_replace('|', ', ', $aRegs[1]) . '.';
         } elseif (strpos($sFault, 'Caution should be used when reporting the displayed variant descriptions') !== false
             || strpos($sFault, 'The displayed variants may be artefacts of aligning') !== false) {
             // Both these warnings are thrown at the same time when there are mismatches between the
