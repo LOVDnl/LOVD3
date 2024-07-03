@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-10-01
- * Modified    : 2024-05-07
- * For LOVD    : 3.0-30
+ * Modified    : 2024-07-03
+ * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -197,7 +197,7 @@ if (ACTION == 'confirm' && POST) {
     print('
     $("#mobidetails_dialog").html("Error while requesting MobiDetails to annotate this variant.<BR>' .
         implode(array_map(function ($sKey, $sVal) {
-            return $sKey . ': ' . $sVal . '<BR>';
+            return $sKey . ': ' . trim($sVal) . '<BR>';
         }, array_keys($aJSON), array_values($aJSON))) . '");
     
     // Select the right buttons.
