@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2024-05-20
- * For LOVD    : 3.0-30
+ * Modified    : 2024-07-12
+ * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -911,7 +911,7 @@ function lovd_getCurrentPageTitle ()
             $sTitle .= ' entry';
         }
         // For a target?
-        if (isset($_GET['target'])) {
+        if (!empty($_GET['target'])) {
             // $_GET['target'] should be checked already when we get here,
             //  but we take no chances.
             $ID = htmlspecialchars($_GET['target']);
