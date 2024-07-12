@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2024-05-07
- * For LOVD    : 3.0-30
+ * Modified    : 2024-07-12
+ * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -501,7 +501,7 @@ function lovd_fetchDBID ($aData)
                 // Cache the DBIDs we saw to speed this up when we repeatedly ask for the DBIDs on the same chromosome.
                 $sSymbol = 'chr' . $aData['chromosome'];
                 $sSQL = 'SELECT IFNULL(RIGHT(MAX(`VariantOnGenome/DBID`), 6), 0) + 1 FROM ' . TABLE_VARIANTS . ' AS vog WHERE vog.chromosome = ? AND `VariantOnGenome/DBID` LIKE ? AND `VariantOnGenome/DBID` REGEXP ?';
-                $aArgs = array($aData['chromosome'], $sSymbol . '\_%', '^' . $sSymbol . '_[0-9]{6}$');
+                $aArgs = array($aData['chromosome'], $sSymbol . '\_%', '^' . preg_quote($sSymbol) . '_[0-9]{6}$');
                 if (isset($aDBIDsSeen[$aData['chromosome']])) {
                     $sSQL .= ' AND `VariantOnGenome/DBID` >= ?';
                     $aArgs[] = $aDBIDsSeen[$aData['chromosome']];
@@ -525,7 +525,7 @@ function lovd_fetchDBID ($aData)
                     SELECT IFNULL(RIGHT(MAX(`VariantOnGenome/DBID`), 6), 0) + 1
                     FROM ' . TABLE_VARIANTS . '
                     WHERE chromosome = ? AND `VariantOnGenome/DBID` REGEXP ?',
-                        array($aData['chromosome'], '^' . $sSymbol . '_[0-9]{6}$'))->fetchColumn();
+                        array($aData['chromosome'], '^' . preg_quote($sSymbol) . '_[0-9]{6}$'))->fetchColumn();
             }
             $sDBID = $sSymbol . '_' . sprintf('%06d', $nDBIDnewNumber);
         }
