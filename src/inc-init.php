@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2024-05-30
- * For LOVD    : 3.0-30
+ * Modified    : 2024-07-18
+ * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -989,15 +989,20 @@ if (!defined('NOT_INSTALLED')) {
 
         // Set email headers.
         $_SETT['email_mime_boundary'] = md5('PHP_MIME');
-        $_SETT['email_headers'] = 'MIME-Version: 1.0' . PHP_EOL .
-                                  'Content-Type: text/plain; charset=UTF-8' . PHP_EOL .
-                                  'X-Priority: 3' . PHP_EOL .
-                                  'X-Mailer: PHP/' . phpversion() . PHP_EOL .
-                                  'From: ' . (ON_WINDOWS? '' : '"LOVD (' . lovd_shortenString($_CONF['system_title'], 50) . ')" ') . '<' . $_CONF['email_address'] . '>';
-        $_SETT['email_mime_headers'] =
-             preg_replace('/^Content-Type.+$/m',
-                          'Content-Type: multipart/mixed; boundary="' . $_SETT['email_mime_boundary'] . '"' . PHP_EOL .
-                          'Content-Transfer-Encoding: 7bit', $_SETT['email_headers']);
+        $_SETT['email_headers'] = [
+            'MIME-Version' => '1.0',
+            'Content-Type' => 'text/plain; charset=UTF-8',
+            'X-Priority' => '3',
+            'X-Mailer' => 'PHP/' . phpversion(),
+            'From' => (ON_WINDOWS? '' : '"LOVD (' . lovd_shortenString($_CONF['system_title'], 50) . ')" ') . '<' . $_CONF['email_address'] . '>',
+        ];
+        $_SETT['email_mime_headers'] = array_merge(
+            $_SETT['email_headers'],
+            [
+                'Content-Type' => 'multipart/mixed; boundary="' . $_SETT['email_mime_boundary'] . '"',
+                'Content-Transfer-Encoding' => '7bit',
+            ]
+        );
     }
 
 
