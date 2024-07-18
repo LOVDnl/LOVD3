@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2024-07-12
+ * Modified    : 2024-07-18
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -707,7 +707,7 @@ function lovd_recaptchaV2_verify ($sUserResponse)
 
 
 
-function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bHalt = true, $bFwdAdmin = true, $aCc = array(), $aBcc = array())
+function lovd_sendMail ($aTo, $sSubject, $sBody, $aHeaders, $bHalt = true, $bFwdAdmin = true, $aCc = array(), $aBcc = array())
 {
     // Format:
     // $aTo, $aCc, $aBcc = array(
@@ -734,22 +734,27 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bHalt = true, $bFwd
         function ($aRegs) { return str_replace(array('{{SPACE}}', '{{HYPHEN}}', '{{COMMA}}', '{{COLON}}', '{{SEMICOLON}}'), array(' ', '-', ',', ':', ';'), $aRegs[1]);},
         $sBody);
 
-    $sHeaders = $sHeaders . (!empty($sCc)? PHP_EOL . 'Cc: ' . $sCc : '') . (!empty($sBcc)? PHP_EOL . 'Bcc: ' . $sBcc : '');
+    if (!empty($sCc)) {
+        $aHeaders['Cc'] = $sCc;
+    }
+    if (!empty($sBcc)) {
+        $aHeaders['Bcc'] = $sBcc;
+    }
 
     // Submission emails should have the Reply-To set to the curator
     //  and the submitter, so both benefit from it.
     if (strpos($sSubject, 'LOVD submission') === 0) {
         // Reply-to should be original addressees.
-        $sHeaders .= PHP_EOL . 'Reply-To: ' . $sTo . ', ' . $sCc;
+        $aHeaders['Reply-To'] = $sTo . ', ' . $sCc;
     }
 
     // 2013-08-26; 3.0-08; Encode the subject as well. Prefixing with "Subject: " to make sure the first line including the SMTP header does not exceed the 76 chars.
     $sSubjectEncoded = substr(mb_encode_mimeheader('Subject: ' . $sSubject, 'UTF-8'), 9);
     $bSafeMode = ini_get('safe_mode');
     if (!$bSafeMode) {
-        $bMail = @mail($sTo, $sSubjectEncoded, $sBody, $sHeaders, '-f ' . $_CONF['email_address']);
+        $bMail = @mail($sTo, $sSubjectEncoded, $sBody, $aHeaders, '-f ' . $_CONF['email_address']);
     } else {
-        $bMail = @mail($sTo, $sSubjectEncoded, $sBody, $sHeaders);
+        $bMail = @mail($sTo, $sSubjectEncoded, $sBody, $aHeaders);
     }
 
     if ($bMail && $bFwdAdmin) {
@@ -761,19 +766,19 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bHalt = true, $bFwd
                  str_repeat('-', 22) . ' End of Forwarded Message ' . str_repeat('-', 22) . "\n";
 
         // The admin should have a proper Reply-to header.
-        $sAdditionalHeaders = '';
+        $aAdditionalHeaders = [];
         if (in_array($sSubject, array('LOVD account registration', 'LOVD password reset'))) {
             // Reply-to should be original addressees.
-            $sAdditionalHeaders .= 'Reply-To: ' . $sTo;
+            $aAdditionalHeaders['Reply-To'] = $sTo;
         } elseif (strpos($sSubject, 'LOVD submission') === 0) {
             // Reply-to should be submitter.
-            $sAdditionalHeaders .= 'Reply-To: ' . $sCc;
+            $aAdditionalHeaders['Reply-To'] = $sCc;
         }
 
         $sSubject = 'FW: ' . $sSubject;
         // 2013-08-26; 3.0-08; Encode the subject as well. Prefixing with "Subject: " to make sure the first line including the SMTP header does not exceed the 76 chars.
         $sSubjectEncoded = substr(mb_encode_mimeheader('Subject: ' . $sSubject, 'UTF-8'), 9);
-        return lovd_sendMail(array($_SETT['admin']), $sSubjectEncoded, $sBody, $_SETT['email_headers'] . ($sAdditionalHeaders? PHP_EOL . $sAdditionalHeaders : ''), $bHalt, false);
+        return lovd_sendMail(array($_SETT['admin']), $sSubjectEncoded, $sBody, array_merge($_SETT['email_headers'], $aAdditionalHeaders), $bHalt, false);
     } elseif (!$bMail) {
         // $sSubject is used here as it can always be used to describe the email type. This function also logs the email error.
         lovd_emailError(LOG_EVENT, $sSubject, $sTo, $bHalt);
