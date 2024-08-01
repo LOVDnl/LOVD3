@@ -731,20 +731,16 @@ class LOVD_Gene extends LOVD_Object
                 list($sType, $sSource) = explode('_', $sColID, 2);
                 if (!empty($zData[$sColID])) {
                     // For IDs and the GTR ("GeneTests", uses NCBI ID) link, use the IDs for the URL, otherwise use the gene symbol;
-                    //  for IDs, use the IDs in the visible part of the link, otherwise use the gene symbol.
-                    // FIXME: Note that id_pubmed_gene now uses the gene symbol in the visible part of the link (code below this block);
-                    //  it would be good if we'd standardize that.
+                    //  for IDs except the PubMed link, use the IDs in the visible part of the link, otherwise use the gene symbol.
                     $zData[$sColID . '_'] = '<A href="' .
                         lovd_getExternalSource($sSource,
                             ($sType == 'id' || $sSource == 'genetests'? $zData[$sColID] :
                                 rawurlencode($zData['id'])), true) . '" target="_blank">' .
-                        ($sType == 'id'? ($sSource == 'hgnc'? 'HGNC:' : '') . $zData[$sColID] : $zData['id']) . '</A>';
+                        ($sType == 'id' && $sSource != 'pubmed_gene'? ($sSource == 'hgnc'? 'HGNC:' : '') . $zData[$sColID] : $zData['id']) . '</A>';
                 } else {
                     $zData[$sColID . '_'] = '';
                 }
             }
-            // The link to PubMed articles showed the Entrez Gene ID, which might be misinterpreted as a number of articles. Replaced by Gene Symbol.
-            $zData['id_pubmed_gene_'] = str_replace($zData['id_entrez'] . '</A>', $zData['id'] . '</A>', $zData['id_pubmed_gene_']);
 
             // Disclaimer.
             $sYear = substr($zData['created_date'], 0, 4);
