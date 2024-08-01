@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2024-05-21
- * For LOVD    : 3.0-30
+ * Modified    : 2024-08-01
+ * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -169,7 +169,7 @@ class LOVD_Gene extends LOVD_Object
                         'disease_omim_' => 'OMIM - Diseases',
                         'show_hgmd_' => 'HGMD',
                         'show_genecards_' => 'GeneCards',
-                        'show_genetests_' => 'GeneTests',
+                        'show_genetests_' => 'NIH Genetic Testing Registry',
                         'show_orphanet_' => 'Orphanet',
                       );
         if (!$_SETT['customization_settings']['genes_show_meta_data']) {
@@ -451,7 +451,7 @@ class LOVD_Gene extends LOVD_Object
                         array('OMIM Gene ID', '', 'print', ($zData['id_omim']?: 'Not Available')),
                         array('Provide link to HGMD', 'Do you want a link to this gene\'s entry in the Human Gene Mutation Database added to the homepage?', 'checkbox', 'show_hgmd'),
                         array('Provide link to GeneCards', 'Do you want a link to this gene\'s entry in the GeneCards database added to the homepage?', 'checkbox', 'show_genecards'),
-                        array('Provide link to GeneTests', 'Do you want a link to this gene\'s entry in the GeneTests database added to the homepage?', 'checkbox', 'show_genetests'),
+                        array('Provide link to NIH GTR', 'Do you want a link to this gene\'s entry in the NIH Genetic Testing Registry (GTR) database added to the homepage?', 'checkbox', 'show_genetests'),
                         array('Provide link to Orphanet', 'Do you want a link to this gene\'s entry in the Orphanet database added to the homepage?', 'checkbox', 'show_orphanet'),
                         array('This gene has a human-readable reference sequence', '', 'select', 'refseq', 1, $aSelectRefseq, 'No', false, false),
                         array('', '', 'note', 'Although GenBank files are the official reference sequence, they are not very readable for humans. If you have a human-readable format of your reference sequence online, please select the type here.'),
@@ -730,7 +730,7 @@ class LOVD_Gene extends LOVD_Object
             foreach ($aExternal as $sColID) {
                 list($sType, $sSource) = explode('_', $sColID, 2);
                 if (!empty($zData[$sColID])) {
-                    // For IDs and the GeneTests link, use the IDs for the URL, otherwise use the gene symbol;
+                    // For IDs and the GTR ("GeneTests", uses NCBI ID) link, use the IDs for the URL, otherwise use the gene symbol;
                     //  for IDs, use the IDs in the visible part of the link, otherwise use the gene symbol.
                     // FIXME: Note that id_pubmed_gene now uses the gene symbol in the visible part of the link (code below this block);
                     //  it would be good if we'd standardize that.
