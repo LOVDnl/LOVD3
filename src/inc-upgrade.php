@@ -837,7 +837,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                      ),
                      array(
                          'CREATE TABLE IF NOT EXISTS ' . TABLE_RATE_LIMITS . ' (
-                            id SMALLINT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
+                            id SMALLINT(5) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
                             active BOOLEAN NOT NULL DEFAULT 0,
                             name VARCHAR(100) NOT NULL,
                             ip_pattern VARCHAR(255) NOT NULL,
@@ -859,7 +859,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                           ENGINE=InnoDB,
                           DEFAULT CHARACTER SET utf8',
                          'CREATE TABLE IF NOT EXISTS ' . TABLE_RATE_LIMITS_DATA . ' (
-                            ratelimitid SMALLINT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
+                            ratelimitid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
                             ips VARCHAR(255) NOT NULL,
                             user_agents TEXT NOT NULL,
                             urls TEXT NOT NULL,
