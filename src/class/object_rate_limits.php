@@ -48,6 +48,43 @@ class LOVD_RateLimit extends LOVD_Object
 
 
 
+    function __construct ()
+    {
+        // Default constructor.
+
+        // List of columns and (default?) order for viewing a list of entries.
+        $this->aColumnsViewList =
+            array(
+                'id' => array(
+                    'view' => array('ID', 45),
+                    'db'   => array('id', 'ASC', true)),
+                'active_' => array(
+                    'view' => array('Active', 60, 'style="text-align : center;"'),
+                    'db'   => array('active', 'DESC', true)),
+                'name' => array(
+                    'view' => array('Name', 250),
+                    'db'   => array('name', 'ASC', true)),
+                'ip_pattern_' => array(
+                    'view' => array('IPs', 150),
+                    'db'   => array('ip_pattern', 'ASC', true)),
+                'user_agent_pattern_' => array(
+                    'view' => array('User agents', 250),
+                    'db'   => array('user_agent_pattern', 'ASC', true)),
+                'max_hits_per_min' => array(
+                    'view' => array('Hits/min', 70),
+                    'db'   => array('max_hits_per_min', 'ASC', true)),
+                'delay' => array(
+                    'view' => array('Delay', 50),
+                    'db'   => array('delay', 'ASC', true)),
+            );
+
+        parent::__construct();
+    }
+
+
+
+
+
     function checkFields ($aData, $zData = false, $aOptions = array())
     {
         // Checks fields before submission of data.
@@ -136,6 +173,32 @@ class LOVD_RateLimit extends LOVD_Object
             );
 
         return parent::getForm();
+    }
+
+
+
+
+
+    function prepareData ($zData = '', $sView = 'list')
+    {
+        // Prepares the data by "enriching" the variable received with links, pictures, etc.
+
+        if (!in_array($sView, array('list', 'entry'))) {
+            $sView = 'list';
+        }
+
+        // Makes sure it's an array and htmlspecialchars() all the values.
+        $zData = parent::prepareData($zData, $sView);
+
+        $zData['active_'] = '<IMG src="gfx/mark_' . (int) $zData['active'] . '.png" alt="" width="11" height="11">';
+        if ($sView == 'list') {
+            $zData['name'] = '<A href="' . $zData['row_link'] . '" class="hide">' . lovd_shortenString($zData['name']) . '</A>';
+            $zData['ip_pattern_'] = lovd_shortenString($zData['ip_pattern'], 25);
+            $zData['user_agent_pattern_'] = lovd_shortenString($zData['user_agent_pattern'], 25);
+        }
+        $zData['delay'] = (int) $zData['delay'];
+
+        return $zData;
     }
 
 

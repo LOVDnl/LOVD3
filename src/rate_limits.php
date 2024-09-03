@@ -41,6 +41,29 @@ if ($_AUTH) {
 
 
 
+if (PATH_COUNT == 1 && !ACTION) {
+    // URL: /rate_limits
+    // View all entries.
+
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
+    $_T->printHeader();
+    $_T->printTitle();
+
+    // Require manager clearance.
+    lovd_requireAUTH(LEVEL_MANAGER);
+
+    require ROOT_PATH . 'class/object_rate_limits.php';
+    $_DATA = new LOVD_RateLimit();
+    $_DATA->viewList('RateLimits');
+
+    $_T->printFooter();
+    exit;
+}
+
+
+
+
+
 if (PATH_COUNT == 1 && ACTION == 'create') {
     // URL: /rate_limits?create
     // Create a new rate limit.
