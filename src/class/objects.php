@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2024-05-07
- * For LOVD    : 3.0-30
+ * Modified    : 2024-09-03
+ * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -68,7 +68,7 @@ class LOVD_Object
                   );
     var $aColumnsViewEntry = array();
     var $aColumnsViewList = array();
-    var $sSortDefault = '';
+    var $sSortDefault = 'id';
     var $nID = 0;
     var $sRowID = ''; // FIXME; needs getter and setter?
     var $sRowLink = ''; // FIXME; needs getter and setter?
@@ -2424,7 +2424,7 @@ class LOVD_Object
         if (empty($this->aColumnsViewList[$aOrder[0]]['db'][1])) {
             $aOrder[0] = $this->sSortDefault;
         }
-        if ($aOrder[1] != 'ASC' && $aOrder[1] != 'DESC') {
+        if ($aOrder[1] != 'ASC' && $aOrder[1] != 'DESC' && isset($this->aColumnsViewList[$aOrder[0]])) {
             $aOrder[1] = $this->aColumnsViewList[$aOrder[0]]['db'][1];
         }
 
