@@ -78,6 +78,29 @@ class LOVD_RateLimit extends LOVD_Object
                     'db'   => array('delay', 'ASC', true)),
             );
 
+        // SQL code for viewing an entry.
+        $this->aSQLViewEntry['SELECT']   = 'rl.*, uc.name AS created_by_, ue.name AS edited_by_';
+        $this->aSQLViewEntry['FROM']     = TABLE_RATE_LIMITS . ' AS rl LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (rl.created_by = uc.id) LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (rl.edited_by = ue.id)';
+        $this->aSQLViewEntry['GROUP_BY'] = 'rl.id';
+
+        // List of columns for viewing an entry.
+        $this->aColumnsViewEntry =
+                 array(
+                        'id' => 'Rate limit ID',
+                        'active_' => 'Active',
+                        'name' => 'Name',
+                        'ip_pattern_' => 'IP pattern',
+                        'user_agent_pattern' => 'User agent pattern',
+                        'url_pattern' => 'URL pattern',
+                        'max_hits_per_min' => 'Max hits per minute',
+                        'delay' => 'Delay (seconds)',
+                        'message' => 'Message shown when blocked',
+                        'created_by_' => 'Created by',
+                        'created_date_' => 'Date created',
+                        'edited_by_' => 'Last edited by',
+                        'edited_date_' => 'Date last edited',
+                      );
+
         parent::__construct();
     }
 
@@ -195,6 +218,8 @@ class LOVD_RateLimit extends LOVD_Object
             $zData['name'] = '<A href="' . $zData['row_link'] . '" class="hide">' . lovd_shortenString($zData['name']) . '</A>';
             $zData['ip_pattern_'] = lovd_shortenString($zData['ip_pattern'], 25);
             $zData['user_agent_pattern_'] = lovd_shortenString($zData['user_agent_pattern'], 25);
+        } else {
+            $zData['ip_pattern_'] = preg_replace('/[;,]+/', '<BR>', $zData['ip_pattern']);
         }
         $zData['delay'] = (int) $zData['delay'];
 
