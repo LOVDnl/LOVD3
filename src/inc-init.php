@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2024-07-18
+ * Modified    : 2024-09-03
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -654,6 +654,8 @@ $_TABLES =
                 //'TABLE_VARIANTS_ON_TRANSCRIPTS_REV' => TABLEPREFIX . '_variants_on_transcripts_revisions',
                 'TABLE_PHENOTYPES' => TABLEPREFIX . '_phenotypes',
                 //'TABLE_PHENOTYPES_REV' => TABLEPREFIX . '_phenotypes_revisions',
+                'TABLE_RATE_LIMITS' => TABLEPREFIX . '_rate_limits',
+                'TABLE_RATE_LIMITS_DATA' => TABLEPREFIX . '_rate_limits_data',
                 'TABLE_SCREENINGS' => TABLEPREFIX . '_screenings',
                 //'TABLE_SCREENINGS_REV' => TABLEPREFIX . '_screenings_revisions',
                 'TABLE_SCR2GENE' => TABLEPREFIX . '_screenings2genes',
