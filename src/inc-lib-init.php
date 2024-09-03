@@ -897,10 +897,10 @@ function lovd_getCurrentPageTitle ()
     }
 
     if (substr($sTitle, 0, 4) == 'All ') {
-        $sTitle .= $sObject;
+        $sTitle .= str_replace('_', ' ', $sObject);
     } else {
         // Capitalize the first letter, trim off the last 's' from the data object.
-        $sTitle = ucfirst($sTitle . substr($sObject, 0, -1));
+        $sTitle = ucfirst($sTitle . str_replace('_', ' ', substr($sObject, 0, -1)));
     }
 
     if ($sObject == 'users' && ACTION != 'boot') {
