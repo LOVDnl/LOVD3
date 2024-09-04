@@ -176,4 +176,91 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     $_T->printFooter();
     exit;
 }
+
+
+
+
+
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
+    // URL: /rate_limits/00001?edit
+    // Edit a specific entry.
+
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
+    define('LOG_EVENT', 'RateLimit' . ucfirst(ACTION));
+
+    // Require manager clearance.
+    lovd_requireAUTH(LEVEL_MANAGER);
+
+    require ROOT_PATH . 'class/object_rate_limits.php';
+    $_DATA = new LOVD_RateLimit();
+    $zData = $_DATA->loadEntry($nID);
+    require ROOT_PATH . 'inc-lib-form.php';
+
+    if (!empty($_POST)) {
+        lovd_errorClean();
+
+        $_DATA->checkFields($_POST, $zData);
+
+        if (!lovd_error()) {
+            // Fields to be used.
+            $aFields = array('active', 'name', 'ip_pattern', 'user_agent_pattern', 'url_pattern', 'max_hits_per_min', 'delay', 'message', 'edited_by', 'edited_date');
+
+            // Prepare values.
+            $_POST['edited_by'] = $_AUTH['id'];
+            $_POST['edited_date'] = date('Y-m-d H:i:s');
+
+            $_DATA->updateEntry($nID, $_POST, $aFields);
+
+            // Write to log...
+            lovd_writeLog('Event', LOG_EVENT, 'Edited rate limit ' . $nID . ' (' . $_POST['name'] . ')');
+
+            // Thank the user...
+            header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH);
+
+            $_T->printHeader();
+            $_T->printTitle();
+            lovd_showInfoTable('Successfully edited the rate limit!', 'success');
+
+            $_T->printFooter();
+            exit;
+
+        } else {
+            // Because we're sending the data back to the form, I need to unset the password fields!
+            unset($_POST['password']);
+        }
+
+    } else {
+        // Load current values.
+        $_POST = array_merge($_POST, $zData);
+    }
+
+
+
+    $_T->printHeader();
+    $_T->printTitle();
+
+    lovd_showInfoTable("Be very careful when setting a rate limit. <B>Only use this feature when you know what it's for and when you're sure what you're doing.</B> When set incorrectly, a large number of users won't be able to connect to LOVD. <B>In the worst case scenario, you won't be able to connect to LOVD to correct the issue.</B> So make sure you create a very specific rate limit. Also, when unsure, keep the allowed rate high, check the status, and decrease the limit after you've confirmed that only the intended users are affected.", 'warning');
+
+    lovd_errorPrint();
+
+    // Tooltip JS code.
+    lovd_includeJS('inc-js-tooltip.php');
+
+    // Table.
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
+
+    // Array which will make up the form table.
+    $aForm = array_merge(
+                 $_DATA->getForm(),
+                 array(
+                        array('', '', 'submit', 'Edit rate limit'),
+                      ));
+    lovd_viewForm($aForm);
+
+    print('</FORM>' . "\n\n");
+
+    $_T->printFooter();
+    exit;
+}
 ?>
