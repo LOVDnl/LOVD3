@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2024-09-03
+ * Modified    : 2024-09-04
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1008,6 +1008,11 @@ function lovd_getCurrentPageTitle ()
             if ($sNCBI) {
                 $sTitle .= ' (' . $sNCBI . ', ' . $sGene . ' gene)';
             }
+            break;
+        case 'rate_limits':
+            $sName = $_DB->q('SELECT name FROM ' . TABLE_RATE_LIMITS . '
+                WHERE id = ?', array($ID))->fetchColumn();
+            $sTitle .= ' (' . $sName . ')';
             break;
         case 'users':
             // We have to take the user's level into account, so that we won't
