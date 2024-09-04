@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-09-03
- * Modified    : 2024-09-03
+ * Modified    : 2024-09-04
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -77,6 +77,7 @@ class LOVD_RateLimit extends LOVD_Object
                     'view' => array('Delay', 50),
                     'db'   => array('delay', 'ASC', true)),
             );
+        $this->sSortDefault = 'id';
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'rl.*, uc.name AS created_by_, ue.name AS edited_by_';
