@@ -61,6 +61,8 @@ if (PATH_COUNT == 1 && !ACTION) {
         );
     }
 
+    lovd_showInfoTable('<B>To create a new rate limit, click here.</B>', 'question', '33%', CURRENT_PATH . '?create');
+
     require ROOT_PATH . 'class/object_rate_limits.php';
     $_DATA = new LOVD_RateLimit();
     $_DATA->viewList('RateLimits');
