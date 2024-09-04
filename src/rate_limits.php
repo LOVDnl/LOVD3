@@ -108,6 +108,16 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
     lovd_showJGNavigation($aNavigation, 'RateLimits');
 
+
+
+    print('<BR><BR>' . "\n\n");
+    $_T->printTitle('Most recent activity for this rate limit', 'H4');
+
+    require ROOT_PATH . 'class/object_rate_limits_data.php';
+    $_DATA = new LOVD_RateLimitData();
+    $_GET['search_ratelimitid'] = $nID;
+    $_DATA->viewList('RLData_for_RateLimits_VE');
+
     $_T->printFooter();
     exit;
 }
