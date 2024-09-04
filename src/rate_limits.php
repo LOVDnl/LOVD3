@@ -263,4 +263,84 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     $_T->printFooter();
     exit;
 }
+
+
+
+
+
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
+    // URL: /rate_limits/00001?delete
+    // Delete a specific entry.
+
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
+    define('LOG_EVENT', 'RateLimit' . ucfirst(ACTION));
+
+    // Require manager clearance.
+    lovd_requireAUTH(LEVEL_MANAGER);
+
+    require ROOT_PATH . 'class/object_rate_limits.php';
+    $_DATA = new LOVD_RateLimit();
+    $zData = $_DATA->loadEntry($nID);
+    require ROOT_PATH . 'inc-lib-form.php';
+
+    if (!empty($_POST)) {
+        lovd_errorClean();
+
+        // Mandatory fields.
+        if (empty($_POST['password'])) {
+            lovd_errorAdd('password', 'Please fill in the \'Enter your password for authorization\' field.');
+
+        } elseif (!lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
+            // User had to enter their password for authorization.
+            lovd_errorAdd('password', 'Please enter your correct password for authorization.');
+        }
+
+        if (!lovd_error()) {
+            $_DATA->deleteEntry($nID);
+
+            // Write to log...
+            lovd_writeLog('Event', LOG_EVENT, 'Deleted rate limit ' . $nID . ' (' . $zData['name'] . ')');
+
+            // Thank the user...
+            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0]);
+
+            $_T->printHeader();
+            $_T->printTitle();
+            lovd_showInfoTable('Successfully deleted the rate limit!', 'success');
+
+            $_T->printFooter();
+            exit;
+
+        } else {
+            // Because we're sending the data back to the form, I need to unset the password fields!
+            unset($_POST['password']);
+        }
+    }
+
+
+
+    $_T->printHeader();
+    $_T->printTitle();
+
+    lovd_errorPrint();
+
+    // Table.
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
+
+    // Array which will make up the form table.
+    $aForm = array(
+        array('POST', '', '', '', '50%', '14', '50%'),
+        array('Deleting rate limit', '', 'print', $zData['name']),
+        'skip',
+        array('Enter your password for authorization', '', 'password', 'password', 20),
+        array('', '', 'submit', 'Delete rate limit'),
+    );
+    lovd_viewForm($aForm);
+
+    print('</FORM>' . "\n\n");
+
+    $_T->printFooter();
+    exit;
+}
 ?>
