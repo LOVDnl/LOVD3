@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-09-03
- * Modified    : 2024-09-03
+ * Modified    : 2024-09-04
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -52,6 +52,15 @@ if (PATH_COUNT == 1 && !ACTION) {
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
 
+    if (empty($_CONF['use_rate_limiting'])) {
+        lovd_showInfoTable(
+            "Rate limiting is currently turned off in the system settings. Any created limits won't work until rate limiting is enabled. Click here to change the system settings.",
+            'information',
+            '100%',
+            'settings?edit'
+        );
+    }
+
     require ROOT_PATH . 'class/object_rate_limits.php';
     $_DATA = new LOVD_RateLimit();
     $_DATA->viewList('RateLimits');
@@ -75,6 +84,15 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
+
+    if (empty($_CONF['use_rate_limiting'])) {
+        lovd_showInfoTable(
+            "Rate limiting is currently turned off in the system settings. Any created limits won't work until rate limiting is enabled. Click here to change the system settings.",
+            'information',
+            '100%',
+            'settings?edit'
+        );
+    }
 
     require ROOT_PATH . 'class/object_rate_limits.php';
     $_DATA = new LOVD_RateLimit();
