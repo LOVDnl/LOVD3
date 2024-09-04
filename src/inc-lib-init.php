@@ -243,6 +243,130 @@ function lovd_cleanDirName ($s)
 
 
 
+function lovd_checkRateLimiting ()
+{
+    // Implements rate limiting, stopping users when they're sending in too many requests.
+    global $_DB;
+
+    // We're called only when the setting is enabled. Fetch all rate limits and see if they apply.
+    $aLimits = $_DB->q('SELECT * FROM ' . TABLE_RATE_LIMITS . ' WHERE active = 1 ORDER BY id')->fetchAllAssoc();
+    // We'll have to check all applicable limits, to prevent a user being counted by only one limit while two apply.
+    // This also means that we'll have to block them after we went over all of them.
+    $bBlock = false;
+    $nDelay = 0;
+    $aMessages = [];
+    $sNow = date('Y-m-d H:i:00');
+    foreach ($aLimits as $aLimit) {
+        if (lovd_validateIP($aLimit['ip_pattern'], $_SERVER['REMOTE_ADDR'])
+            && (empty($aLimit['user_agent_pattern']) || lovd_matchString($aLimit['user_agent_pattern'], $_SERVER['HTTP_USER_AGENT']))
+            && (empty($aLimit['url_pattern']) || lovd_matchString($aLimit['url_pattern'], CURRENT_PATH))) {
+            // We have a match.
+            $aData = $_DB->q('SELECT * FROM ' . TABLE_RATE_LIMITS_DATA . ' WHERE ratelimitid = ? AND hit_date = ?',
+                array($aLimit['id'], $sNow))->fetchAssoc();
+            if (!$aData) {
+                // No record for this minute. Create one. We don't check if this insert worked or not.
+                $_DB->q(
+                    'INSERT INTO '. TABLE_RATE_LIMITS_DATA . ' (ratelimitid, ips, user_agents, urls, hit_date, hit_count, reject_count) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                    array(
+                        $aLimit['id'],
+                        json_encode([$_SERVER['REMOTE_ADDR']]),
+                        json_encode([$_SERVER['HTTP_USER_AGENT']]),
+                        json_encode([CURRENT_PATH]),
+                        $sNow,
+                        1,
+                        0
+                    ),
+                    false
+                );
+
+            } else {
+                // Whether we're over the limit or not, we'll store a few values. Update only what we have to.
+                $sQ = 'UPDATE ' . TABLE_RATE_LIMITS_DATA . ' SET ';
+                $aQ = [];
+                foreach (['ips' => $_SERVER['REMOTE_ADDR'], 'user_agents' => $_SERVER['HTTP_USER_AGENT'], 'urls' => CURRENT_PATH] as $sField => $sValue) {
+                    $aValues = json_decode($aData[$sField], true);
+                    if (count($aValues) < 10) {
+                        $sQ .= $sField . ' = ?, ';
+                        $aQ[] = json_encode(array_unique(array_merge($aValues, [$sValue])));
+                    } elseif (count($aValues) == 10) {
+                        $sQ .= $sField . ' = ?, ';
+                        $aQ[] = json_encode(array_merge($aValues, ['...']));
+                    }
+                }
+                if ($aData['hit_count'] < $aLimit['max_hits_per_min']) {
+                    // Not over the limit yet.
+                    // Don't manually set the hit_count; let SQL increase it by one to prevent race conditions.
+                    $sQ .= 'hit_count = hit_count + 1';
+                } else {
+                    // We're over the limit.
+                    // Don't manually set the counts; let SQL increase it by one to prevent race conditions.
+                    $sQ .= 'hit_count = hit_count + 1, reject_count = reject_count + 1';
+                    $bBlock = true;
+                    if ($aLimit['message']) {
+                        $aMessages[] = $aLimit['message'];
+                    }
+                }
+
+                $sQ .= ' WHERE ratelimitid = ? AND hit_date = ?';
+                $aQ[] = $aData['ratelimitid'];
+                $aQ[] = $aData['hit_date'];
+                // We don't check if this insert worked or not.
+                $_DB->q($sQ, $aQ, false);
+            }
+
+            // Don't stack the delays, pick the maximum one.
+            $nDelay = max($nDelay, $aLimit['delay']);
+        }
+    }
+
+    // Now, do sleep if needed.
+    if ($nDelay) {
+        sleep($nDelay);
+    }
+
+    // We handled all limits. If we need to block this user, do so now.
+    if ($bBlock) {
+        // Since we might have been waiting, we need to sort out the Retry After time again.
+        $nRetryAfter = max(0, (strtotime($sNow . ' + 1 minute') - time()));
+
+        // Now, prep the output.
+        header('Retry-After: ' . $nRetryAfter, true, 429); // HTTP 429 Too Many Requests.
+        if (!$aMessages) {
+            $aMessages = [
+                "Too Many Requests.",
+                "You have exceeded the number of requests you're allowed to make. Wait $nRetryAfter seconds and then try again, but slow down your pace.",
+                "Note that your allowed number of requests per minute may be shared with other IP addresses. A rate limit can be configured for multiple ranges of IP addresses, all sharing one slot.",
+                "We may configure such a limit when we notice that a single service is using multiple IP addresses to query this system, putting an unfair strain on the server.",
+            ];
+        }
+        switch (FORMAT) {
+            case 'application/json':
+                print(
+                json_encode(
+                    array(
+                        'version' => '',
+                        'messages' => array(),
+                        'warnings' => array(),
+                        'errors' => $aMessages,
+                        'data' => array(),
+                    )));
+                break;
+            case 'text/plain':
+                print(implode("\n", $aMessages) . "\n");
+                break;
+            case 'text/html':
+            default:
+                print('<B>' . implode('<BR>', $aMessages) . "</B>\n");
+                break;
+        }
+        exit;
+    }
+}
+
+
+
+
+
 function lovd_convertBytesToHRSize ($nValue)
 {
     // This function takes integers and converts it to sizes like "128M".

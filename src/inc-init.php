@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2024-09-03
+ * Modified    : 2024-09-04
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -174,7 +174,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-30',
+                            'version' => '3.0-30b',
                           ),
                 'user_levels' =>
                      array(
@@ -935,6 +935,12 @@ if (!defined('NOT_INSTALLED')) {
         define('ACTION', $aRegs[1]);
     } else {
         define('ACTION', false);
+    }
+
+    // Implement rate limiting. We do this only here, because we need CURRENT_PATH.
+    if (!empty($_CONF['use_rate_limiting'])) {
+        // This stops a user when they're sending in too many requests.
+        lovd_checkRateLimiting();
     }
 
     // STUB; This should be implemented properly later on.
