@@ -185,7 +185,7 @@ class LOVD_RateLimit extends LOVD_Object
                 array('User agent pattern', '', 'text', 'user_agent_pattern', 50),
                 array('', '', 'note', 'Specify which user agent this rate limit should apply to. Just paste the full user agent here, without quotes. You can also use regular expressions; in that case, use slash delimiters.<BR><B>Please be extremely careful using this setting.</B> Using this setting too widely, can deny large numbers of users access to LOVD.'),
                 array('URLs to limit access to', '', 'text', 'url_pattern', 50),
-                array('', '', 'note', 'Leave this empty to apply this rate limit to all of LOVD. Otherwise, to include or exclude only specific pages, use a regular expression with slash delimiters.<BR>E.g., use "/^\/api/" to only apply this rate limit to the API.'),
+                array('', '', 'note', 'Leave this empty to apply this rate limit to all of LOVD. Otherwise, to include or exclude only specific pages, use a regular expression with slash delimiters.<BR>E.g., use "/^api/" to only apply this rate limit to the API.'),
                 array('Max hits per minute', 'How many hits are allowed per minute? Any more requests than this number, will be blocked.', 'text', 'max_hits_per_min', 5),
                 array('', '', 'note', 'Setting this to 60 will limit the user to one request per second.'),
                 array('Also delay the user this many seconds', 'Add the number of seconds the user is also delayed. Read the notes to understand the danger of this setting.', 'text', 'delay', 5),
