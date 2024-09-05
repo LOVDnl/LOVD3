@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2024-09-04
+ * Modified    : 2024-09-05
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -316,6 +316,25 @@ function lovd_checkRateLimiting ()
 
             // Don't stack the delays, pick the maximum one.
             $nDelay = max($nDelay, $aLimit['delay']);
+
+            // Random garbage collection, once in every ~10 requests. We do this only when we match a certain rule.
+            // This way, only users that are rate limited are spending their time cleaning up,
+            // *and* we make sure we always have some matches to show as we never delete the latest data.
+            if (!rand(0, 9)) {
+                // We'll always want to keep, say, 10 rows of data, even if it's older. So better just first do a count.
+                $nCount = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_RATE_LIMITS_DATA . ' WHERE ratelimitid = ?', [$aLimit['id']], false)->fetchColumn();
+                if ($nCount > 10) {
+                    $nCount -= 10;
+                    // But, we also want to keep data for at least 15 minutes.
+                    $_DB->q(
+                        'DELETE FROM ' . TABLE_RATE_LIMITS_DATA . ' WHERE ratelimitid = ? AND hit_date < ? ORDER BY hit_date ASC LIMIT ' . $nCount,
+                        [
+                            $aLimit['id'],
+                            date('Y-m-d H:i:00', strtotime('-15 minutes'))
+                        ], false
+                    );
+                }
+            }
         }
     }
 
