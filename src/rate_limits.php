@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-09-03
- * Modified    : 2024-09-04
+ * Modified    : 2024-09-05
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -104,6 +104,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $aNavigation = array();
     // Authorized user is logged in. Provide tools.
     $aNavigation[CURRENT_PATH . '?edit'] = array('menu_edit.png', 'Edit rate limit', 1);
+    $aNavigation[CURRENT_PATH . '?clear'] = array('menu_empty.png', 'Clear history and current blocks', 1);
     $aNavigation[CURRENT_PATH . '?delete'] = array('cross.png', 'Delete rate limit', 1);
 
     lovd_showJGNavigation($aNavigation, 'RateLimits');
@@ -291,6 +292,39 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     print('</FORM>' . "\n\n");
 
     $_T->printFooter();
+    exit;
+}
+
+
+
+
+
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'clear') {
+    // URL: /rate_limits/00001?clear
+    // Clear a limit's data and current blocks.
+
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
+    define('LOG_EVENT', 'RateLimit' . ucfirst(ACTION));
+
+    // Require manager clearance.
+    lovd_requireAUTH(LEVEL_MANAGER);
+
+    require ROOT_PATH . 'class/object_rate_limits.php';
+    $_DATA = new LOVD_RateLimit();
+    $zData = $_DATA->loadEntry($nID);
+
+    // Let's just do this the easy way. If we're here, the entry exists.
+    $b = $_DB->q('DELETE FROM ' . TABLE_RATE_LIMITS_DATA . ' WHERE ratelimitid = ?', [$nID], false);
+    if (!$b) {
+        // Failed.
+        lovd_showInfoTable("Failed to clear this limit's history and blocks.", 'stop');
+        $_T->printFooter();
+        exit;
+    }
+
+    // If we get here, we succeeded. Just send the user back.
+    header('Location: ' . lovd_getInstallURL() . CURRENT_PATH);
     exit;
 }
 

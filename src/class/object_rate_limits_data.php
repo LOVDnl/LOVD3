@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-09-03
- * Modified    : 2024-09-04
+ * Modified    : 2024-09-05
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -65,19 +65,19 @@ class LOVD_RateLimitData extends LOVD_Object
                     'view' => false, // We only use this for filtering.
                     'db'   => array('rld.ratelimitid', 'ASC', true)),
                 'ips' => array(
-                    'view' => array('IPs', 150),
+                    'view' => array('IPs', 80),
                     'db'   => array('rld.ips')),
                 'user_agents' => array(
-                    'view' => array('User agents', 250),
+                    'view' => array('User agents', 350),
                     'db'   => array('rld.user_agents')),
                 'urls' => array(
-                    'view' => array('URLs', 250),
+                    'view' => array('URLs', 150),
                     'db'   => array('rld.urls')),
                 'hit_date' => array(
                     'view' => array('Time', 175),
                     'db'   => array('rld.hit_date')),
                 'hit_count' => array(
-                    'view' => array('Hits', 50, 'style="text-align: right;"'),
+                    'view' => array('Hits', 40, 'style="text-align: right;"'),
                     'db'   => array('rld.hit_count')),
                 'reject_count' => array(
                     'view' => array('Rejects', 50, 'style="text-align: right;"'),
