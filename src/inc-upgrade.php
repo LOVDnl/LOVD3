@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2024-04-16
- * For LOVD    : 3.0-30
+ * Modified    : 2024-09-03
+ * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -829,6 +829,48 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  '3.0-29b' =>
                  array(
                      'UPDATE ' . TABLE_SOURCES . ' SET url = "https://www.orpha.net/en/disease/gene/{{ ID }}" WHERE id = "orphanet"',
+                 ),
+                 '3.0-30b' => array_merge(
+                     lovd_addConditionalSQL(
+                         'column_not_exists', array(TABLE_CONFIG, 'use_rate_limiting'),
+                         'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN use_rate_limiting BOOLEAN NOT NULL DEFAULT 0 AFTER use_ssl'
+                     ),
+                     array(
+                         'CREATE TABLE IF NOT EXISTS ' . TABLE_RATE_LIMITS . ' (
+                            id SMALLINT(5) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
+                            active BOOLEAN NOT NULL DEFAULT 0,
+                            name VARCHAR(100) NOT NULL,
+                            ip_pattern VARCHAR(255) NOT NULL,
+                            user_agent_pattern VARCHAR(255) NOT NULL,
+                            url_pattern VARCHAR(255) NOT NULL,
+                            max_hits_per_min SMALLINT(5) UNSIGNED NOT NULL DEFAULT 60,
+                            delay TINYINT(2) UNSIGNED NOT NULL DEFAULT 0,
+                            message TEXT NOT NULL,
+                            created_by SMALLINT(5) UNSIGNED ZEROFILL,
+                            created_date DATETIME NOT NULL,
+                            edited_by SMALLINT(5) UNSIGNED ZEROFILL,
+                            edited_date DATETIME,
+                            PRIMARY KEY (id),
+                            INDEX (active),
+                            INDEX (created_by),
+                            INDEX (edited_by),
+                            CONSTRAINT ' . TABLE_RATE_LIMITS . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
+                            CONSTRAINT ' . TABLE_RATE_LIMITS . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
+                          ENGINE=InnoDB,
+                          DEFAULT CHARACTER SET utf8',
+                         'CREATE TABLE IF NOT EXISTS ' . TABLE_RATE_LIMITS_DATA . ' (
+                            ratelimitid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
+                            ips VARCHAR(255) NOT NULL,
+                            user_agents TEXT NOT NULL,
+                            urls TEXT NOT NULL,
+                            hit_date DATETIME NOT NULL,
+                            hit_count SMALLINT(5) UNSIGNED NOT NULL DEFAULT 1,
+                            reject_count SMALLINT(5) UNSIGNED NOT NULL DEFAULT 0,
+                            PRIMARY KEY (ratelimitid, hit_date),
+                            CONSTRAINT ' . TABLE_RATE_LIMITS_DATA . '_fk_ratelimitid FOREIGN KEY (ratelimitid) REFERENCES ' . TABLE_RATE_LIMITS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE)
+                          ENGINE=InnoDB,
+                          DEFAULT CHARACTER SET utf8',
+                     )
                  ),
              );
 

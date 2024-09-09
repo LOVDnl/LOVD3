@@ -44,6 +44,7 @@ php_value suhosin.request.max_vars 15000
     RewriteRule ^logs(.*)$ logs.php
     RewriteRule ^pedigree(.*)$ pedigree.php
     RewriteRule ^phenotypes(.*)$ phenotypes.php
+    RewriteRule ^rate_limits(.*)$ rate_limits.php
     RewriteRule ^references(.*)$ references.php
     RewriteRule ^reset_password(.*)$ reset_password.php
     RewriteRule ^screenings(.*)$ screenings.php

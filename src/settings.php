@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-12
- * Modified    : 2022-11-22
- * For LOVD    : 3.0-29
+ * Modified    : 2024-09-04
+ * For LOVD    : 3.0-31
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -71,7 +71,8 @@ if (PATH_COUNT == 1 && ACTION == 'edit') {
                 'md_apikey',
                 'logo_uri', 'donate_dialog_allow', 'donate_dialog_months_hidden',
                 'send_stats', 'include_in_listing',
-                'allow_submitter_registration', 'lock_users', 'allow_unlock_accounts', 'allow_submitter_mods', 'use_ssl');
+                'allow_submitter_registration', 'lock_users', 'allow_unlock_accounts', 'allow_submitter_mods', 'use_ssl', 'use_rate_limiting'
+            );
 
             // Prepare values.
             // Make sure the database URL ends in a /.

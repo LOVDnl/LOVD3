@@ -17,7 +17,7 @@ fi
 # When running locally, we usually miss this variable.
 if [ ! "${LOVD_SELENIUM_DRIVER}" ];
 then
-  export LOVD_SELENIUM_DRIVER=firefox;
+  export LOVD_SELENIUM_DRIVER=chrome;
 fi;
 
 # Before changing any of these versions, ensure they are compatible with each other, and with your browser versions.
@@ -44,8 +44,8 @@ then
   # Make sure our Chrome Driver matched our Chrome version.
   # We're using the latest stable Chrome, but this doesn't always mean the latest stable Chrome driver.
   chromeMajorVersion=$(google-chrome --version | cut -d " " -f 3 | cut -d . -f 1);
-  chromeDriverVersion=$(curl -s "http://chromedriver.storage.googleapis.com/LATEST_RELEASE_${chromeMajorVersion}");
-  chromeDriverURL="http://chromedriver.storage.googleapis.com/${chromeDriverVersion}/chromedriver_linux64.zip";
+  chromeDriverVersion=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_${chromeMajorVersion}");
+  chromeDriverURL="https://storage.googleapis.com/chrome-for-testing-public/${chromeDriverVersion}/linux64/chromedriver-linux64.zip";
 
   echo "Downloading chromedriver from ${chromeDriverURL}...";
   chromeDriverArchive="${chromeDriverURL##*/}";

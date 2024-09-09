@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2024-05-07
- * For LOVD    : 3.0-30
+ * Modified    : 2024-09-04
+ * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -300,6 +300,7 @@ class LOVD_SystemSetting extends LOVD_Object
                         //array('Enable getting counts of hidden entries?', 'Enabling this feature allows the public to find the number of entries in the database (including hidden entries) matching one or more search terms on a specified set of columns. This feature will only mention the number of variant entries matched, without showing them.', 'checkbox', 'allow_count_hidden_entries'),
  'count_hidden_data' => array('Enable getting counts of hidden entries?', 'Enabling this feature allows the public to find the number of entries in the database (including hidden entries) matching one or more search terms on a specified set of columns. This feature will only mention the number of variant entries matched, without showing them.', 'print', '&nbsp;<I style="color : #666666;">Not yet implemented</I>'),
                         array('Force SSL-only access to LOVD?', 'SSL is a secure protocol allowing for encryption of data sent between you and LOVD. When you will record sensitive individual information in LOVD, you <B>should</B> enable this setting, as the individual information can otherwise be \'sniffed\' off the network. If you do not record sensitive information, enabling SSL is <I>recommended</I>.', 'checkbox', 'use_ssl'),
+                        array('Enable rate limiting?', 'Rate limiting allows you to reduce traffic to this LOVD instance from certain IP addresses or from unknown IPs using a certain user agent (like search engine bots). You can configure rate limits in the Setup area, but you have to enable this setting for any configured rate limits to work.', 'checkbox', 'use_rate_limiting'),
                         //array('Use data versioning of biological data?', 'Versioning allows you to see all previous versions of a certain data entry (individuals, variants, phenotype information, etc) and allows you to return the entry to a previous state. Please note that this feature requires quite a lot of space in the database. Disabling this feature later will not free any space, just prevent more space from being used.', 'checkbox', 'use_versioning'),
     'use_versioning' => array('Use data versioning of biological data?', 'Versioning allows you to see all previous versions of a certain data entry (individuals, variants, phenotype information, etc) and allows you to return the entry to a previous state. Please note that this feature requires quite a lot of space in the database. Disabling this feature later will not free any space, just prevent more space from being used.', 'print', '&nbsp;<I style="color : #666666;">Not yet implemented</I>'),
          'uninstall' => array('Disable LOVD uninstall?', 'Select this to disable the "Uninstall LOVD" option in the Setup area. Please note that this uninstall lock can only be removed by directly accessing the MySQL database.', 'checkbox', 'lock_uninstall'),
