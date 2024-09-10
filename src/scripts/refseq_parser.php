@@ -715,30 +715,30 @@ if ($_GET['step'] == 2) {
                         // print the first line
                         $sPreSpaces = str_repeat(' ', (LENGTH_LINE - $nLeftover));// Spaces before the leftover part to be added
                         if ($lUpstream <= LENGTH_LINE) {
-                            // First line is also last line of upstream sequence
-                            // Determine the preceeding nucleotide number
+                            // First line is also last line of upstream sequence.
+                            // Determine the preceding nucleotide number.
                             $nPreceedNumber = -($nLineMultFactor*LENGTH_LINE) - strlen(substr($sUpstream, 0, $lUpstream - $nExonNuclsToAdd)) - strlen(substr($sUpstream, $lUpstream - $nExonNuclsToAdd, $nExonNuclsToAdd));
                             if (strlen($sPreSpaces) > strlen($nPreceedNumber) + 3) {// +3 because of the extra space and c.
-                                // There is enough room for the preceeding nucleotide number
+                                // There is enough room for the preceding nucleotide number.
                                 fputs($fIntron, $sPreSpaces . 'g.1' . str_repeat(' ', strlen($nPreceedNumber)) . substr($sLinemarkBack, LENGTH_LINE - $lUpstream, $lUpstream - $nExonNuclsToAdd) . '   ' . substr($sLinemarkBack,  -$nExonNuclsToAdd, $nExonNuclsToAdd) . '  g.' . $nLeftover . "\n");
                                 fputs($fIntron, $sPreSpaces . 'c.' . $nPreceedNumber . ' ' . substr($sUpstream, 0, $lUpstream - $nExonNuclsToAdd) . ' \\ ' . substr($sUpstream, $lUpstream - $nExonNuclsToAdd, $nExonNuclsToAdd) . '  c.' . -($nLineMultFactor*LENGTH_LINE + 1) . "\n\n");
                             } else {
-                                // No preceeding nucleotide number will be printed
+                                // No preceding nucleotide number will be printed.
                                 fputs($fIntron, $sPreSpaces . substr($sLinemarkBack, LENGTH_LINE - $lUpstream, $lUpstream - $nExonNuclsToAdd) . '   ' . substr($sLinemarkBack,  -$nExonNuclsToAdd, $nExonNuclsToAdd) . '  g.' . $nLeftover . "\n");
                                 fputs($fIntron, $sPreSpaces . substr($sUpstream, 0, $lUpstream - $nExonNuclsToAdd) . ' \\ ' . substr($sUpstream, $lUpstream - $nExonNuclsToAdd, $nExonNuclsToAdd) . '  c.' . -($nLineMultFactor*LENGTH_LINE + 1) . "\n\n");
                             }
                         } else {
-                            // First line is not the last line
-                            // Determine the preceeding nucleotide number
+                            // First line is not the last line.
+                            // Determine the preceding nucleotide number.
                             $nPreceedNumber = -($nLineMultFactor*LENGTH_LINE) - strlen(substr($sUpstream, 0, $nLeftover));
                             $sPreSpaces = str_repeat(' ', (LENGTH_LINE - $nLeftover));
-                            if (strlen($sPreSpaces) > strlen($nPreceedNumber)) {// + 3) {// +3 because of the extra space
-                                // Determine if there is enough room for the preceeding nucleotide number
+                            if (strlen($sPreSpaces) > strlen($nPreceedNumber)) {
+                                // Determine if there is enough room for the preceding nucleotide number.
                                 $sPreSpaces = str_repeat(' ', max((LENGTH_LINE - $nLeftover - 3 - strlen($nPreceedNumber)), 0));
                                 fputs($fIntron, $sPreSpaces . 'g.1' . str_repeat(' ', strlen($nPreceedNumber)) . substr($sLinemarkBack, -$nLeftover) . '    g.' . $nLeftover . "\n");// Print the line with the 10th position marks (dots)
                                 fputs($fIntron, $sPreSpaces . 'c.' . $nPreceedNumber . ' ' . substr($sUpstream, 0, $nLeftover) . '    c.' . -($nLineMultFactor*LENGTH_LINE + 1) . "\n\n");
                             } else {
-                                // No preceeding nucleotide number will be printed
+                                // No preceding nucleotide number will be printed.
                                 fputs($fIntron, $sPreSpaces . substr($sLinemarkBack, -$nLeftover) . '    g.' . $nLeftover . "\n");// Print the line with the 10th position marks (dots)
                                 fputs($fIntron, $sPreSpaces . substr($sUpstream, 0, $nLeftover) . '    c.' . -($nLineMultFactor*LENGTH_LINE + 1) . "\n\n");
                             }
