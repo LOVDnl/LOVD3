@@ -165,7 +165,7 @@ Note that search terms are case-insensitive and that wildcards such as * are tre
 You can use different operators to specify your search request:
 \vskip 0.5\baselineskip % This page is too crammed but if I don't do this, everything below goes to hell.
 \noindent
-\begin{tabular}{>{\bfseries}p{2.5cm} p{2.6cm} p{10.6cm}}
+\begin{tabular}{>{\bfseries}p{2.6cm} p{2.6cm} p{10.5cm}}
   Operator & \textbf{Example} & \textbf{Matches}\\ \hline \hline
   & Arg & Results containing `Arg'.\\ \hline
   space & Arg Ser & Results containing both `Arg' and `Ser'.\\ \hline
@@ -1280,13 +1280,16 @@ The registration form is protected using a \emph{reCAPTCHA} module, which makes 
     Available from: LOVD 3.0 Build 01
   \end{leftbar}
 \end{wrapfigure}
-To register a new submitter account, click the ``Register as submitter'' link on the top right corner of the screen, next to the ``Log in'' link.
+To register a new submitter account, click the ``Register as submitter'' link on the top right corner of the screen,
+ next to the ``Log in'' link.
 First, you are asked to provide an ORCID ID, if you have one.
 \href{https://info.orcid.org/what-is-orcid/}{ORCID} provides a persistent digital identifier that distinguishes you
  from every other researcher and, through integration in key research workflows such as manuscript and grant submission,
  supports automated linkages between you and your professional activities ensuring that your work is recognized.
-If you don't have an ORCID ID yet, you can get one created by using the \href{https://orcid.org/register}{register} link also given on the page.
-If you don't want to register at ORCID at this time, click the ``I don't have an ORCID ID \guillemotright'' button to continue to the registration page.
+If you don't have an ORCID ID yet,
+ you can get one created by using the \href{https://orcid.org/register}{register} link also given on the page.
+If you don't want to register at ORCID at this time,
+ click the ``I don't have an ORCID ID \guillemotright'' button to continue to the registration page.
 If you do have an ORCID ID, fill it in and click the ``Continue \guillemotright'' button.
 Your ORCID ID will be verified, and the associated data is shown on the screen.
 If this data is correct, click ``Yes, this is correct \guillemotright'' to continue to the registration page.
@@ -1368,7 +1371,8 @@ This will proof that you are a human and not a computer.
 
 After completing the form, press the ``Register'' button.
 LOVD sends you a confirmation of your registered information through email.
-If the ``Forward messages to database admin'' setting in the \hyperlink{sec:system_settings}{LOVD system settings} is enabled,
+If the ``Forward messages to database admin''
+ setting in the \hyperlink{sec:system_settings}{LOVD system settings} is enabled,
  the database administrator also receives a copy of your data.
 
 
@@ -1592,16 +1596,19 @@ This chapter describes how to create, edit and delete gene databases in LOVD.
   \end{leftbar}
 \end{wrapfigure}
 Creating a new gene database in LOVD is largely automated.
-Click the ``Create a new gene entry'' option of the ``Genes'' tab dropdown menu, or the ``Create a new gene database'' link in the setup area.
+Click the ``Create a new gene entry'' option of the ``Genes'' tab dropdown menu,
+ or the ``Create a new gene database'' link in the setup area.
 Fill in the HGNC ID or the gene symbol of the gene you want to create, and click ``Continue \guillemotright''.
 LOVD will check if the gene already exists in this LOVD installation, and if the gene symbol or HGNC ID is correct.
 For this, it contacts the \href{https://www.genenames.org/}{HGNC website}.
-If the gene symbol you used has been replaced by a new one, or if LOVD can find genes for which the given symbol is an alias,
- LOVD will report back the official symbol(s).
+If the gene symbol you used has been replaced by a new one,
+ or if LOVD can find genes for which the given symbol is an alias, LOVD will report back the official symbol(s).
 
 \begin{infotable}
-Unfortunately, due to some problems on the side of the NCBI, we are unable to handle variants on the mitochondrial genome at this time.
-NCBI does not handle the MT genes by their official names, and doesn't allow for automatic retrieval of reference sequences for the MT genes.
+Unfortunately, due to some problems on the side of the NCBI,
+ we are unable to handle variants on the mitochondrial genome at this time.
+NCBI does not handle the MT genes by their official names,
+ and doesn't allow for automatic retrieval of reference sequences for the MT genes.
 When the NCBI has fixed this problem, we will implement support for MT genes.
 \end{infotable}
 
@@ -1703,10 +1710,12 @@ Here you can add links to other resources that will be displayed on the gene's L
   \item[Provide link to GeneCards] \hfill \\
   If you wish to include a link from the gene homepage to the gene's page on the GeneCards site, enable this checkbox.
   \item[Provide link to NIH GTR] \hfill \\
-  If you wish to include a link from the gene homepage to the gene's page on the NIH Genetic Testing Registry (GTR) site, enable this checkbox.
+  If you wish to include a link from the gene homepage to the gene's page on the
+   NIH Genetic Testing Registry (GTR) site, enable this checkbox.
   \item[This gene has a human-readable reference sequence] \hfill \\
   Although GenBank files are the official reference sequence, they are not very readable for humans.
-  If you have a human-readable format of your reference sequence online, please select the type here; ``Coding DNA'' or ``Genomic''.
+  If you have a human-readable format of your reference sequence online,
+   please select the type here; ``Coding DNA'' or ``Genomic''.
   \pagebreak[4] % Break the page here (up to 4; 4 is very persistent)
   \item[Human-readable reference sequence location] \hfill \\
 % TODO: add link to refseq parser section in manual.
@@ -4752,7 +4761,8 @@ If you choose to upgrade LOVD, follow these steps:
 
 \hypertarget{chap:troubleshooting}{}
 \chapter{Troubleshooting}
-In case you run into any kind of problem or when you have a question, we recommend you first check in the manual to see if perhaps the answer can be found there.
+In case you run into any kind of problem or when you have a question,
+ we recommend you first check in the manual to see if perhaps the answer can be found there.
 A newer version of the manual may be available online, on \href{https://www.lovd.nl/3.0/docs/}{the LOVD website}.
 If that doesn't resolve your problem or answer your question, please follow the following steps:
 \begin{itemize}
