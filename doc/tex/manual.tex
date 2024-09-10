@@ -49,13 +49,13 @@ LOVD 3.0 extends this idea to also provide patient-centered data storage and sto
 
 LOVD was developed approaching the ``LSDB-in-a-Box'' idea for the easy creation and maintenance of a fully web-based gene sequence variant database,
 that is platform-in\-de\-pen\-dent and uses PHP and MySQL open source software only.
-The design of the database follows the recommendations of the \href{http://www.hgvs.org/}{Human Genome Variation Society} (HGVS)
+The design of the database follows the recommendations of the \href{https://www.hgvs.org/}{Human Genome Variation Society} (HGVS)
 and focuses on the collection and display of DNA sequence variants, but it has fully implemented methods for storing complete clinical data as well.
 The open LOVD setup also facilitates functional extensions with scripts written by the community.
 \vskip \baselineskip
 
 The development of (then nameless) LOVD started in late 2002, while it was first officially released in January, 2004.
-Before that LOVD was only in use by the \href{http://www.DMD.nl/}{Leiden Muscular Dystrophy pages},
+Before that LOVD was only in use by the \href{https://www.DMD.nl/}{Leiden Muscular Dystrophy pages},
 as a not-so-modular system with lots of characteristics specific for that website only.
 With the official release of LOVD in 2004 the system had become much more dynamic and customizing LOVD was made easy mostly by editing text-files.
 
@@ -96,7 +96,7 @@ greatly reducing the amount of work required by curators to get LOVD set up for 
 
 LOVD 3.0 reached beta stage in January 2012, and the first stable release was in December of that year.
 Currently, the latest release is \LOVDversion.
-Keep an eye on our \href{http://www.lovd.nl/3.0/news}{news page} for the latest information on LOVD 3.0 development.
+Keep an eye on our \href{https://www.lovd.nl/3.0/news}{news page} for the latest information on LOVD 3.0 development.
 \vskip \baselineskip
 
 \begin{infotable}
@@ -502,9 +502,9 @@ A suitable server with the necessary software installed is available at virtuall
 If you don't want to run LOVD on a server but rather want to have it running on your computer,
  we can recommend the \href{https://www.apachefriends.org/}{XAMPP} package,
  which installs all needed software on your computer regardless of whether it's Linux, Windows or Mac.
-For Windows users, a working alternative is the \href{http://www.wampserver.com/en/}{WampServer} package.
+For Windows users, a working alternative is the \href{https://www.wampserver.com/en/}{WampServer} package.
 Also, at the time of this writing, we are offering free server space if you need to set up an LOVD.
-\href{http://www.LOVD.nl/3.0/faq/server_space}{See our website} for more information.
+\href{https://www.LOVD.nl/3.0/faq/server_space}{See our website} for more information.
 In that case you don't need to install anything and you can skip this chapter.
 \vskip \baselineskip
 
@@ -518,7 +518,7 @@ Also, you'll need to install a properly configured Mail Transfer Agent for sendi
  (such as registration information).\\
 LOVD may work with other database platforms, but we are not developing for other database backends.
 You are welcome to try other database backends and report the results to us, but we can't provide any support for it.
-For more information, see the \href{http://lovd.nl/3.0/faq/software}{FAQ about software needed}.
+For more information, see the \href{https://lovd.nl/3.0/faq/software}{FAQ about software needed}.
 \vskip \baselineskip
 
 Before installing LOVD, be sure you have the required credentials for
@@ -531,7 +531,7 @@ If you are installing LOVD on a remote server, be sure to have the
 
 
 \subsection{Download \& Extract}
-To download LOVD, go to the \href{http://www.LOVD.nl/3.0/}{LOVD website} and click on the ``Download'' tab.
+To download LOVD, go to the \href{https://www.LOVD.nl/3.0/}{LOVD website} and click on the ``Download'' tab.
 You can download LOVD in two formats; GZIPped TARball and ZIP archive.
 The first format is common for Unix and Linux systems while the ZIP archive is popular on the Windows platform.
 Usually you will be able to open both formats.
@@ -577,11 +577,11 @@ The mod\_rewrite rules in the .htaccess file require ``FileInfo'' enabled in Apa
 \vspace{1em} % vspace doesn't introduce new \par, therefore no \noindent is needed
 
 More information about .htaccess files:\\
-\url{http://httpd.apache.org/docs/2.0/howto/htaccess.html}
+\url{https://httpd.apache.org/docs/2.0/howto/htaccess.html}
 \vspace{1em} % vspace doesn't introduce new \par, therefore no \noindent is needed
 
 More information about AllowOverride:\\
-\url{http://httpd.apache.org/docs/2.0/mod/core.html\#allowoverride}
+\url{https://httpd.apache.org/docs/2.0/mod/core.html#allowoverride}
 \vskip \baselineskip
 
 \textbf{If you use a different webserver}, make sure to configure it to deny access to the config.ini.php file.
@@ -836,7 +836,7 @@ or move your mouse over the ``Setup'' tab and click the ``LOVD system settings''
 
 \subsection{Connection settings (optional)}
 Some networks have no access to the outside world except through a so-called proxy server
- (\href{http://en.wikipedia.org/wiki/Proxy_server#Forward_proxies}{more info on WikiPedia}).
+ (\href{https://en.wikipedia.org/wiki/Proxy_server}{more info on WikiPedia}).
 If this applies to the network this server is installed on, please fill in the proxy server information here.
 \begin{description}
   \item[Proxy server host name] \hfill \\
@@ -878,8 +878,8 @@ We use this information to see how many LOVDs there are worldwide, which version
   No specific information is sent, just the numbers.
   \hypertarget{item:include_in_listing}{}
   \item[Include in the global LOVD listing] \hfill \\
-  On our website, we keep a \href{http://www.lovd.nl/3.0/public_list}{list of public LOVD installations}.
-  This list is also feeding our \href{http://www.lovd.nl/LSDBs}{worldwide LSDB list},
+  On our website, we keep a \href{https://www.lovd.nl/3.0/public_list}{list of public LOVD installations}.
+  This list is also feeding our \href{https://www.lovd.nl/LSDBs}{worldwide LSDB list},
    through which submitters can locate databases for a specific gene to submit data to.
   If you enable the ``Include in the global LOVD listing'' setting,
    your LOVD installation will send us all the information we need to build these lists:
@@ -1282,8 +1282,8 @@ The registration form is protected using a \emph{reCAPTCHA} module, which makes 
 \end{wrapfigure}
 To register a new submitter account, click the ``Register as submitter'' link on the top right corner of the screen, next to the ``Log in'' link.
 First, you are asked to provide an ORCID ID, if you have one.
-\href{http://about.orcid.org/}{ORCID} provides a persistent digital identifier that distinguishes you from every other researcher and,
- through integration in key research workflows such as manuscript and grant submission,
+\href{https://info.orcid.org/what-is-orcid/}{ORCID} provides a persistent digital identifier that distinguishes you
+ from every other researcher and, through integration in key research workflows such as manuscript and grant submission,
  supports automated linkages between you and your professional activities ensuring that your work is recognized.
 If you don't have an ORCID ID yet, you can get one created by using the \href{https://orcid.org/register}{register} link also given on the page.
 If you don't want to register at ORCID at this time, click the ``I don't have an ORCID ID \guillemotright'' button to continue to the registration page.
@@ -1360,7 +1360,8 @@ To prevent unauthorized use of your account, we implemented a security feature t
 
 
 \subsection{Registration authentication}
-To prevent automatic submission of the registration form, we implemented a \href{http://www.google.com/recaptcha}{reCAPTCHA} module.
+To prevent automatic submission of the registration form,
+ we implemented a \href{https://www.google.com/recaptcha/about/}{reCAPTCHA} module.
 In the provided text field, type the two words you see in the image.
 This will proof that you are a human and not a computer.
 \vskip \baselineskip
@@ -1594,7 +1595,7 @@ Creating a new gene database in LOVD is largely automated.
 Click the ``Create a new gene entry'' option of the ``Genes'' tab dropdown menu, or the ``Create a new gene database'' link in the setup area.
 Fill in the HGNC ID or the gene symbol of the gene you want to create, and click ``Continue \guillemotright''.
 LOVD will check if the gene already exists in this LOVD installation, and if the gene symbol or HGNC ID is correct.
-For this, it contacts the \href{http://www.genenames.org/}{HGNC website}.
+For this, it contacts the \href{https://www.genenames.org/}{HGNC website}.
 If the gene symbol you used has been replaced by a new one, or if LOVD can find genes for which the given symbol is an alias,
  LOVD will report back the official symbol(s).
 
@@ -1687,8 +1688,10 @@ Here you can add links to other resources that will be displayed on the gene's L
   Here you can provide links to other resources on the internet that you would like to link to,
    such as other gene variant databases, or websites with more information about diagnostics.
   If you want to include more than one link, put every link on a new line in this field.
-  If you do not want to include a title for this link, simply paste the full URL in this field, such as ``http://DMD.LOVD.nl/''.
-  If you do want to include a title, use the format ``Description <URL>'', such as ``Other LOVDs on this gene <http://DMD.LOVD.nl/>''.
+  If you do not want to include a title for this link, simply paste the full URL in this field,
+   such as ``https://DMD.LOVD.nl/''.
+  If you do want to include a title, use the format ``Description <URL>'',
+   such as ``Other LOVDs on this gene <https://DMD.LOVD.nl/>''.
   \item[HGNC ID] \hfill \\
   This information has been filled in for you, and can't be changed.
   \item[Entrez Gene (Locuslink) ID] \hfill \\
@@ -4063,7 +4066,7 @@ Examples of possibilities are searching on a gene symbol, getting the list of av
 Even though LOVD3 is not gene-based like LOVD2 was, we have decided to keep the same
  gene-centered design of the API to make sure LOVD2 and LOVD3 can be queried alike.
 The output it creates is either an Atom 1.0 feed with the LOVD information in plain text, or a
- \href{http://www.json.org/}{JSON} file.
+ \href{https://www.json.org/json-en.html}{JSON} file.
 
 A more advanced API will be included in LOVD3 later, allowing the querying of variants genome-wide
  and getting more detailed information out of LOVD, such as patient and phenotype data.
@@ -4099,13 +4102,13 @@ Since 3.0-22, the LOVD2-style API allows for JSON data to be returned.
 The original format, also still available in 3.0-22, is an Atom feed, and is still the standard.
 When searching for genes, an Atom feed is returned with zero or more entries.
 When requesting a specific entry, just the Atom entry is returned.
-The Atom format is described in detail on \href{http://en.wikipedia.org/wiki/Atom_(standard)}{Wikipedia}.
+The Atom format is described in detail on \href{https://en.wikipedia.org/wiki/Atom_(web_standard)}{Wikipedia}.
 
 The content of the Atom entries is in plain text, with headers and values separated by a colon (:).
 Other formats as a `payload' of the Atom entries are not available.
 
 The new LOVD3 API (release date unavailable) will probably support multiple formats, such as
- \href{http://www.varioml.org/}{VarioML} and \href{http://www.json.org/}{JSON},
+ \href{https://www.varioml.org/}{VarioML} and \href{https://www.json.org/json-en.html}{JSON},
  and will not support Atom feeds, since this API serves a different purpose.
 
 \subsubsection{Genes}
@@ -4118,8 +4121,8 @@ The new LOVD3 API (release date unavailable) will probably support multiple form
   <title>
     Results for your query of the database
   </title>
-  <link rel="alternate" type="text/html" href="http://databases.lovd.nl/shared/"/>
-  <link rel="self" type="application/atom+xml" href="http://databases.lovd.nl/shared/api/rest/genes"/>
+  <link rel="alternate" type="text/html" href="https://databases.lovd.nl/shared/"/>
+  <link rel="self" type="application/atom+xml" href="https://databa...lovd.nl/shared/api/rest/genes"/>
   <updated>2018-04-17T20:15:10+02:00</updated>
   <id>tag:databases.lovd.nl,2012-05-02:web01:shared/REST_api</id>
   <generator uri="http://www.LOVD.nl/" version="3.0-21">
@@ -4128,8 +4131,8 @@ The new LOVD3 API (release date unavailable) will probably support multiple form
   <rights>Copyright (c), the curators of this database</rights>
   <entry xmlns="http://www.w3.org/2005/Atom">
     <title>IVD</title>
-    <link rel="alternate" type="text/html" href="http://databases.lovd.nl/shared/genes/IVD"/>
-    <link rel="self" type="application/atom+xml" href="http://d...lovd.nl/shared/api/rest/genes/IVD"/>
+    <link rel="alternate" type="text/html" href="https://databases.lovd.nl/shared/genes/IVD"/>
+    <link rel="self" type="application/atom+xml" href="https://...lovd.nl/shared/api/rest/genes/IVD"/>
     <id>tag:databases.lovd.nl,2011-04-05:IVD</id>
     <author>
       <name>Gerard C.P. Schaafsma</name>
@@ -4158,7 +4161,7 @@ The new LOVD3 API (release date unavailable) will probably support multiple form
     Example LOVD API output, in the default Atom format.
     The longest line has been shortened to fit this page.
     This example output of a search on gene symbol returns the IVD gene and its basic information.
-    Source: \href{http://databases.lovd.nl/shared/api/rest/genes?search_symbol=IVD}
+    Source: \href{https://databases.lovd.nl/shared/api/rest/genes?search_symbol=IVD}
      {LOVD3 shared installation}.}
   \end{shaded}
 \end{figure}
@@ -4231,8 +4234,8 @@ The JSON data shows all transcripts.
   <title>
     Results for your query of the IVD gene database
   </title>
-  <link rel="alternate" type="text/html" href="http://databases.lovd.nl/shared/"/>
-  <link rel="self" type="application/atom+xml" href="http://...lovd.nl/shared/api/rest/variants/IVD"/>
+  <link rel="alternate" type="text/html" href="https://databases.lovd.nl/shared/"/>
+  <link rel="self" type="application/atom+xml" href="https://...ovd.nl/shared/api/rest/variants/IVD"/>
   <updated>2017-08-07T13:40:16+02:00</updated>
   <id>tag:databases.lovd.nl,2012-05-02:web01:shared/REST_api</id>
   <generator uri="http://www.LOVD.nl/" version="3.0-21">
@@ -4241,8 +4244,8 @@ The JSON data shows all transcripts.
   <rights>Copyright (c), the curators of this database</rights>
   <entry xmlns="http://www.w3.org/2005/Atom">
     <title>IVD:c.860G&gt;A</title>
-    <link rel="alternate" type="text/html" href="http://...?search_VariantOnGenome/DBID=IVD_000001"/>
-    <link rel="self" type="application/atom+xml" href="http://.../api/rest/variants/IVD/0000000563"/>
+    <link rel="alternate" type="text/html" href="https://...?search_VariantOnGenome/DBID=IVD_000001"/>
+    <link rel="self" type="application/atom+xml" href="https://.../api/rest/variants/IVD/0000000563"/>
     <id>tag:databases.lovd.nl,2011-04-06:IVD/0000000563</id>
     <author>
       <name>Gerard C.P. Schaafsma</name>
@@ -4268,7 +4271,7 @@ The JSON data shows all transcripts.
     Example LOVD API output, in the default Atom format.
     The three longest lines have been shortened to fit this page.
     This example output of a search on DB ID returns one variant in the IVD gene and its basic information.
-    Source: \href{http://databases.lovd.nl/shared/api/rest/variants/IVD?search_Variant/DBID=IVD_000001}
+    Source: \href{https://databases.lovd.nl/shared/api/rest/variants/IVD?search_Variant/DBID=IVD_000001}
      {LOVD3 shared installation}.}
   \end{shaded}
 \end{figure}
@@ -4308,7 +4311,7 @@ The JSON data shows all transcripts.
      returns all transcripts associated with the variant in question, storing the data in an array.
      The genomic position is formatted slightly differently.
     Source:
-     \href{http://databases.lovd.nl/shared/api/rest/variants/IVD?search_Variant/DBID=IVD_000001&format=application/json}
+    \href{https://databases.lovd.nl/shared/api/rest/variants/IVD?search_Variant/DBID=IVD_000001&format=application/json}
      {LOVD3 shared installation}.}
   \end{shaded}
 \end{figure}
@@ -4346,30 +4349,31 @@ To obtain JSON output, add the `\texttt{format=application/json}' flag to all UR
 \subsubsection{Genes}
 \begin{description}
   \item[Listing of all genes in the database]\hfill \\
-  \href{http://databases.lovd.nl/shared/api/rest.php/genes}{http://databases.lovd.nl/shared/api/rest.php/genes}
+  \href{https://databases.lovd.nl/shared/api/rest.php/genes}{https://databases.lovd.nl/shared/api/rest.php/genes}
   \item[Searching on the gene symbol] (full match only)\hfill \\
-  \href{http://databases.lovd.nl/shared/api/rest.php/genes?search_symbol=IVD}
-    {http://databases.lovd.nl/shared/api/rest.php/genes?search\_symbol=IVD}
+  \href{https://databases.lovd.nl/shared/api/rest.php/genes?search_symbol=IVD}
+    {https://databases.lovd.nl/shared/api/rest.php/genes?search\_symbol=IVD}
   \item[Showing only one specific gene entry]\hfill \\
-  \href{http://databases.lovd.nl/shared/api/rest.php/genes/IVD}{http://databases.lovd.nl/shared/api/rest.php/genes/IVD}
+  \href{https://databases.lovd.nl/shared/api/rest.php/genes/IVD}
+    {https://databases.lovd.nl/shared/api/rest.php/genes/IVD}
   \item[Searching on the genomic position]\hfill \\
   \emph{Chromosome only:}\\
-  \href{http://databases.lovd.nl/shared/api/rest.php/genes?search_position=chr15}
-    {http://databases.lovd.nl/shared/api/rest.php/genes?search\_position=chr15}\\
+  \href{https://databases.lovd.nl/shared/api/rest.php/genes?search_position=chr15}
+    {https://databases.lovd.nl/shared/api/rest.php/genes?search\_position=chr15}\\
   \emph{Chromosomal location:}\\
-  \href{http://databases.lovd.nl/shared/api/rest.php/genes?search_position=chr15:40705600}
-       {http://databases.lovd.nl/shared/api/rest.php/genes?search\_position=chr15:40705600}\\
+  \href{https://databases.lovd.nl/shared/api/rest.php/genes?search_position=chr15:40705600}
+       {https://databases.lovd.nl/shared/api/rest.php/genes?search\_position=chr15:40705600}\\
   \emph{Chromosomal range, exact match} (only match genes having exactly this range)\\
-  \href{http://databases.lovd.nl/shared/api/rest.php/genes?search_position=chr15:40697686_40713512&position_match=exact}
-       {http://databases.lovd.nl/shared/api/rest.php/genes?\\
+  \href{https://databases.lovd.nl/shared/api/rest.php/genes?search_position=chr15:40697686_40713512&position_match=exact}
+       {https://databases.lovd.nl/shared/api/rest.php/genes?\\
        \phantom{..........}search\_position=chr15:40697686\_40713512\&position\_match=exact}\\
   \emph{Chromosomal range, exclusive match} (only match genes completely within this range)\\
-  \href{http://databases.lovd.nl/shared/api/rest.php/genes?search_position=chr15:40657686_40762512&position_match=exclusive}
-       {http://databases.lovd.nl/shared/api/rest.php/genes?\\
+  \href{https://databases.lovd.nl/shared/api/rest.php/genes?search_position=chr15:40657686_40762512&position_match=exclusive}
+       {https://databases.lovd.nl/shared/api/rest.php/genes?\\
        \phantom{..........}search\_position=chr15:40657686\_40762512\&position\_match=exclusive}\\
   \emph{Chromosomal range, partial match} (match any gene overlapping the given region)\\
-  \href{http://databases.lovd.nl/shared/api/rest.php/genes?search_position=chr15:40657686_40762512&position_match=partial}
-       {http://databases.lovd.nl/shared/api/rest.php/genes?\\
+  \href{https://databases.lovd.nl/shared/api/rest.php/genes?search_position=chr15:40657686_40762512&position_match=partial}
+       {https://databases.lovd.nl/shared/api/rest.php/genes?\\
        \phantom{..........}search\_position=chr15:40657686\_40762512\&position\_match=partial}
 \end{description}
 \clearpage
@@ -4377,39 +4381,39 @@ To obtain JSON output, add the `\texttt{format=application/json}' flag to all UR
 \subsubsection{Variants}
 \begin{description}
   \item[Listing of all variant entries in a certain gene]\hfill \\
-  \href{http://databases.lovd.nl/shared/api/rest.php/variants/IVD}
-       {http://databases.lovd.nl/shared/api/rest.php/variants/IVD}
+  \href{https://databases.lovd.nl/shared/api/rest.php/variants/IVD}
+       {https://databases.lovd.nl/shared/api/rest.php/variants/IVD}
   \item[Searching on the DNA position]\hfill \\
   \emph{Coding DNA or genomic position, exact match only}\\
-  \href{http://databases.lovd.nl/shared/api/rest.php/variants/IVD?search_position=c.157}
-       {http://databases.lovd.nl/shared/api/rest.php/variants/IVD?search\_position=c.157}\\
+  \href{https://databases.lovd.nl/shared/api/rest.php/variants/IVD?search_position=c.157}
+       {https://databases.lovd.nl/shared/api/rest.php/variants/IVD?search\_position=c.157}\\
        This does not allow for partial matches, so variant c.157\_158del is not matched.
        c.157 will match c.157+? and c.157\_158 will match c.157+?\_158-?.
        However, c.157 does not match c.157+5.
        Searching on genomic locations can be achieved using g. as a prefix.\\
        \small{
-       \href{http://databases.lovd.nl/shared/api/rest.php/variants/IVD?search_position=g.40699840}
-            {http://databases.lovd.nl/shared/api/rest.php/variants/IVD?search\_position=g.40699840}}\\
+       \href{https://databases.lovd.nl/shared/api/rest.php/variants/IVD?search_position=g.40699840}
+            {https://databases.lovd.nl/shared/api/rest.php/variants/IVD?search\_position=g.40699840}}\\
   \emph{Genomic position only, exclusive match (only match variants completely within this range)}\\
-  \href{http://databases.lovd.nl/shared/api/rest.php/variants/IVD?search_position=g.40710300_40710410&position_match=exclusive}
-       {http://databases.lovd.nl/shared/api/rest.php/variants/IVD?\\
+  \href{https://databases.lovd.nl/shared/api/rest.php/variants/IVD?search_position=g.40710300_40710410&position_match=exclusive}
+       {https://databases.lovd.nl/shared/api/rest.php/variants/IVD?\\
        \phantom{..........}search\_position=g.40710300\_40710410\&position\_match=exclusive}\\
   \emph{Genomic position only, partial match (match any variant overlapping the given region)}\\
-  \href{http://databases.lovd.nl/shared/api/rest.php/variants/IVD?search_position=g.40710300_40710410&position_match=partial}
-       {http://databases.lovd.nl/shared/api/rest.php/variants/IVD?\\
+  \href{https://databases.lovd.nl/shared/api/rest.php/variants/IVD?search_position=g.40710300_40710410&position_match=partial}
+       {https://databases.lovd.nl/shared/api/rest.php/variants/IVD?\\
        \phantom{..........}search\_position=g.40710300\_40710410\&position\_match=partial}
   \item[Searching on the DNA field]\hfill \\
-  \href{http://databases.lovd.nl/shared/api/rest.php/variants/IVD?search_Variant/DNA=c.157C\%3ET}
-       {http://databases.lovd.nl/shared/api/rest.php/variants/IVD?\\
+  \href{https://databases.lovd.nl/shared/api/rest.php/variants/IVD?search_Variant/DNA=c.157C\%3ET}
+       {https://databases.lovd.nl/shared/api/rest.php/variants/IVD?\\
        \phantom{..........}search\_Variant/DNA=c.157C\%3ET}\\
        This does not allow for partial matches, but c.(157C>T) or c.157C>T? will also match.
   \item[Searching on the DBID field]\hfill \\
-  \href{http://databases.lovd.nl/shared/api/rest.php/variants/IVD?search_Variant/DBID=IVD_000001}
-       {http://databases.lovd.nl/shared/api/rest.php/variants/IVD?\\
+  \href{https://databases.lovd.nl/shared/api/rest.php/variants/IVD?search_Variant/DBID=IVD_000001}
+       {https://databases.lovd.nl/shared/api/rest.php/variants/IVD?\\
        \phantom{..........}search\_Variant/DBID=IVD\_000001}
   \item[Showing only one specific variant entry (internal ID only)]\hfill \\
-  \href{http://databases.lovd.nl/shared/api/rest.php/variants/IVD/0000001350}
-       {http://databases.lovd.nl/shared/api/rest.php/variants/IVD/0000001350}
+  \href{https://databases.lovd.nl/shared/api/rest.php/variants/IVD/0000001350}
+       {https://databases.lovd.nl/shared/api/rest.php/variants/IVD/0000001350}
 \end{description}
 
 
@@ -4417,8 +4421,8 @@ To obtain JSON output, add the `\texttt{format=application/json}' flag to all UR
 \subsection{World-wide LOVD quering service}
 There is also a world-wide LOVD query API that allows you to query a genomic location to find out
  whether there is a variant reported in any public LOVD installation that has registered at
- \href{http://lovd.nl/3.0/public_list}{LOVD.nl}.
-Please \href{http://www.lovd.nl/3.0/contact}{contact us directly} for more information on that API.
+ \href{https://lovd.nl/3.0/public_list}{LOVD.nl}.
+Please \href{https://www.lovd.nl/3.0/contact}{contact us directly} for more information on that API.
 \clearpage
 
 
@@ -4443,8 +4447,8 @@ Note that this API was introduced in LOVD 3.0-18, but was only fully functional 
 
 
 \subsection{The submission format}
-The format used by the submission API is a JSON implementation of the \href{http://varioml.org/}{VarioML format}.
-For an example file, please see \url{http://LOVD.nl/3.0/submission_api_format.json}.
+The format used by the submission API is a JSON implementation of the \href{https://varioml.org/}{VarioML format}.
+For an example file, please see \url{https://LOVD.nl/3.0/submission_api_format.json}.
 Since Vario\-ML is originally an XML format, all XML attributes have been prefixed by an `\texttt{@}' character,
  and text nodes are stored in `\texttt{\#text}' elements.
 The JSON format allows for multiple individuals to be submitted at once;
@@ -4457,7 +4461,7 @@ JSON officially can't contain comments so a JSON parser might fail on the exampl
 Do note that not all fields that may be configured in LOVD3 will be representable (yet) in this format.
 All fields currently supported are present in the example file (see above).
 If you have more data that you'd like to submit using this format,
- please \href{http://www.LOVD.nl/3.0/contact?question}{contact us}.
+ please \href{https://www.LOVD.nl/3.0/contact?question}{contact us}.
 We aim to map as many LOVD3 fields as possible to VarioML.
 
 
@@ -4717,8 +4721,8 @@ If an update is available, detailed information is presented:
   \item[Release info:]
   Information on the changes that have been done in this release.
   Please note that this is usually only a very short list of updates.
-  A more elaborate description can always be found in the \href{http://www.lovd.nl/3.0/news/}{news section} of the
-   LOVD website, and the full list can be found in the \href{http://www.lovd.nl/3.0/changelog.txt}{LOVD changelog}.
+  A more elaborate description can always be found in the \href{https://www.lovd.nl/3.0/news/}{news section} of the
+   LOVD website, and the full list can be found in the \href{https://www.lovd.nl/3.0/changelog.txt}{LOVD changelog}.
 \end{description}
 
 \noindent
@@ -4749,10 +4753,11 @@ If you choose to upgrade LOVD, follow these steps:
 \hypertarget{chap:troubleshooting}{}
 \chapter{Troubleshooting}
 In case you run into any kind of problem or when you have a question, we recommend you first check in the manual to see if perhaps the answer can be found there.
-A newer version of the manual may be available online, on \href{http://www.lovd.nl/3.0/docs/}{the LOVD website}.
+A newer version of the manual may be available online, on \href{https://www.lovd.nl/3.0/docs/}{the LOVD website}.
 If that doesn't resolve your problem or answer your question, please follow the following steps:
 \begin{itemize}
-  \item Check the \href{http://www.lovd.nl/3.0/faq}{Frequently Asked Questions} on our website to see if that provides you any answers.
+  \item Check the \href{https://www.lovd.nl/3.0/faq}{Frequently Asked Questions}
+   on our website to see if that provides you any answers.
   \item If you're sure the problem you are having is an LOVD bug,
    or if you'd like to request a new feature or change of an existing LOVD feature,
    please \href{https://github.com/LOVDnl/LOVD3/issues/new/choose}{use our bug tracking system} to report your issue.
