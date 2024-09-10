@@ -809,7 +809,7 @@ if ($_GET['step'] == 2) {
                             if (strlen($sPreSpaces) > (strlen($aExonEnds[$nIntron]) + strlen($nStart2 - 1) + 1)) {
                                 // 2009-02-27; 2.0-16; by Gerard
                                 $x = LENGTH_LINE - $lLeftover - strlen($aExonEnds[$nIntron]) - strlen($nStart2 - 1) - 4;
-                                fputs($fIntron, substr($sPreSpaces, 0, (LENGTH_LINE - $lLeftover - strlen($aExonEnds[$nIntron]) - strlen($nStart2 - 1) - 4)) . 'g.' . ($nGenomicNumberIntron - $lLeftover + 1) . substr($sPreSpaces, 0, ($sPreSpaces - $x - strlen($nGenomicNumberIntron - $lLeftover + 1) - 2)) . substr($sLinemarkBack, -$lLeftover) . '  g.' . $nGenomicNumberIntron . "\n");// + strlen( + 2
+                                fputs($fIntron, substr($sPreSpaces, 0, (LENGTH_LINE - $lLeftover - strlen($aExonEnds[$nIntron]) - strlen($nStart2 - 1) - 4)) . 'g.' . ($nGenomicNumberIntron - $lLeftover + 1) . substr($sPreSpaces, 0, (strlen($sPreSpaces) - $x - strlen($nGenomicNumberIntron - $lLeftover + 1) - 2)) . substr($sLinemarkBack, -$lLeftover) . '  g.' . $nGenomicNumberIntron . "\n");// + strlen( + 2
                                 fputs($fIntron, substr($sPreSpaces, 0, (LENGTH_LINE - $lLeftover - strlen($aExonEnds[$nIntron]) - strlen($nStart2 - 1) - 4)) . 'c.' . ($aExonEnds[$nIntron] < 0? $aExonEnds[$nIntron] : $aExonEnds[$nIntron] + 1) . ($nStart2) . '  ');
                             } else {
                                 fputs($fIntron, $sPreSpaces . substr($sLinemarkBack, -$lLeftover) . '  g.' . $nGenomicNumberIntron . "\n");
