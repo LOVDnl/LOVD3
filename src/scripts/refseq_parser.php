@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-29
- * Modified    : 2022-11-22
- * For LOVD    : 3.0-29
+ * Modified    : 2024-09-10
+ * For LOVD    : 3.0-31
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Gerard C.P. Schaafsma <G.C.P.Schaafsma@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -734,7 +734,7 @@ if ($_GET['step'] == 2) {
                             $sPreSpaces = str_repeat(' ', (LENGTH_LINE - $nLeftover));
                             if (strlen($sPreSpaces) > strlen($nPreceedNumber)) {// + 3) {// +3 because of the extra space
                                 // Determine if there is enough room for the preceeding nucleotide number
-                                $sPreSpaces = @str_repeat(' ', (LENGTH_LINE - $nLeftover - 3 - strlen($nPreceedNumber)));
+                                $sPreSpaces = str_repeat(' ', max((LENGTH_LINE - $nLeftover - 3 - strlen($nPreceedNumber)), 0));
                                 fputs($fIntron, $sPreSpaces . 'g.1' . str_repeat(' ', strlen($nPreceedNumber)) . substr($sLinemarkBack, -$nLeftover) . '    g.' . $nLeftover . "\n");// Print the line with the 10th position marks (dots)
                                 fputs($fIntron, $sPreSpaces . 'c.' . $nPreceedNumber . ' ' . substr($sUpstream, 0, $nLeftover) . '    c.' . -($nLineMultFactor*LENGTH_LINE + 1) . "\n\n");
                             } else {
