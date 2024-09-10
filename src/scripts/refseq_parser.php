@@ -1764,7 +1764,7 @@ if ($_GET['step'] == 3) {
                         $sPrntFinl .= $c_prnt;
 
                         // Create number at the right of the sequence.
-                        if ($l_prnt[0] != '*') {
+                        if (substr($l_prnt, 0, 1) != '*') {
                             // Maybe this is a weird check. Will there ever be no $c_prnt?
                             $l_prnt = ($c_prnt? $l_prnt+1 : $l_prnt);
                         } elseif ($c_prnt) {
@@ -1892,7 +1892,7 @@ if ($_GET['step'] == 3) {
                     if (isset($n_break)) {
                         $n_break = LENGTH_LINE - $n_break;
                         $i -= $n_break;
-                        if ($l_prnt[1] == '*') {
+                        if (substr($l_prnt, 0, 1) == '*') {
                             $l_prnt = (substr($l_prnt, 1) - $n_break);
                         } else {
                             $l_prnt = '*0';
