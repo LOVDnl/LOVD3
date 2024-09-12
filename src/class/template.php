@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2024-01-25
- * For LOVD    : 3.0-30
+ * Modified    : 2024-09-12
+ * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -363,7 +363,8 @@ class LOVD_Template
 
         }
         print('  Powered by <A href="' . $_SETT['upstream_URL'] . $_STAT['tree'] . '/" target="_blank">LOVD v.' . $_STAT['tree'] . '</A> Build ' . $_STAT['build'] . '<BR>' . "\n" .
-              '  LOVD' . (LOVD_plus? '+' : '') . ' software &copy;2004-2024 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>' . "\n");
+              '  LOVD' . (LOVD_plus? '+' : '') . ' software &copy;2004-2024 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A><BR>' . "\n" .
+              '  Database contents &copy; by their respective submitters and curators<BR>' . "\n");
 ?>
     </TD>
     <TD width="42" align="right">
