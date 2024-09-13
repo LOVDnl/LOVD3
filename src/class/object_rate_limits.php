@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-09-03
- * Modified    : 2024-09-04
+ * Modified    : 2024-09-12
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -65,7 +65,7 @@ class LOVD_RateLimit extends LOVD_Object
                     'view' => array('Name', 250),
                     'db'   => array('name', 'ASC', true)),
                 'ip_pattern_' => array(
-                    'view' => array('IPs', 150),
+                    'view' => array('IPs', 125),
                     'db'   => array('ip_pattern', 'ASC', true)),
                 'user_agent_pattern_' => array(
                     'view' => array('User agents', 250),
@@ -76,6 +76,9 @@ class LOVD_RateLimit extends LOVD_Object
                 'delay' => array(
                     'view' => array('Delay', 50),
                     'db'   => array('delay', 'ASC', true)),
+                'data_' => array(
+                    'view' => array('Data', 100),
+                    'db'   => false),
             );
         $this->sSortDefault = 'id';
 
@@ -206,6 +209,7 @@ class LOVD_RateLimit extends LOVD_Object
     function prepareData ($zData = '', $sView = 'list')
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.
+        global $_DB;
 
         if (!in_array($sView, array('list', 'entry'))) {
             $sView = 'list';
@@ -218,7 +222,18 @@ class LOVD_RateLimit extends LOVD_Object
         if ($sView == 'list') {
             $zData['name'] = '<A href="' . $zData['row_link'] . '" class="hide">' . lovd_shortenString($zData['name']) . '</A>';
             $zData['ip_pattern_'] = lovd_shortenString($zData['ip_pattern'], 25);
-            $zData['user_agent_pattern_'] = lovd_shortenString($zData['user_agent_pattern'], 25);
+            $zData['user_agent_pattern_'] = lovd_shortenString($zData['user_agent_pattern'], 50);
+            // I could handle this with a join, but since I need some PHP it's easier to just do this here.
+            $aData = $_DB->q(
+                'SELECT hit_date, hit_count, reject_count FROM ' . TABLE_RATE_LIMITS_DATA . ' WHERE ratelimitid = ? ORDER BY ratelimitid DESC, hit_date DESC',
+                [$zData['id']])->fetchAllAssoc();
+            if ($aData) {
+                $t = (time() - strtotime($aData[0]['hit_date']));
+                $nHits = array_sum(array_map(function ($a) { return $a['hit_count']; }, $aData));
+                $nRejects = array_sum(array_map(function ($a) { return $a['reject_count']; }, $aData));
+                $nPerc = round($nRejects / $nHits * 100);
+                $zData['data_'] = lovd_convertSecondsToTime($t) . ' ago; ' . $nPerc . '% blocked';
+            }
         } else {
             $zData['ip_pattern_'] = preg_replace('/[;,]+/', '<BR>', $zData['ip_pattern']);
         }

@@ -24,6 +24,7 @@
    MT genes, we are creating fake transcripts since MT genes don't have them.
    Select transcripts are labeled as such to make it easier to select the right
    transcript.
+   Closes #521: "Load MANE transcript info from HGNC".
    Closes #639: "Use VV for the creation of all transcripts".
  * Removed the LRG functionality from LOVD. It will still be recognized, but new
    genes can't be linked to LRGs anymore.

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-29
- * Modified    : 2022-11-22
- * For LOVD    : 3.0-29
+ * Modified    : 2024-09-10
+ * For LOVD    : 3.0-31
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Gerard C.P. Schaafsma <G.C.P.Schaafsma@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -715,30 +715,30 @@ if ($_GET['step'] == 2) {
                         // print the first line
                         $sPreSpaces = str_repeat(' ', (LENGTH_LINE - $nLeftover));// Spaces before the leftover part to be added
                         if ($lUpstream <= LENGTH_LINE) {
-                            // First line is also last line of upstream sequence
-                            // Determine the preceeding nucleotide number
+                            // First line is also last line of upstream sequence.
+                            // Determine the preceding nucleotide number.
                             $nPreceedNumber = -($nLineMultFactor*LENGTH_LINE) - strlen(substr($sUpstream, 0, $lUpstream - $nExonNuclsToAdd)) - strlen(substr($sUpstream, $lUpstream - $nExonNuclsToAdd, $nExonNuclsToAdd));
                             if (strlen($sPreSpaces) > strlen($nPreceedNumber) + 3) {// +3 because of the extra space and c.
-                                // There is enough room for the preceeding nucleotide number
+                                // There is enough room for the preceding nucleotide number.
                                 fputs($fIntron, $sPreSpaces . 'g.1' . str_repeat(' ', strlen($nPreceedNumber)) . substr($sLinemarkBack, LENGTH_LINE - $lUpstream, $lUpstream - $nExonNuclsToAdd) . '   ' . substr($sLinemarkBack,  -$nExonNuclsToAdd, $nExonNuclsToAdd) . '  g.' . $nLeftover . "\n");
                                 fputs($fIntron, $sPreSpaces . 'c.' . $nPreceedNumber . ' ' . substr($sUpstream, 0, $lUpstream - $nExonNuclsToAdd) . ' \\ ' . substr($sUpstream, $lUpstream - $nExonNuclsToAdd, $nExonNuclsToAdd) . '  c.' . -($nLineMultFactor*LENGTH_LINE + 1) . "\n\n");
                             } else {
-                                // No preceeding nucleotide number will be printed
+                                // No preceding nucleotide number will be printed.
                                 fputs($fIntron, $sPreSpaces . substr($sLinemarkBack, LENGTH_LINE - $lUpstream, $lUpstream - $nExonNuclsToAdd) . '   ' . substr($sLinemarkBack,  -$nExonNuclsToAdd, $nExonNuclsToAdd) . '  g.' . $nLeftover . "\n");
                                 fputs($fIntron, $sPreSpaces . substr($sUpstream, 0, $lUpstream - $nExonNuclsToAdd) . ' \\ ' . substr($sUpstream, $lUpstream - $nExonNuclsToAdd, $nExonNuclsToAdd) . '  c.' . -($nLineMultFactor*LENGTH_LINE + 1) . "\n\n");
                             }
                         } else {
-                            // First line is not the last line
-                            // Determine the preceeding nucleotide number
+                            // First line is not the last line.
+                            // Determine the preceding nucleotide number.
                             $nPreceedNumber = -($nLineMultFactor*LENGTH_LINE) - strlen(substr($sUpstream, 0, $nLeftover));
                             $sPreSpaces = str_repeat(' ', (LENGTH_LINE - $nLeftover));
-                            if (strlen($sPreSpaces) > strlen($nPreceedNumber)) {// + 3) {// +3 because of the extra space
-                                // Determine if there is enough room for the preceeding nucleotide number
-                                $sPreSpaces = @str_repeat(' ', (LENGTH_LINE - $nLeftover - 3 - strlen($nPreceedNumber)));
+                            if (strlen($sPreSpaces) > strlen($nPreceedNumber)) {
+                                // Determine if there is enough room for the preceding nucleotide number.
+                                $sPreSpaces = str_repeat(' ', max((LENGTH_LINE - $nLeftover - 3 - strlen($nPreceedNumber)), 0));
                                 fputs($fIntron, $sPreSpaces . 'g.1' . str_repeat(' ', strlen($nPreceedNumber)) . substr($sLinemarkBack, -$nLeftover) . '    g.' . $nLeftover . "\n");// Print the line with the 10th position marks (dots)
                                 fputs($fIntron, $sPreSpaces . 'c.' . $nPreceedNumber . ' ' . substr($sUpstream, 0, $nLeftover) . '    c.' . -($nLineMultFactor*LENGTH_LINE + 1) . "\n\n");
                             } else {
-                                // No preceeding nucleotide number will be printed
+                                // No preceding nucleotide number will be printed.
                                 fputs($fIntron, $sPreSpaces . substr($sLinemarkBack, -$nLeftover) . '    g.' . $nLeftover . "\n");// Print the line with the 10th position marks (dots)
                                 fputs($fIntron, $sPreSpaces . substr($sUpstream, 0, $nLeftover) . '    c.' . -($nLineMultFactor*LENGTH_LINE + 1) . "\n\n");
                             }
@@ -809,7 +809,7 @@ if ($_GET['step'] == 2) {
                             if (strlen($sPreSpaces) > (strlen($aExonEnds[$nIntron]) + strlen($nStart2 - 1) + 1)) {
                                 // 2009-02-27; 2.0-16; by Gerard
                                 $x = LENGTH_LINE - $lLeftover - strlen($aExonEnds[$nIntron]) - strlen($nStart2 - 1) - 4;
-                                fputs($fIntron, substr($sPreSpaces, 0, (LENGTH_LINE - $lLeftover - strlen($aExonEnds[$nIntron]) - strlen($nStart2 - 1) - 4)) . 'g.' . ($nGenomicNumberIntron - $lLeftover + 1) . substr($sPreSpaces, 0, ($sPreSpaces - $x - strlen($nGenomicNumberIntron - $lLeftover + 1) - 2)) . substr($sLinemarkBack, -$lLeftover) . '  g.' . $nGenomicNumberIntron . "\n");// + strlen( + 2
+                                fputs($fIntron, substr($sPreSpaces, 0, (LENGTH_LINE - $lLeftover - strlen($aExonEnds[$nIntron]) - strlen($nStart2 - 1) - 4)) . 'g.' . ($nGenomicNumberIntron - $lLeftover + 1) . substr($sPreSpaces, 0, (strlen($sPreSpaces) - $x - strlen($nGenomicNumberIntron - $lLeftover + 1) - 2)) . substr($sLinemarkBack, -$lLeftover) . '  g.' . $nGenomicNumberIntron . "\n");// + strlen( + 2
                                 fputs($fIntron, substr($sPreSpaces, 0, (LENGTH_LINE - $lLeftover - strlen($aExonEnds[$nIntron]) - strlen($nStart2 - 1) - 4)) . 'c.' . ($aExonEnds[$nIntron] < 0? $aExonEnds[$nIntron] : $aExonEnds[$nIntron] + 1) . ($nStart2) . '  ');
                             } else {
                                 fputs($fIntron, $sPreSpaces . substr($sLinemarkBack, -$lLeftover) . '  g.' . $nGenomicNumberIntron . "\n");
@@ -1764,7 +1764,7 @@ if ($_GET['step'] == 3) {
                         $sPrntFinl .= $c_prnt;
 
                         // Create number at the right of the sequence.
-                        if ($l_prnt[0] != '*') {
+                        if (substr($l_prnt, 0, 1) != '*') {
                             // Maybe this is a weird check. Will there ever be no $c_prnt?
                             $l_prnt = ($c_prnt? $l_prnt+1 : $l_prnt);
                         } elseif ($c_prnt) {
@@ -1892,7 +1892,7 @@ if ($_GET['step'] == 3) {
                     if (isset($n_break)) {
                         $n_break = LENGTH_LINE - $n_break;
                         $i -= $n_break;
-                        if ($l_prnt[1] == '*') {
+                        if (substr($l_prnt, 0, 1) == '*') {
                             $l_prnt = (substr($l_prnt, 1) - $n_break);
                         } else {
                             $l_prnt = '*0';

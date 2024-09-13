@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-11-22
- * For LOVD    : 3.0-29
+ * Modified    : 2024-09-10
+ * For LOVD    : 3.0-31
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -137,7 +137,8 @@ if ($_GET['step'] == 0 && defined('NOT_INSTALLED')) {
     // Check for PHP version, PHP functions, MySQL version.
     $sPHPVers = str_replace('_', '-', PHP_VERSION) . '-';
     $sPHPVers = substr($sPHPVers, 0, strpos($sPHPVers, '-'));
-    $bPHP = ($sPHPVers >= $aRequired['PHP']);
+    // Compare each version section separately, to make sure LOVD knows that 10.0.0 is higher than 5.3.0.
+    $bPHP = (explode('.', $sPHPVers) >= explode('.', $aRequired['PHP']));
     $sPHP = '<IMG src="gfx/mark_' . (int) $bPHP . '.png" alt="" width="11" height="11">&nbsp;PHP : ' . $sPHPVers . ' (' . $aRequired['PHP'] . ' required)';
 
     // Check for certain PHP functions from optional libraries, such as mbstring and SSL.
@@ -162,7 +163,8 @@ if ($_GET['step'] == 0 && defined('NOT_INSTALLED')) {
 
     $sMySQLVers = str_replace('_', '-', $_DB->getServerInfo()) . '-';
     $sMySQLVers = substr($sMySQLVers, 0, strpos($sMySQLVers, '-'));
-    $bMySQL = ($sMySQLVers >= $aRequired['MySQL']);
+    // Compare each version section separately, to make sure LOVD knows that 10.0.0 is higher than 4.1.2.
+    $bMySQL = (explode('.', $sMySQLVers) >= explode('.', $aRequired['MySQL']));
     $sMySQL = '<IMG src="gfx/mark_' . (int) $bMySQL . '.png" alt="" width="11" height="11">&nbsp;MySQL : ' . $sMySQLVers . ' (' . $aRequired['MySQL'] . ' required)';
 
     // Check for InnoDB support.
