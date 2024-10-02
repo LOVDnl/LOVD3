@@ -91,7 +91,11 @@ class LOVD_VV
         //  cleaning of the error message to compensate.
         $sFault = str_replace(
             array(
+                // Prefixed by an untouched variant...
                 $sVariant . ': ',
+                // Prefixed by the variant with parentheses removed and an = appended...
+                str_replace(array('(', ')'), '', $sVariant) . '=: ', // Seen with NM_004006.2:c.(123del).
+                // Prefixed by a short version of the variant with everything outside the parentheses removed.
                 str_replace(array(strstr($sVariant, '(', true), '(', ')'), '', $sVariant) . ': '), '', $sFault);
 
         // VV has declared their error messages are stable.
@@ -139,7 +143,14 @@ class LOVD_VV
             || $sFault == 'insertion length must be 1'
             || strpos($sFault, ' must be provided ') !== false) {
             // ESYNTAX error.
-            $aData['errors']['ESYNTAX'] = $sFault;
+            // But, hang on. It's very possible that we do support this variant, but VV does not.
+            // This doesn't mean the description is bad. If we have valid variant info, we think it's good.
+            if ($aVariantInfo && empty($aVariantInfo['errors']) && empty($aVariantInfo['warnings'])) {
+                $aData['warnings']['WNOTSUPPORTED'] =
+                    'Although this variant seems to be a valid HGVS description, this syntax is currently not supported for mapping and validation.';
+            } else {
+                $aData['errors']['ESYNTAX'] = $sFault;
+            }
         } elseif ($sFault == 'Uncertain positions are not currently supported') {
             // EUNCERTAIN error.
             $aData['errors']['EUNCERTAIN'] = $sFault;

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-06
- * Modified    : 2023-06-23
- * For LOVD    : 3.0-30
+ * Modified    : 2024-10-02
+ * For LOVD    : 3.0-31
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               L. Werkman <L.Werkman@LUMC.nl>
  *
@@ -244,17 +244,23 @@ foreach ($aVariants as $sVariant => $aVariant) {
 
             if ($aVV && ($aVV['errors'] || $aVV['warnings'])) {
                 // Warnings or errors have occurred.
-                $aVariant['is_hgvs'] = false;
-                $aVariant['VV'] = array_merge(
-                    $aVariant['VV'],
-                    array_map(
-                        function ($sValue)
-                        {
-                            return 'VariantValidator: ' . htmlspecialchars($sValue);
-                        },
-                        array_merge($aVV['errors'], $aVV['warnings'])
-                    )
-                );
+                // If all we got was a WNOTSUPPORTED, handle it differently. It looked HGVS, VV can't validate, let's accept it.
+                if (empty($aVV['errors']) && array_keys($aVV['warnings']) == array('WNOTSUPPORTED')) {
+                    // All good, actually. VV can't be used.
+                    $aVariant['VV']['WNOTSUPPORTED'] = $aVV['warnings']['WNOTSUPPORTED'];
+                } else {
+                    $aVariant['is_hgvs'] = false;
+                    $aVariant['VV'] = array_merge(
+                        $aVariant['VV'],
+                        array_map(
+                            function ($sValue)
+                            {
+                                return 'VariantValidator: ' . htmlspecialchars($sValue);
+                            },
+                            array_merge($aVV['errors'], $aVV['warnings'])
+                        )
+                    );
+                }
             }
         }
 
