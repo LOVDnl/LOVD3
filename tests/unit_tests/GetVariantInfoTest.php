@@ -3029,6 +3029,16 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'warnings' => array(),
                 'errors' => array(),
             )),
+            array('c.0?', array( // Although mostly undocumented on the HGVS site, this indicates probably no transcript was generated.
+                'position_start' => 0,
+                'position_end' => 0,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => '0',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(),
+            )),
             array('g.0', array(
                 'position_start' => 0,
                 'position_end' => 0,

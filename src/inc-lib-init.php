@@ -1519,7 +1519,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     preg_match(
         '/^([cgmn])\.' .                         // 1.  Prefix.
 
-        '([?=0]$|(' .                            // 2. '?' or '=' (e.g. c.=).
+        '((?:[?=0]|0\?)$|(' .                    // 2. '?', '=', '0', or '0?' (e.g., c.0?).
         '(\({1,2})?' .              // 4=(       // 4.  Opening parentheses.
         '([-*]?[0-9]+|\?)' .                     // 5.  (Earliest) start position.
         '([-+]([0-9]+|\?))?' .                   // 6.  (Earliest) intronic start position.
@@ -1730,8 +1730,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         }
         // For unknown variants (c.?), the type is set to NULL.
         // Otherwise, the type is ether '=' or '0'.
-        $aResponse['type'] = substr($aVariant['complete'], -1);
-        if ($aResponse['type'] == '?') {
+        $aResponse['type'] = substr(rtrim($aVariant['complete'], '?'), -1);
+        if ($aResponse['type'] == '.') {
+            // 'c.?' etc, I trimmed the '?' off to recognize 'c.0?'.
             $aResponse['type'] = NULL;
 
         } elseif ($aResponse['type'] == '=') {
