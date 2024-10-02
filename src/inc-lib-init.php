@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2024-09-05
+ * Modified    : 2024-10-02
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1519,7 +1519,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     preg_match(
         '/^([cgmn])\.' .                         // 1.  Prefix.
 
-        '([?=]$|(' .                             // 2. '?' or '=' (e.g. c.=).
+        '([?=0]$|(' .                            // 2. '?' or '=' (e.g. c.=).
         '(\({1,2})?' .              // 4=(       // 4.  Opening parentheses.
         '([-*]?[0-9]+|\?)' .                     // 5.  (Earliest) start position.
         '([-+]([0-9]+|\?))?' .                   // 6.  (Earliest) intronic start position.
@@ -1681,6 +1681,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 'Please place a "|" between the positions and the variant type (' . $aRegs[1] . ').';
             return $aResponse;
         }
+
+        // No other special formats defined, nothing left to do but to return false.
         return false;
     }
 
@@ -1715,7 +1717,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     // Storing the variant type.
     if (!$aVariant['type']) {
         // If no type was matched, we can be sure that the variant is either
-        //  a full wild type or a full unknown variant; so either g.= or g.? .
+        //  a full wild type, a full unknown variant, or a 0-allele;
+        //  so g.=, g.?, or g.0.
         // In this case, we do not need to go over all tests, since there is
         //  simply a lot less information to test. We will do a few tests
         //  and add all necessary information, and then return our response
@@ -1726,12 +1729,21 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             $aResponse['position_start_intron'] = 0;
         }
         // For unknown variants (c.?), the type is set to NULL.
-        $aResponse['type'] = (substr($aVariant['complete'], -1) == '='? '=' : NULL);
+        // Otherwise, the type is ether '=' or '0'.
+        $aResponse['type'] = substr($aVariant['complete'], -1);
+        if ($aResponse['type'] == '?') {
+            $aResponse['type'] = NULL;
 
-        if ($aResponse['type'] == '=') {
+        } elseif ($aResponse['type'] == '=') {
             // HGVS requires unchanged sequence ("=") to always give positions.
             $aResponse['errors']['EMISSINGPOSITIONS'] =
                 'When using "=", please provide the position(s) that are unchanged.';
+            return ($bCheckHGVS? false : $aResponse);
+
+        } elseif ($aResponse['type'] == '0' && in_array($aVariant['prefix'], array('g', 'm'))) {
+            // This is only allowed for transcript-based reference sequences, as it's a consequence of a genomic change (deletion or so).
+            // It indicates the lack of expression of the transcript.
+            $aResponse['errors']['EWRONGTYPE'] = 'The 0-allele is used to indicate there is no expression of a given transcript. This can not be used for genomic variants.';
             return ($bCheckHGVS? false : $aResponse);
         }
         return ($bCheckHGVS? true : $aResponse);

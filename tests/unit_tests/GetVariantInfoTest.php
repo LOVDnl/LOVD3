@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2024-05-01
- * For LOVD    : 3.0-30
+ * Modified    : 2024-10-02
+ * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
@@ -3019,6 +3019,26 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
             )),
 
             // Other errors or problems.
+            array('c.0', array( // Although mostly undocumented on the HGVS site, this indicates no transcript was generated.
+                'position_start' => 0,
+                'position_end' => 0,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => '0',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('g.0', array(
+                'position_start' => 0,
+                'position_end' => 0,
+                'type' => '0',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(
+                    'EWRONGTYPE' => 'The 0-allele is used to indicate there is no expression of a given transcript. This can not be used for genomic variants.',
+                ),
+            )),
             array('G.123dup', array(
                 'position_start' => 123,
                 'position_end' => 123,
