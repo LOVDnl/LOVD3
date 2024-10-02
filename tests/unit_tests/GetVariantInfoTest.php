@@ -1150,7 +1150,9 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'position_end' => 0,
                 'type' => '=',
                 'range' => false,
-                'warnings' => array(),
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
+                ),
                 'errors' => array(
                     'EMISSINGPOSITIONS' => 'When using "=", please provide the position(s) that are unchanged.',
                 ),
@@ -1217,7 +1219,9 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'position_end_intron' => 0,
                 'type' => NULL,
                 'range' => false,
-                'warnings' => array(),
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
+                ),
                 'errors' => array(),
             )),
             array('c.123?', array(
@@ -3026,7 +3030,9 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'position_end_intron' => 0,
                 'type' => '0',
                 'range' => false,
-                'warnings' => array(),
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
+                ),
                 'errors' => array(),
             )),
             array('c.0?', array( // Although mostly undocumented on the HGVS site, this indicates probably no transcript was generated.
@@ -3036,7 +3042,9 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'position_end_intron' => 0,
                 'type' => '0',
                 'range' => false,
-                'warnings' => array(),
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
+                ),
                 'errors' => array(),
             )),
             array('g.0', array(
@@ -3044,7 +3052,9 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'position_end' => 0,
                 'type' => '0',
                 'range' => false,
-                'warnings' => array(),
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
+                ),
                 'errors' => array(
                     'EWRONGTYPE' => 'The 0-allele is used to indicate there is no expression of a given transcript. This can not be used for genomic variants.',
                 ),

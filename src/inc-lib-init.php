@@ -1728,6 +1728,11 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             $aResponse['position_end_intron'] = 0;
             $aResponse['position_start_intron'] = 0;
         }
+
+        // None of these can be handled by VV. If we add that information here, LOVD won't try.
+        $aResponse['warnings']['WNOTSUPPORTED'] =
+            'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.';
+
         // For unknown variants (c.?), the type is set to NULL.
         // Otherwise, the type is ether '=' or '0'.
         $aResponse['type'] = substr(rtrim($aVariant['complete'], '?'), -1);
