@@ -160,10 +160,15 @@ class LOVD_VV
             // EUNCERTAINPOSITIONS error.
             $aData['errors']['EUNCERTAINPOSITIONS'] = 'VariantValidator does not currently support variant descriptions with uncertain positions.';
         } elseif (preg_match(
-            '/^A more recent version of the selected reference sequence (.+) is available \((.+)\):/',
-            $sFault, $aRegs)) {
+            '/^(?:TranscriptVersionWarning: )?A more recent version of the selected reference sequence (.+) is available(?: for genome build .+)? \((.+)\)/',
+            $sFault, $aRegs) || strpos($sFault, 'TranscriptVersionWarning:') === 0) {
             // This is not that important, but we won't completely discard it, either.
-            $aData['messages']['IREFSEQUPDATED'] = 'Reference sequence ' . $aRegs[1] . ' can be updated to ' . $aRegs[2] . '.';
+            if ($aRegs) {
+                $aData['messages']['IREFSEQUPDATED'] = 'Reference sequence ' . $aRegs[1] . ' can be updated to ' . $aRegs[2] . '.';
+            } else {
+                // The description changed again, but we found the warning code at least.
+                $aData['messages']['IREFSEQUPDATED'] = 'The reference sequence used can be updated.';
+            }
         } elseif (preg_match(
             '/^The following versions of the requested transcript are available in our database: (.+)$/',
             $sFault, $aRegs)) {
