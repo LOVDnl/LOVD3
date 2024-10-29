@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2024-10-02
+ * Modified    : 2024-10-29
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2112,6 +2112,32 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'type' => 'del',
                 'range' => true,
                 'warnings' => array(),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(1_100)del(A)', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "(A)" to "A".',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(1_100)del[A]', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "[A]" to "A".',
+                ),
                 'errors' => array(),
                 'messages' => array(
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',

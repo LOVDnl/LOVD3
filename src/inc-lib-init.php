@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2024-10-02
+ * Modified    : 2024-10-29
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2792,6 +2792,26 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 if ($sUnknownBases) {
                     $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
                 }
+
+            } elseif (preg_match('/^(\[[A-Z]+\]|\([A-Z]+\))$/i', $aVariant['suffix'], $aRegs)) {
+                // g.123_124del[AA], g.123_124del(AA).
+                $sSequence = substr($aVariant['suffix'], 1, -1);
+                $bCaseOK = ($sSequence == strtoupper($sSequence));
+                $nSuffixMinLength = strlen($sSequence);
+
+                // Check if only correct bases have been used.
+                $sUnknownBases = preg_replace(
+                    '/' . $_LIBRARIES['regex_patterns']['bases']['ref'] . '+/',
+                    '',
+                    strtoupper($sSequence)
+                );
+                if ($sUnknownBases) {
+                    $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
+                }
+
+                $aResponse['warnings']['WSUFFIXFORMAT'] =
+                    'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
+                    ' Please rewrite "' . $aVariant['suffix'] . '" to "' . $sSequence . '".';
 
             } elseif (preg_match('/^\(([0-9]+)(?:_([0-9]+))?\)$/', $aVariant['suffix'], $aRegs)) {
                 // g.123_124del(2), g.(100_200)del(50_60).
