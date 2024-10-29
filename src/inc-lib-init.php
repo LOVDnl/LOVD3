@@ -1413,20 +1413,22 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 if ($bCheckHGVS) {
                     return false;
                 }
-                $aResponse['errors']['EWRONGREFERENCE'] =
-                    'The given reference sequence (' . $sReferenceSequence . ') does not match the DNA type (' . $sVariant[0] . ').' .
-                    ' For variants on ' . $sReferenceSequence . ', please use the ' . implode('. or ', $aPrefixesByRefSeq) . '. prefix.';
-                switch ($sVariant[0]) {
-                    case 'c':
-                    case 'n':
-                        $aResponse['errors']['EWRONGREFERENCE'] .=
-                            ' For ' . $sVariant[0] . '. variants, please use a ' . ($sVariant[0] == 'c'? '' : 'non-') . 'coding transcript reference sequence.';
-                        break;
-                    case 'g':
-                    case 'm':
-                        $aResponse['errors']['EWRONGREFERENCE'] .=
-                            ' For ' . $sVariant[0] . '. variants, please use a ' . ($sVariant[0] == 'g'? 'genomic' : 'mitochondrial') . ' reference sequence.';
-                        break;
+                if ($sVariant[1] == '.' && !ctype_digit($sVariant[0])) {
+                    $aResponse['errors']['EWRONGREFERENCE'] =
+                        'The given reference sequence (' . $sReferenceSequence . ') does not match the DNA type (' . $sVariant[0] . ').' .
+                        ' For variants on ' . $sReferenceSequence . ', please use the ' . implode('. or ', $aPrefixesByRefSeq) . '. prefix.';
+                    switch ($sVariant[0]) {
+                        case 'c':
+                        case 'n':
+                            $aResponse['errors']['EWRONGREFERENCE'] .=
+                                ' For ' . $sVariant[0] . '. variants, please use a ' . ($sVariant[0] == 'c'? '' : 'non-') . 'coding transcript reference sequence.';
+                            break;
+                        case 'g':
+                        case 'm':
+                            $aResponse['errors']['EWRONGREFERENCE'] .=
+                                ' For ' . $sVariant[0] . '. variants, please use a ' . ($sVariant[0] == 'g'? 'genomic' : 'mitochondrial') . ' reference sequence.';
+                            break;
+                    }
                 }
 
             } elseif (!preg_match('/^(N[CGTW]|LRG)/', $sReferenceSequence)
