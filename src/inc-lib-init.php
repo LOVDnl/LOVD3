@@ -3390,17 +3390,29 @@ function lovd_guessVariantInfo ($sReferenceSequence, $sVariant)
     //  that it tries to figure out what the user meant, but it doesn't HAVE to
     //  provide a fix, it should return data instead.
 
-    if (preg_match('/^([cgmn]\.)?([0-9]+)([A-Z])$/i', $sVariant, $aMatches)) {
-        // E.g., c.100A or even just 100A. Assuming this is a substitution.
+    if (strlen($sVariant) > 1 && $sVariant[1] != '.') {
+        // Variant doesn't have a prefix, e.g., 100A>T.
+        // Figure out its most likely prefix, and test if we're at least getting an array back.
+        $sPrefix = lovd_guessVariantPrefix($sReferenceSequence, $sVariant);
+        $aVariant = lovd_getVariantInfo(($sReferenceSequence? $sReferenceSequence . ':' : '') . $sPrefix . '.' . $sVariant, false);
+        if ($aVariant) {
+            $aVariant['errors']['EPREFIXMISSING'] = 'This variant description seems incomplete. Variant descriptions should start with a molecule type (e.g., "' . $sPrefix . '."). Please rewrite "' . $sVariant . '" to "' . $sPrefix . '.' . $sVariant . '".';
+            return $aVariant;
+        }
+    }
+
+    if (preg_match('/^([cgmn]\.[0-9*-]+)([A-Z])$/i', $sVariant, $aMatches)) {
+        // E.g., c.100A. Assuming this is a substitution, but we don't have the original base.
         $sVariant =
-            ($aMatches[1] ?: 'c.') .
-            $aMatches[2] .
-            (strtoupper($aMatches[3]) == 'A'? 'T' : 'A') . '>' .
-            strtoupper($aMatches[3]);
+            $aMatches[1] .
+            (strtoupper($aMatches[2]) == 'A'? 'T' : 'A') . '>' .
+            strtoupper($aMatches[2]);
         $aVariant = lovd_getVariantInfo(($sReferenceSequence? $sReferenceSequence . ':' : '') . $sVariant);
-        $aVariant['type'] = ''; // Note, we're not sure about the substitution.
-        $aVariant['errors']['EINVALID'] = 'This variant description seems incomplete. Did you mean to write a substitution? Substitutions are written like "' . $sVariant . '".';
-        return $aVariant;
+        if ($aVariant) {
+            $aVariant['type'] = ''; // Note, we're not sure about the substitution.
+            $aVariant['errors']['EINVALID'] = 'This variant description seems incomplete. Did you mean to write a substitution? Substitutions are written like "' . $sVariant . '".';
+            return $aVariant;
+        }
     }
 
     return false;

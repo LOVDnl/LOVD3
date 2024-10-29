@@ -2755,6 +2755,18 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                     'EWRONGREFERENCE' => 'The given reference sequence (NC_123456.1(NM_123456.1)) does not match the DNA type (g). For variants on NC_123456.1(NM_123456.1), please use the c. prefix. For g. variants, please use a genomic reference sequence.',
                 ),
             )),
+            array('NC_123456.1(NM_123456.1):1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(
+                    'EPREFIXMISSING' => 'This variant description seems incomplete. Variant descriptions should start with a molecule type (e.g., "c."). Please rewrite "1del" to "c.1del".',
+                ),
+            )),
             array('NC_123456.1(NM_123456.1):c.1-1del', array(
                 'position_start' => 1,
                 'position_end' => 1,
@@ -3211,6 +3223,19 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                     'WWHITESPACE' => 'This variant description contains one or more whitespace characters (spaces, tabs, etc). Please remove these.',
                 ),
                 'errors' => array(),
+            )),
+            array('123A', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => '',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(
+                    'EPREFIXMISSING' => 'This variant description seems incomplete. Variant descriptions should start with a molecule type (e.g., "c."). Please rewrite "123A" to "c.123A".',
+                    'EINVALID' => 'This variant description seems incomplete. Did you mean to write a substitution? Substitutions are written like "c.123T>A".',
+                ),
             )),
             array('g.123A', array(
                 'position_start' => 123,
