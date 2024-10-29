@@ -3397,7 +3397,7 @@ function lovd_guessVariantInfo ($sReferenceSequence, $sVariant)
         $sFixedVariant = $sPrefix . '.' . $sVariant;
         $aVariant = lovd_getVariantInfo(($sReferenceSequence? $sReferenceSequence . ':' : '') . $sFixedVariant, false);
         if ($aVariant) {
-            $aVariant['errors']['EPREFIXMISSING'] = 'This variant description seems incomplete. Variant descriptions should start with a molecule type (e.g., "' . $sPrefix . '."). Please rewrite "' . $sVariant . '" to "' . $sFixedVariant . '".';
+            $aVariant['warnings']['WPREFIXMISSING'] = 'This variant description seems incomplete. Variant descriptions should start with a molecule type (e.g., "' . $sPrefix . '."). Please rewrite "' . $sVariant . '" to "' . $sFixedVariant . '".';
             return $aVariant;
         }
     }

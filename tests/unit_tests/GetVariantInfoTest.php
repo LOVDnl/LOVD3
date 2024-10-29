@@ -2762,10 +2762,10 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'position_end_intron' => 0,
                 'type' => 'del',
                 'range' => false,
-                'warnings' => array(),
-                'errors' => array(
-                    'EPREFIXMISSING' => 'This variant description seems incomplete. Variant descriptions should start with a molecule type (e.g., "c."). Please rewrite "1del" to "c.1del".',
+                'warnings' => array(
+                    'WPREFIXMISSING' => 'This variant description seems incomplete. Variant descriptions should start with a molecule type (e.g., "c."). Please rewrite "1del" to "c.1del".',
                 ),
+                'errors' => array(),
             )),
             array('NC_123456.1(NM_123456.1):c.1-1del', array(
                 'position_start' => 1,
@@ -3231,9 +3231,10 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'position_end_intron' => 0,
                 'type' => '',
                 'range' => false,
-                'warnings' => array(),
+                'warnings' => array(
+                    'WPREFIXMISSING' => 'This variant description seems incomplete. Variant descriptions should start with a molecule type (e.g., "c."). Please rewrite "123A" to "c.123A".',
+                ),
                 'errors' => array(
-                    'EPREFIXMISSING' => 'This variant description seems incomplete. Variant descriptions should start with a molecule type (e.g., "c."). Please rewrite "123A" to "c.123A".',
                     'EINVALID' => 'This variant description seems incomplete. Did you mean to write a substitution? Substitutions are written like "c.123T>A".',
                 ),
             )),

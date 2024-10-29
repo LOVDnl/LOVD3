@@ -82,6 +82,7 @@ class FixHGVSTest extends PHPUnit\Framework\TestCase
             array('(123dup)', 'c.(123dup)'),
             array('.123dup', 'c.123dup'),
             array('123-5dup', 'c.123-5dup'),
+            array('NC_123456.1(NM_123456.1):1del', 'NC_123456.1(NM_123456.1):c.1del'),
 
             // Wrong prefix, the size of the positions indicates it's a range,
             //  and the range is fixed to a single position.
