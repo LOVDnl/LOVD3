@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2024-07-03
+ * Modified    : 2024-10-29
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -145,7 +145,9 @@ class LOVD_VV
             // ESYNTAX error.
             // But, hang on. It's very possible that we do support this variant, but VV does not.
             // This doesn't mean the description is bad. If we have valid variant info, we think it's good.
-            if ($aVariantInfo && empty($aVariantInfo['errors']) && empty($aVariantInfo['warnings'])) {
+            // E.g.: "NM_000088.3:c.589?: char 17: expected one of =, _, con, copy, del, dup, ins, inv, or a digit".
+            if ($aVariantInfo && empty($aVariantInfo['errors'])
+                && (empty($aVariantInfo['warnings']) || !array_diff(array_keys($aVariantInfo['warnings']), ['WNOTSUPPORTED']))) {
                 $aData['warnings']['WNOTSUPPORTED'] =
                     'Although this variant seems to be a valid HGVS description, this syntax is currently not supported for mapping and validation.';
             } else {

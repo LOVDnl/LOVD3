@@ -1231,7 +1231,9 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'position_end_intron' => 0,
                 'type' => NULL,
                 'range' => false,
-                'warnings' => array(),
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
+                ),
                 'errors' => array(),
             )),
 

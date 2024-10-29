@@ -1898,6 +1898,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
     } elseif ($aVariant['type'] == '?') {
         $aResponse['type'] = NULL;
+        // Throw a WNOTSUPPORTED. We are currently not sure if this variant is valid, as the refseq or the positions can still be a problem.
+        $aResponse['warnings']['WNOTSUPPORTED'] =
+            'This syntax is currently not supported for mapping and validation.';
 
     } else {
         $aResponse['type'] = $aVariant['type'];
