@@ -3408,6 +3408,46 @@ function lovd_guessVariantInfo ($sReferenceSequence, $sVariant)
 
 
 
+function lovd_guessVariantPrefix ($sReferenceSequence, $sVariant)
+{
+    // Try to guess what variant prefix (molecule type) would fit this variant
+    //  description by checking the reference sequence and the variant.
+    // This assumes no prefix is given in the variant description.
+    // This is far from perfect, but an educated guess is good enough.
+
+    $aPrefixesByRefSeq = (lovd_getVariantPrefixesByRefSeq($sReferenceSequence) ?? []);
+    if ($aPrefixesByRefSeq) {
+        // When we have a single match, return that.
+        // When we have multiple matches, we will never be able to prove that it may be the second option.
+        // We could prove that something is c. and not n., but not the reverse.
+        // Therefore, make our lives easier and just return the first (g. or c.).
+        return $aPrefixesByRefSeq[0];
+
+    } elseif (preg_match('/(^|[^0-9])[*-][0-9]/', $sVariant)) {
+        // There seems to be an UTR position mentioned.
+        return 'c';
+
+    } elseif (preg_match('/[0-9][+-][0-9]/', $sVariant)) {
+        // There seems to be an intronic position mentioned.
+        // This can be c. or n., but we'll default to c.
+        return 'c';
+
+    } elseif (preg_match('/([0-9]+)/', $sVariant, $aRegs)
+        && $aRegs[1] < 1000) {
+        // The first number in the variant description is lower than 1000.
+        // Most likely to be a coding variant.
+        return 'c';
+
+    } else {
+        // Larger numbers and everything else will be 'g'.
+        return 'g';
+    }
+}
+
+
+
+
+
 function lovd_hideEmail ($s)
 {
     // Function kindly provided by Ileos.nl in the interest of Open Source.

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2024-05-23
- * For LOVD    : 3.0-30
+ * Modified    : 2024-10-29
+ * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -85,31 +85,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         if (in_array(strtolower($sVariant[0]), array('c', 'g', 'm', 'n'))) {
             $sType = strtolower($sVariant[0]);
         } else {
-            if (preg_match('/[0-9][+-][0-9]/', $sVariant)) {
-                // Variant doesn't have a prefix either, *and* there seems to be an
-                //  intronic position mentioned.
-                $sType = 'c';
-            } elseif ($sReference) {
-                // If can't get it from the variant, but we do have a refseq,
-                //  let that one do the talking!
-                if (preg_match('/^[NX]R_[0-9]/', $sReference)) {
-                    $sType = 'n';
-                } elseif (preg_match('/^(ENST|LRG_[0-9]+t|[NX]M_)[0-9]/', $sReference)) {
-                    $sType = 'c';
-                } elseif (preg_match('/^NC_(001807|012920)/', $sReference)) {
-                    $sType = 'm';
-                } else {
-                    $sType = 'g';
-                }
-            } elseif (preg_match('/([0-9]+)/', $sVariant, $aRegs)
-                && $aRegs[1] < 1000) {
-                // The first number in the variant description is lower than 1000.
-                // Most likely to be a coding variant.
-                $sType = 'c';
-            } else {
-                // Fine, we default to 'g'.
-                $sType = 'g';
-            }
+            $sType = lovd_guessVariantPrefix(rtrim($sReference, ':'), $sVariant);
         }
     }
 
@@ -266,7 +242,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         } else {
             // If the prefix does not equal the expected type, we can be sure
             //  to try and add in the type instead. Perhaps the user accidentally
-            //  wrote down a 'g.' in the transcript field.
+            //  wrote down a 'g.' in the cDNA field.
             return lovd_fixHGVS($sReference . $sType . substr($sVariant, 1), $sType);
         }
 
