@@ -1682,6 +1682,26 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             return $aResponse;
         }
 
+        // Here, we will try to recognize all those other non-standard formats
+        //  that we don't want to include in the regex.
+        // Some may still be somewhat salvageable, e.g. C100G.
+        // We have lovd_fixHGVS() for fixing descriptions, but we don't want to fix the description here.
+        // We want to have some information, if possible, on the position and the type, and get a proper error message.
+        // This code should *NOT* duplicate functionality in lovd_fixHGVS(). If I wish to support something here that
+        //  lovd_fixHGVS() currently handles, I should MOVE that code here and let lovd_fixHGVS() use the given rewrite.
+        $aVariant = lovd_guessVariantInfo($sReferenceSequence, $sVariant);
+        // Merge the data we got back with what we already have (may include feedback on refseqs).
+        if ($aVariant) {
+            foreach ($aVariant as $sKey => $Value) {
+                if (is_array($Value)) {
+                    $aResponse[$sKey] = array_merge($aResponse[$sKey], $Value);
+                } else {
+                    $aResponse[$sKey] = $Value;
+                }
+            }
+            return $aResponse;
+        }
+
         // No other special formats defined, nothing left to do but to return false.
         return false;
     }
@@ -3353,6 +3373,35 @@ function lovd_getTableInfoByCategory ($sCategory)
         return false;
     }
     return $aTables[$sCategory];
+}
+
+
+
+
+
+function lovd_guessVariantInfo ($sReferenceSequence, $sVariant)
+{
+    // This function will try to recognize invalid descriptions and try to guess
+    //  some information on the variant. It is similar to lovd_getVariantInfo()
+    //  in that it returns the same data if possible, but this function is only
+    //  meant for invalid descriptions. It is also similar to lovd_fixHGVS() in
+    //  that it tries to figure out what the user meant, but it doesn't HAVE to
+    //  provide a fix, it should return data instead.
+
+    if (preg_match('/^([cgmn]\.)?([0-9]+)([A-Z])$/i', $sVariant, $aMatches)) {
+        // E.g., c.100A or even just 100A. Assuming this is a substitution.
+        $sVariant =
+            ($aMatches[1] ?: 'c.') .
+            $aMatches[2] .
+            (strtoupper($aMatches[3]) == 'A'? 'T' : 'A') . '>' .
+            strtoupper($aMatches[3]);
+        $aVariant = lovd_getVariantInfo(($sReferenceSequence? $sReferenceSequence . ':' : '') . $sVariant);
+        $aVariant['type'] = ''; // Note, we're not sure about the substitution.
+        $aVariant['errors']['EINVALID'] = 'This variant description seems incomplete. Did you mean to write a substitution? Substitutions are written like "' . $sVariant . '".';
+        return $aVariant;
+    }
+
+    return false;
 }
 
 

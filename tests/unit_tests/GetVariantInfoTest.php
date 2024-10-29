@@ -3212,6 +3212,16 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.123A', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => '',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(
+                    'EINVALID' => 'This variant description seems incomplete. Did you mean to write a substitution? Substitutions are written like "g.123T>A".',
+                ),
+            )),
         );
     }
 }
