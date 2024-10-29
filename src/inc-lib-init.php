@@ -3397,7 +3397,11 @@ function lovd_guessVariantInfo ($sReferenceSequence, $sVariant)
         $sFixedVariant = $sPrefix . '.' . $sVariant;
         $aVariant = lovd_getVariantInfo(($sReferenceSequence? $sReferenceSequence . ':' : '') . $sFixedVariant, false);
         if ($aVariant) {
-            $aVariant['warnings']['WPREFIXMISSING'] = 'This variant description seems incomplete. Variant descriptions should start with a molecule type (e.g., "' . $sPrefix . '."). Please rewrite "' . $sVariant . '" to "' . $sFixedVariant . '".';
+            // Make sure this warning comes first. If the fixed variant has warnings as well, these need to come later.
+            $aVariant['warnings'] = array_merge(
+                ['WPREFIXMISSING' => 'This variant description seems incomplete. Variant descriptions should start with a molecule type (e.g., "' . $sPrefix . '."). Please rewrite "' . $sVariant . '" to "' . $sFixedVariant . '".'],
+                $aVariant['warnings']
+            );
             return $aVariant;
         }
     }
@@ -3411,7 +3415,11 @@ function lovd_guessVariantInfo ($sReferenceSequence, $sVariant)
         $aVariant = lovd_getVariantInfo(($sReferenceSequence? $sReferenceSequence . ':' : '') . $sFixedVariant);
         if ($aVariant) {
             $aVariant['type'] = ''; // Note, we're not sure about the substitution.
-            $aVariant['errors']['EINVALID'] = 'This variant description seems incomplete. Did you mean to write a substitution? Substitutions are written like "' . $sFixedVariant . '".';
+            // Make sure this error comes first. If the fixed variant has errors as well, these need to come later.
+            $aVariant['errors'] = array_merge(
+                ['EINVALID' => 'This variant description seems incomplete. Did you mean to write a substitution? Substitutions are written like "' . $sFixedVariant . '".'],
+                $aVariant['errors']
+            );
             return $aVariant;
         }
     }
