@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2024-10-29
+ * Modified    : 2024-10-30
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -3247,6 +3247,31 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'errors' => array(
                     'EINVALID' => 'This variant description seems incomplete. Did you mean to write a substitution? Substitutions are written like "g.123T>A".',
                 ),
+            )),
+            array('C123A', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'subst',
+                'range' => false,
+                'warnings' => array(
+                    'WPREFIXMISSING' => 'This variant description seems incomplete. Variant descriptions should start with a molecule type (e.g., "c."). Please rewrite "C123A" to "c.C123A".',
+                    'WINVALID' => 'This is not a valid HGVS description. Did you mean to write a substitution? Please rewrite "c.C123A" to "c.123C>A".',
+                ),
+                'errors' => array(),
+            )),
+            array('c.C123A', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'subst',
+                'range' => false,
+                'warnings' => array(
+                    'WINVALID' => 'This is not a valid HGVS description. Did you mean to write a substitution? Please rewrite "c.C123A" to "c.123C>A".',
+                ),
+                'errors' => array(),
             )),
         );
     }

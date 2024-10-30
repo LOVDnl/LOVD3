@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2024-10-29
+ * Modified    : 2024-10-30
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -3419,6 +3419,24 @@ function lovd_guessVariantInfo ($sReferenceSequence, $sVariant)
             $aVariant['errors'] = array_merge(
                 ['EINVALID' => 'This variant description seems incomplete. Did you mean to write a substitution? Substitutions are written like "' . $sFixedVariant . '".'],
                 $aVariant['errors']
+            );
+            return $aVariant;
+        }
+    }
+
+    if (preg_match('/^([cgmn]\.)([A-Z])([0-9*-]+)([A-Z])$/i', $sVariant, $aMatches)) {
+        // E.g., c.A100T. Assuming this is a substitution.
+        $sFixedVariant =
+            $aMatches[1] .
+            $aMatches[3] .
+            strtoupper($aMatches[2]) . '>' .
+            strtoupper($aMatches[4]);
+        $aVariant = lovd_getVariantInfo(($sReferenceSequence? $sReferenceSequence . ':' : '') . $sFixedVariant);
+        if ($aVariant) {
+            // Make sure this error comes first. If the fixed variant has errors as well, these need to come later.
+            $aVariant['warnings'] = array_merge(
+                ['WINVALID' => 'This is not a valid HGVS description. Did you mean to write a substitution? Please rewrite "' . $aMatches[0] . '" to "' . $sFixedVariant . '".'],
+                $aVariant['warnings']
             );
             return $aVariant;
         }

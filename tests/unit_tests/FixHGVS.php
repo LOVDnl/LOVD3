@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-07
- * Modified    : 2024-10-29
+ * Modified    : 2024-10-30
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -303,6 +303,9 @@ class FixHGVSTest extends PHPUnit\Framework\TestCase
             array('g.[123A>C;124A>C]', 'g.[123A>C;124A>C]'),
             array('g.[123A>C(;)124A>C]', 'g.[123A>C(;)124A>C]'),
             array('g.[123A>C];[124A>C]', 'g.[123A>C];[124A>C]'),
+
+            // Multiple issues fixed in once.
+            array('C123A', 'c.123C>A'),
 
 
 
