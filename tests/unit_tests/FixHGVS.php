@@ -81,6 +81,7 @@ class FixHGVSTest extends PHPUnit\Framework\TestCase
             array('123456dup', 'g.123456dup'),
             array('(123dup)', 'c.(123dup)'),
             array('.123dup', 'c.123dup'),
+            array('c123dup', 'c.123dup'),
             array('123-5dup', 'c.123-5dup'),
             array('NC_123456.1(NM_123456.1):1del', 'NC_123456.1(NM_123456.1):c.1del'),
 

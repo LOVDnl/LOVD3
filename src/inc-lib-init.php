@@ -3421,6 +3421,20 @@ function lovd_guessVariantInfo ($sReferenceSequence, $sVariant)
                 $aVariant['warnings']
             );
             return $aVariant;
+
+        } elseif (preg_match('/^[cgmn][0-9(-]/', $sVariant)) {
+            // Variant actually does have a prefix, but not a period, e.g., c100A>T.
+            // Add the period and try again.
+            $sFixedVariant = $sVariant[0] . '.' . substr($sVariant, 1);
+            $aVariant = lovd_getVariantInfo(($sReferenceSequence? $sReferenceSequence . ':' : '') . $sFixedVariant, false);
+            if ($aVariant) {
+                // Make sure this warning comes first. If the fixed variant has warnings as well, these need to come later.
+                $aVariant['warnings'] = array_merge(
+                    ['WPREFIXFORMAT' => 'This variant description seems incomplete. Molecule types in variant descriptions should be followed by a period (e.g., "' . $sVariant[0] . '."). Please rewrite "' . $sVariant . '" to "' . $sFixedVariant . '".'],
+                    $aVariant['warnings']
+                );
+                return $aVariant;
+            }
         }
     }
 
