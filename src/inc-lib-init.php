@@ -3397,7 +3397,7 @@ function lovd_guessVariantInfo ($sReferenceSequence, $sVariant)
     //  meant for invalid descriptions. It is also similar to lovd_fixHGVS() in
     //  that it tries to figure out what the user meant, but it doesn't HAVE to
     //  provide a fix, it should return data instead.
-    global $_LIBRARIES;
+    global $_LIBRARIES, $_SETT;
 
     // First, try to pick up a protein notation that we sometimes receive.
     if (preg_match('/^(p\.)?([A-Z]|[A-Z][a-z]{2})([0-9]+)([A-Z]|[A-Z][a-z]{2})$/', $sVariant, $aMatches)) {
@@ -3435,6 +3435,13 @@ function lovd_guessVariantInfo ($sReferenceSequence, $sVariant)
             // But since we fixed the variant already, there shouldn't be any other issues, so we just overwrite everything.
             $aVariant['warnings'] = ['WINVALID' => 'This is not a valid HGVS description; it looks like a VCF-based description. Please rewrite "' . ($sReferenceSequence? $sReferenceSequence . ':' : '') . $sVariant . '" to "' . $sFixedVariant . '".'];
             $aVariant['errors'] = ['EREFSEQMISSING' => 'You indicated this variant is located on chromosome ' . $sChromosome . '. However, the HGVS nomenclature does not include chromosomes in variant descriptions, they are represented by reference sequences. Therefore, please provide a reference sequence for this chromosome.'];
+            if (!empty($_SETT['human_builds'])) {
+                foreach (array_slice(array_keys($_SETT['human_builds']), -2) as $sBuild) {
+                    if (!empty($_SETT['human_builds'][$sBuild]['ncbi_sequences'][$sChromosome])) {
+                        $aVariant['errors']['EREFSEQMISSING'] .= ' For ' . $sBuild . '/' . $_SETT['human_builds'][$sBuild]['ncbi_name'] . ', use ' . $_SETT['human_builds'][$sBuild]['ncbi_sequences'][$sChromosome] . '.';
+                    }
+                }
+            }
             return $aVariant;
         }
     }
