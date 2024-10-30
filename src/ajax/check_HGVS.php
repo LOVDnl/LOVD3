@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-06
- * Modified    : 2024-10-02
+ * Modified    : 2024-10-30
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -248,6 +248,9 @@ foreach ($aVariants as $sVariant => $aVariant) {
                 if (empty($aVV['errors']) && array_keys($aVV['warnings']) == array('WNOTSUPPORTED')) {
                     // All good, actually. VV can't be used.
                     $aVariant['VV']['WNOTSUPPORTED'] = $aVV['warnings']['WNOTSUPPORTED'];
+                } elseif (empty($aVV['warnings']) && array_keys($aVV['errors']) == array('EREFSEQ')) {
+                    // The RefSeq threw an error, but that doesn't necessarily mean that it's invalid. VV can't be used.
+                    $aVariant['VV']['WNOTSUPPORTED'] = "VariantValidator couldn't find the reference sequence used. This does not necessarily mean the variant description is invalid, but we can't validate it to be sure. Please double-check the used reference sequence.";
                 } else {
                     $aVariant['is_hgvs'] = false;
                     $aVariant['VV'] = array_merge(
