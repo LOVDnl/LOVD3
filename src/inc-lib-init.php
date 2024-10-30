@@ -3391,7 +3391,7 @@ function lovd_guessVariantInfo ($sReferenceSequence, $sVariant)
     //  provide a fix, it should return data instead.
 
     // First, try to pick up a protein notation that we sometimes receive.
-    if (preg_match('/^(p\.)?([A-Z]|[A-Z]{3})([0-9]+)([A-Z]|[A-Z]{3})$/i', $sVariant, $aMatches)) {
+    if (preg_match('/^(p\.)?([A-Z]|[A-Z][a-z]{2})([0-9]+)([A-Z]|[A-Z][a-z]{2})$/', $sVariant, $aMatches)) {
         // Double-check if this couldn't be a DNA description.
         if ($aMatches[1] // p. prefix given.
             || strlen($aMatches[2]) > 1 || !in_array(strtoupper($aMatches[2]), ['A', 'C', 'G', 'T']) // Three-letter amino-acid code or non-DNA nucleotide.
