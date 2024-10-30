@@ -3390,6 +3390,24 @@ function lovd_guessVariantInfo ($sReferenceSequence, $sVariant)
     //  that it tries to figure out what the user meant, but it doesn't HAVE to
     //  provide a fix, it should return data instead.
 
+    // First, try to pick up a protein notation that we sometimes receive.
+    if (preg_match('/^(p\.)?([A-Z]|[A-Z]{3})([0-9]+)([A-Z]|[A-Z]{3})$/i', $sVariant, $aMatches)) {
+        // Double-check if this couldn't be a DNA description.
+        if ($aMatches[1] // p. prefix given.
+            || strlen($aMatches[2]) > 1 || !in_array(strtoupper($aMatches[2]), ['A', 'C', 'G', 'T']) // Three-letter amino-acid code or non-DNA nucleotide.
+            || strlen($aMatches[4]) > 1 || !in_array(strtoupper($aMatches[4]), ['A', 'C', 'G', 'T']) // Three-letter amino-acid code or non-DNA nucleotide.
+        ) {
+            // E.g., R120L or p.Arg120Leu. Assuming this is a protein substitution.
+            // To send more than an array with just an error, create a template and edit that.
+            return array_merge(
+                (lovd_getVariantInfo('g.' . $aMatches[3] . 'A>T') ?: []),
+                [
+                    'errors' => ['EINVALID' => 'This variant description looks like a protein description, while we are expecting DNA input. Please double-check your input.']
+                ]
+            );
+        }
+    }
+
     if (strlen($sVariant) > 1 && $sVariant[1] != '.') {
         // Variant doesn't have a prefix, e.g., 100A>T.
         // Figure out its most likely prefix, and test if we're at least getting an array back.

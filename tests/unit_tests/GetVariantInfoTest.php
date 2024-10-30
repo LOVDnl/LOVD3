@@ -3062,6 +3062,48 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'errors' => array(),
             )),
 
+            // Non-DNA input.
+            array('R123L', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'subst',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(
+                    'EINVALID' => 'This variant description looks like a protein description, while we are expecting DNA input. Please double-check your input.',
+                ),
+            )),
+            array('p.R123L', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'subst',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(
+                    'EINVALID' => 'This variant description looks like a protein description, while we are expecting DNA input. Please double-check your input.',
+                ),
+            )),
+            array('Arg123Leu', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'subst',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(
+                    'EINVALID' => 'This variant description looks like a protein description, while we are expecting DNA input. Please double-check your input.',
+                ),
+            )),
+            array('p.Arg123Leu', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'subst',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(
+                    'EINVALID' => 'This variant description looks like a protein description, while we are expecting DNA input. Please double-check your input.',
+                ),
+            )),
+
             // Other errors or problems.
             array('c.0', array( // Although mostly undocumented on the HGVS site, this indicates no transcript was generated.
                 'position_start' => 0,
