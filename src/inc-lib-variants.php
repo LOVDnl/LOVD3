@@ -179,7 +179,9 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     }
 
     // Add prefix in case it is missing.
-    if (!in_array(strtolower($sVariant[0]), array('c', 'g', 'm', 'n'))) {
+    if (!in_array(strtolower($sVariant[0]), array('c', 'g', 'm', 'n'))
+        // But don't do that when the variant looks like it's a VCF-like format.
+        && !preg_match('/^([0-9]{1,2}|[XYM])[:-]([0-9]+)[:-]/', $sVariant)) {
         return lovd_fixHGVS($sReference . $sType . ($sVariant[0] == '.'? '' : '.') . $sVariant, $sType);
     }
 

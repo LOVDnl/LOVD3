@@ -3358,6 +3358,44 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 ),
                 'errors' => array(),
             )),
+
+            // Support some common non-HGVS descriptions.
+            array('1:1234567:A:C', array(
+                'position_start' => 1234567,
+                'position_end' => 1234567,
+                'type' => 'subst',
+                'range' => false,
+                'warnings' => array(
+                    'WINVALID' => 'This is not a valid HGVS description; it looks like a VCF-based description. Please rewrite "1:1234567:A:C" to "g.1234567A>C".',
+                ),
+                'errors' => array(
+                    'EREFSEQMISSING' => 'You indicated this variant is located on chromosome 1. However, the HGVS nomenclature does not include chromosomes in variant descriptions, they are represented by reference sequences. Therefore, please provide a reference sequence for this chromosome.',
+                ),
+            )),
+            array('1:1234567:AA:CC', array(
+                'position_start' => 1234567,
+                'position_end' => 1234568,
+                'type' => 'delins',
+                'range' => true,
+                'warnings' => array(
+                    'WINVALID' => 'This is not a valid HGVS description; it looks like a VCF-based description. Please rewrite "1:1234567:AA:CC" to "g.1234567_1234568delinsCC".',
+                ),
+                'errors' => array(
+                    'EREFSEQMISSING' => 'You indicated this variant is located on chromosome 1. However, the HGVS nomenclature does not include chromosomes in variant descriptions, they are represented by reference sequences. Therefore, please provide a reference sequence for this chromosome.',
+                ),
+            )),
+            array('X-1234567-AA-ATA', array(
+                'position_start' => 1234567,
+                'position_end' => 1234568,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(
+                    'WINVALID' => 'This is not a valid HGVS description; it looks like a VCF-based description. Please rewrite "X-1234567-AA-ATA" to "g.1234567_1234568insT".',
+                ),
+                'errors' => array(
+                    'EREFSEQMISSING' => 'You indicated this variant is located on chromosome X. However, the HGVS nomenclature does not include chromosomes in variant descriptions, they are represented by reference sequences. Therefore, please provide a reference sequence for this chromosome.',
+                ),
+            )),
         );
     }
 }

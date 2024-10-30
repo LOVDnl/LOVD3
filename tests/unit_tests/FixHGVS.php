@@ -311,6 +311,9 @@ class FixHGVSTest extends PHPUnit\Framework\TestCase
 
             // Multiple issues fixed in once.
             array('C123A', 'c.123C>A'),
+            array('1:1234567:A:C', 'g.1234567A>C'),
+            array('1:1234567:AA:CC', 'g.1234567_1234568delinsCC'),
+            array('X-1234567-AA-ATA', 'g.1234567_1234568insT'),
 
 
 

@@ -1701,6 +1701,14 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     $aResponse[$sKey] = $Value;
                 }
             }
+
+            // This hack is a bit sad, but so be it. To support the format 1:123456:G:A,
+            //  we have to "forgive" using "1" as a reference sequence.
+            // lovd_guessVariantInfo() added EREFSEQMISSING, but we just added EREFERENCEFORMAT.
+            if (isset($aResponse['errors']['EREFSEQMISSING']) && isset($aResponse['errors']['EREFERENCEFORMAT'])) {
+                unset($aResponse['errors']['EREFERENCEFORMAT']);
+            }
+
             return $aResponse;
         }
 
@@ -3389,6 +3397,7 @@ function lovd_guessVariantInfo ($sReferenceSequence, $sVariant)
     //  meant for invalid descriptions. It is also similar to lovd_fixHGVS() in
     //  that it tries to figure out what the user meant, but it doesn't HAVE to
     //  provide a fix, it should return data instead.
+    global $_LIBRARIES;
 
     // First, try to pick up a protein notation that we sometimes receive.
     if (preg_match('/^(p\.)?([A-Z]|[A-Z][a-z]{2})([0-9]+)([A-Z]|[A-Z][a-z]{2})$/', $sVariant, $aMatches)) {
@@ -3405,6 +3414,28 @@ function lovd_guessVariantInfo ($sReferenceSequence, $sVariant)
                     'errors' => ['EINVALID' => 'This variant description looks like a protein description, while we are expecting DNA input. Please double-check your input.']
                 ]
             );
+        }
+    }
+
+    // Add support for VCF-like variant descriptions. Ignore spacing.
+    // Matches "1:123456:A:C" (note, the chromosome has been cut off as the reference sequence) and "1-123456-A-C" (still has the chromosome).
+    if (preg_match(
+        '/^([0-9]{1,2}|[XYM])[:-]([0-9]+)[:-](' . $_LIBRARIES['regex_patterns']['bases']['ref'] . '+)[:-](' . $_LIBRARIES['regex_patterns']['bases']['ref'] . '+)$/',
+        ($sReferenceSequence? $sReferenceSequence . ':' : '') . $sVariant,
+        $aMatches)) {
+        // E.g., 1:123456:A:C. Process the variant as a substitution, lovd_fixHGVS() will know how to fix it.
+        // I choose to support this type of description here so we can provide detailed feedback.
+        // We'll be tossing out the chromosome, so they need to fix that.
+        list(,$sChromosome, $nPosition, $sRef, $sAlt) = $aMatches;
+        $sFixedVariant = lovd_fixHGVS('g.' . $nPosition . $sRef . '>' . $sAlt);
+        $aVariant = lovd_getVariantInfo(($sReferenceSequence? $sReferenceSequence . ':' : '') . $sFixedVariant);
+        if ($aVariant) {
+            // For the 1:123456:A:C format, the code cut off the "1" and treated it like a reference sequence.
+            // This will have thrown a EREFERENCEFORMAT.
+            // But since we fixed the variant already, there shouldn't be any other issues, so we just overwrite everything.
+            $aVariant['warnings'] = ['WINVALID' => 'This is not a valid HGVS description; it looks like a VCF-based description. Please rewrite "' . ($sReferenceSequence? $sReferenceSequence . ':' : '') . $sVariant . '" to "' . $sFixedVariant . '".'];
+            $aVariant['errors'] = ['EREFSEQMISSING' => 'You indicated this variant is located on chromosome ' . $sChromosome . '. However, the HGVS nomenclature does not include chromosomes in variant descriptions, they are represented by reference sequences. Therefore, please provide a reference sequence for this chromosome.'];
+            return $aVariant;
         }
     }
 
