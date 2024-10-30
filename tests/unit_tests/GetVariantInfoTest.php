@@ -387,6 +387,17 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.1dela', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "dela" to "delA".',
+                    'WSUFFIXGIVEN' => 'Nothing should follow "del".',
+                ),
+                'errors' => array(),
+            )),
             array('g.1DELA', array(
                 'position_start' => 1,
                 'position_end' => 1,
@@ -397,6 +408,18 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                     'WSUFFIXGIVEN' => 'Nothing should follow "del".',
                 ),
                 'errors' => array(),
+            )),
+            array('g.1delZ', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WSUFFIXGIVEN' => 'Nothing should follow "del".',
+                ),
+                'errors' => array(
+                    'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "Z".',
+                ),
             )),
             array('g.1del<unknown>', array(
                 'position_start' => 1,
@@ -1162,6 +1185,14 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'position_end' => 123,
                 'type' => '=',
                 'range' => false,
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('g.123_125=', array(
+                'position_start' => 123,
+                'position_end' => 125,
+                'type' => '=',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
             )),

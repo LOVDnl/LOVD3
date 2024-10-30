@@ -91,6 +91,8 @@ class FixHGVSTest extends PHPUnit\Framework\TestCase
             // Whitespace, other typos, and copy/paste errors.
             array('g. 123_124insA', 'g.123_124insA'),
             array(' g.123del', 'g.123del'),
+            array(':g.123del', 'g.123del'),
+            array('g,123del', 'g.123del'),
             array('c.–123del', 'c.-123del'),
             array('c.123—5del', 'c.123-5del'),
             array('c,123del', 'c.123del'),
@@ -179,6 +181,7 @@ class FixHGVSTest extends PHPUnit\Framework\TestCase
 
             // Superfluous suffixes.
             array('c.123delA', 'c.123del'),
+            array('c.123dela', 'c.123del'),
             array('c.123del[A]', 'c.123del'),
             array('c.123del(A)', 'c.123del'),
             array('c.123delAA', 'c.123delAA'), // Unfixable.
@@ -319,6 +322,7 @@ class FixHGVSTest extends PHPUnit\Framework\TestCase
             array('g.1del<unknown>', 'g.1del<unknown>'),
             array('g.=', 'g.='),
             array('c.1insA', 'c.1insA'),
+            array('g.1_2ins10', 'g.1_2ins10'),
             array('c.0_1del', 'c.0_1del'),
             array('g.0_1del', 'g.0_1del'),
             array('c.1_2ins', 'c.1_2ins'),
