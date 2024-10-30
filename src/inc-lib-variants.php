@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2024-10-29
+ * Modified    : 2024-10-30
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -99,6 +99,9 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     if (substr($sVariant, 0, 2) == $sType . ',') {
         $sVariant[1] = '.';
     }
+
+    // Replace double periods with one.
+    $sVariant = preg_replace('/\.+/', '.', $sVariant);
 
     // More special characters arising from copying variants from PDFs. Some journals decide to use specialized fonts to
     //  create markup for normal characters, such as the > in a substitution. This is a terrible idea, as

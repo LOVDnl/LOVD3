@@ -76,12 +76,14 @@ class FixHGVSTest extends PHPUnit\Framework\TestCase
 
 
             // FIXABLE VARIANTS.
-            // Missing prefixes that will be added.
+            // Missing or broken prefixes that will be fixed.
             array('123dup', 'c.123dup'),
             array('123456dup', 'g.123456dup'),
             array('(123dup)', 'c.(123dup)'),
             array('.123dup', 'c.123dup'),
             array('c123dup', 'c.123dup'),
+            array('c,123dup', 'c.123dup'),
+            array('c..123dup', 'c.123dup'),
             array('123-5dup', 'c.123-5dup'),
             array('NC_123456.1(NM_123456.1):1del', 'NC_123456.1(NM_123456.1):c.1del'),
 
@@ -93,7 +95,6 @@ class FixHGVSTest extends PHPUnit\Framework\TestCase
             array('g. 123_124insA', 'g.123_124insA'),
             array(' g.123del', 'g.123del'),
             array(':g.123del', 'g.123del'),
-            array('g,123del', 'g.123del'),
             array('c.–123del', 'c.-123del'),
             array('c.123—5del', 'c.123-5del'),
             array('c,123del', 'c.123del'),
