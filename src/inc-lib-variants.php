@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2024-10-30
+ * Modified    : 2024-10-31
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -63,8 +63,9 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             $sVariant = str_replace($aRegs[0], $aRegs[0] . ':', $sVariant);
         }
         list($sReference, $sVariant) = explode(':', $sVariant, 2);
-        // Fix possible case issues. All uppercase except for the t in LRG_123t1.
-        $sReference = preg_replace('/(?<=[0-9])T(?=[0-9])/', 't', strtoupper($sReference));
+        // Fix possible case issues. All uppercase except for the t in LRG_123t1 and the v in NM(GENE_v001).
+        $sReference = preg_replace('/(?<=[0-9])T(?=[0-9])/', 't',
+            preg_replace('/(?<=_)V(?=[0-9])/', 'v', strtoupper($sReference)));
         $sReference .= ':'; // To simplify the concatenation later on.
     } else {
         // No reference was found.
@@ -266,15 +267,9 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             list(, $sOld, $sNew) = $aRegs;
             // To prevent a disaster when g.100del1 gets replaced to g.N[1]00delN[1], replace only the last occurrence.
             // That's where usually the issues are.
-            $nPosition = strrpos($sReference . $sVariant, $sOld);
+            $nPosition = strripos($sReference . $sVariant, $sOld);
             return lovd_fixHGVS(substr_replace($sReference . $sVariant, $sNew, $nPosition, strlen($sOld)), $sType);
         }
-    }
-
-    // Make fixes to the reference sequences as indicated by lovd_getVariantInfo().
-    if (isset($aVariant['warnings']['WREFERENCEFORMAT'])
-        && preg_match('/Please rewrite "([^"]+)" to "([^"]+)"\.$/', $aVariant['warnings']['WREFERENCEFORMAT'], $aRegs)) {
-        return lovd_fixHGVS(str_replace($aRegs[1], $aRegs[2], $sReference . $sVariant), $sType);
     }
 
     // Fix case problems.

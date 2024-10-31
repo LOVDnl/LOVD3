@@ -1461,6 +1461,11 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     'The genomic and transcript reference sequence IDs have been swapped.' .
                     ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[2] . '(' . $aRegs[1] . ')".';
 
+            } elseif (preg_match('/^([NX][MR]_[0-9]{6,9}\.[0-9]+)\(([A-Z][A-Za-z0-9#@-]*(_v[0-9]+)?)\)$/', $sReferenceSequence, $aRegs)) {
+                $aResponse['warnings']['WREFERENCEFORMAT'] =
+                    'The reference sequence ID should not include a gene symbol.' .
+                    ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . '".';
+
             } elseif (preg_match('/([NX][CGMRTW])-?([0-9]+)/', $sReferenceSequence, $aRegs)) {
                 // The user forgot the underscore or used a hyphen.
                 $aResponse['warnings']['WREFERENCEFORMAT'] =
