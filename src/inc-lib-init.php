@@ -1504,6 +1504,11 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     'Ensembl reference sequence IDs require 11 digits.' .
                     ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . str_pad($aRegs[2], 11, '0', STR_PAD_LEFT) . '.' . $aRegs[3] . '".';
 
+            } elseif (preg_match('/^NP_[0-9]+/', $sReferenceSequence)) {
+                $aResponse['errors']['EREFERENCEFORMAT'] =
+                    'Protein reference sequences are not supported.' .
+                    ' Please submit a DNA variant using a DNA reference sequence.';
+
             } else {
                 $aResponse['errors']['EREFERENCEFORMAT'] =
                     'The reference sequence could not be recognised.' .

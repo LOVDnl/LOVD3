@@ -2988,6 +2988,18 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                     'EREFERENCEFORMAT' => 'The reference sequence could not be recognised. Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.',
                 ),
             )),
+            array('NP_123456.1:c.1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(
+                    'EREFERENCEFORMAT' => 'Protein reference sequences are not supported. Please submit a DNA variant using a DNA reference sequence.',
+                ),
+            )),
             array('NM_123456.1(NC_123456.1):c.100del', array(
                 'position_start' => 100,
                 'position_end' => 100,
