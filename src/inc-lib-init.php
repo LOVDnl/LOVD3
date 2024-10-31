@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2024-10-30
+ * Modified    : 2024-10-31
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -40,7 +40,7 @@ $_LIBRARIES = array(
             'alt' => '[ACGTMRWSYKVHDBN]',
         ),
         'refseq' => array(
-            'basic' => '/^[A-Z_.t0-9()-]+$/',
+            'basic' => '/^[A-Z_.tv0-9()-]+$/',
             'strict'  =>
                 '/^([NX][CGMRTW]_[0-9]{6}\.[0-9]+' .
                 '|[NX][MR]_[0-9]{9}\.[0-9]+' .
