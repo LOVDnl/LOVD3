@@ -3396,6 +3396,16 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                     'EREFSEQMISSING' => 'You indicated this variant is located on chromosome X. However, the HGVS nomenclature does not include chromosomes in variant descriptions, they are represented by reference sequences. Therefore, please provide a reference sequence for this chromosome.',
                 ),
             )),
+            array('rs123456', array(
+                'position_start' => 0,
+                'position_end' => 0,
+                'type' => '',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(
+                    'EINVALID' => 'This is not a valid HGVS description; it looks like a dbSNP identifier. Please provide a variant description following the HGVS nomenclature.',
+                ),
+            )),
         );
     }
 }

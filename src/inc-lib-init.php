@@ -3417,6 +3417,26 @@ function lovd_guessVariantInfo ($sReferenceSequence, $sVariant)
         }
     }
 
+    // Sometimes, RS numbers are sent. This block can be used for other IDs as well.
+    if (preg_match('/^(rs)[0-9]+$/', $sVariant, $aMatches)) {
+        // E.g., rs123456.
+        // Sad to see that we need to replicate the $aResponse array, but I don't think I have a better way to obtain it.
+        return [
+            'position_start' => 0,
+            'position_end'   => 0,
+            'type'           => '',
+            'range'          => false,
+            'warnings'       => [],
+            'errors'         => [
+                'EINVALID' => 'This is not a valid HGVS description; it looks like ' .
+                    ([
+                        'rs' => 'a dbSNP',
+                    ][$aMatches[1]] ?? 'some variant') .
+                    ' identifier. Please provide a variant description following the HGVS nomenclature.',
+            ],
+        ];
+    }
+
     // Add support for VCF-like variant descriptions. Ignore spacing.
     // Matches "1:123456:A:C" (note, the chromosome has been cut off as the reference sequence) and "1-123456-A-C" (still has the chromosome).
     if (preg_match(
