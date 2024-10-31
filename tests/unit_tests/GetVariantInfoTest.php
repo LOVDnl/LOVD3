@@ -3406,6 +3406,16 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                     'EINVALID' => 'This is not a valid HGVS description; it looks like a dbSNP identifier. Please provide a variant description following the HGVS nomenclature.',
                 ),
             )),
+            array('VCV000009325.130', array(
+                'position_start' => 0,
+                'position_end' => 0,
+                'type' => '',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(
+                    'EINVALID' => 'This is not a valid HGVS description; it looks like a ClinVar variation identifier. Please provide a variant description following the HGVS nomenclature.',
+                ),
+            )),
         );
     }
 }

@@ -3417,8 +3417,8 @@ function lovd_guessVariantInfo ($sReferenceSequence, $sVariant)
         }
     }
 
-    // Sometimes, RS numbers are sent. This block can be used for other IDs as well.
-    if (preg_match('/^(rs)[0-9]+$/', $sVariant, $aMatches)) {
+    // Sometimes, variant identifiers are sent.
+    if (preg_match('/^(rs|RCV|SCV|VCV)?[0-9]+(\.[0-9]+)?$/i', $sVariant, $aMatches)) {
         // E.g., rs123456.
         // Sad to see that we need to replicate the $aResponse array, but I don't think I have a better way to obtain it.
         return [
@@ -3431,7 +3431,10 @@ function lovd_guessVariantInfo ($sReferenceSequence, $sVariant)
                 'EINVALID' => 'This is not a valid HGVS description; it looks like ' .
                     ([
                         'rs' => 'a dbSNP',
-                    ][$aMatches[1]] ?? 'some variant') .
+                        'RCV' => 'a ClinVar reference',
+                        'SCV' => 'a ClinVar submission',
+                        'VCV' => 'a ClinVar variation',
+                    ][($aMatches[1] ?? '')] ?? 'some variant') .
                     ' identifier. Please provide a variant description following the HGVS nomenclature.',
             ],
         ];
