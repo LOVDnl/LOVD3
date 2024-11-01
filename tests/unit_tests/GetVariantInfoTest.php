@@ -60,7 +60,7 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
             && (empty($aOutput['warnings'])
                 || empty(array_diff(
                         array_keys($aOutput['warnings']),
-                        array('WNOTSUPPORTED', 'WPOSITIONLIMIT', 'WTRANSCRIPTFOUND', 'WDIFFERENTREFSEQ')))
+                        array('WDIFFERENTREFSEQ', 'WNOTSUPPORTED', 'WPOSITIONLIMIT', 'WREFERENCENOTSUPPORTED', 'WTRANSCRIPTFOUND')))
             )) {
             $bHGVS = true;
         } else {
@@ -3160,6 +3160,16 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'range' => false,
                 'warnings' => array(
                     'WREFERENCEFORMAT' => 'Ensembl reference sequence IDs require 11 digits. Please rewrite "ENSG1234567890.1" to "ENSG01234567890.1".',
+                ),
+                'errors' => array(),
+            )),
+            array('AA123456.1:g.1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WREFERENCENOTSUPPORTED' => 'Currently, variant descriptions using "AA123456.1" are not yet supported. This does not necessarily mean the description is not valid HGVS. Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.',
                 ),
                 'errors' => array(),
             )),

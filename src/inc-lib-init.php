@@ -1445,9 +1445,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         } else {
             // The user seems to have tried to add a reference sequence, but it
             //  was not formatted correctly. We will return errors or warnings accordingly.
-            if ($bCheckHGVS) {
-                return false;
-            }
+
             // Check for missing version. We don't want to yet define another pattern.
             // Just check if it helps to add a version number.
             if (lovd_isValidRefSeq(preg_replace('/([0-9]{6})([()]|$)/', '$1.1$2', $sReferenceSequence))) {
@@ -1522,10 +1520,22 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     'Protein reference sequences are not supported.' .
                     ' Please submit a DNA variant using a DNA reference sequence.';
 
+            } elseif (preg_match('/^([A-Z][0-9]{5}|[A-Z]{2}[0-9]{6})(\.[0-9]+)$/', $sReferenceSequence)) {
+                // These are valid GenBank identifiers, but these are not supported by VV.
+                // It's too early to tell if the rest of the syntax is OK, though.
+                $aResponse['warnings']['WREFERENCENOTSUPPORTED'] =
+                    'Currently, variant descriptions using "' . $sReferenceSequence . '" are not yet supported.' .
+                    ' This does not necessarily mean the description is not valid HGVS.' .
+                    ' Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.';
+
             } else {
                 $aResponse['errors']['EREFERENCEFORMAT'] =
                     'The reference sequence could not be recognised.' .
                     ' Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.';
+            }
+
+            if ($bCheckHGVS) {
+                return (isset($aResponse['warnings']['WREFERENCENOTSUPPORTED']));
             }
         }
     }
