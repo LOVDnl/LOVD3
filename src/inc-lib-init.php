@@ -2757,12 +2757,20 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         // This part has a refseq?
                         // Require brackets around the insertion and either a valid position or a valid inversion.
                         $sVariantInInsertion = (substr($sInsertion, -3) == 'inv'? $sInsertion : $sInsertion . 'del');
-                        if (!lovd_getVariantInfo($sVariantInInsertion, false, true)) {
+                        $aVariantInInsertion = lovd_getVariantInfo($sVariantInInsertion, false);
+                        if (!is_array($aVariantInInsertion) || !empty($aVariantInInsertion['errors'])
+                            || !empty(array_diff(array_keys($aVariantInInsertion['warnings']), ['WREFERENCENOTSUPPORTED']))) {
                             // Not a valid description. We might still be able to fix this, but we don't know right now.
                             // We could try to tell the difference, but in this case, we'll just store a warning.
                             $aResponse['warnings']['WSUFFIXFORMAT'] =
                                 'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
                                 ' Failed to recognize a valid sequence or position in "' . $sInsertion . '".';
+                        } elseif (isset($aVariantInInsertion['warnings']['WREFERENCENOTSUPPORTED'])) {
+                            // The insertion uses an unsupported reference sequence. Copy the warning to our output.
+                            if (!isset($aResponse['warnings']['WREFERENCENOTSUPPORTED'])) {
+                                $aResponse['warnings']['WREFERENCENOTSUPPORTED'] = $aVariantInInsertion['warnings']['WREFERENCENOTSUPPORTED'];
+                            }
+
                         } else {
                             // Let's only throw this warning when the above error isn't present.
                             //  The user may not have meant to send a complex variant.
