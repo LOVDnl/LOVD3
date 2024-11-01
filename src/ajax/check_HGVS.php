@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-06
- * Modified    : 2024-10-30
+ * Modified    : 2024-11-01
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -121,7 +121,7 @@ foreach ($aVariants as $sVariant => $aVariant) {
         (
             empty($aVariant['variant_info']['warnings'])
             ||
-            array_keys($aVariant['variant_info']['warnings']) == array('WNOTSUPPORTED')
+            empty(array_diff(array_keys($aVariant['variant_info']['warnings']), ['WNOTSUPPORTED', 'WREFERENCENOTSUPPORTED']))
         )
     );
     // But compensate for ENOTSUPPORTED.
@@ -182,7 +182,7 @@ foreach ($aVariants as $sVariant => $aVariant) {
             (
                 empty($aVariant['fixed_variant_variant_info']['warnings'])
                 ||
-                array_keys($aVariant['fixed_variant_variant_info']['warnings']) == array('WNOTSUPPORTED')
+                empty(array_diff(array_keys($aVariant['variant_info']['warnings']), ['WNOTSUPPORTED', 'WREFERENCENOTSUPPORTED']))
             )
         );
 
@@ -198,12 +198,12 @@ foreach ($aVariants as $sVariant => $aVariant) {
 
     $aVariant['VV'] = array();
     if ($bVV) {
-        if (!empty($aVariant['variant_info'])
-            && !empty($aVariant['variant_info']['errors']['ENOTSUPPORTED'])) {
+        if (!empty($aVariant['variant_info']['errors']['ENOTSUPPORTED'])) {
             $aVariant['VV']['ENOTSUPPORTED'] = 'This variant description is not currently supported by VariantValidator.';
-        } elseif (!empty($aVariant['variant_info'])
-            && !empty($aVariant['variant_info']['warnings']['WNOTSUPPORTED'])) {
+        } elseif (!empty($aVariant['variant_info']['warnings']['WNOTSUPPORTED'])) {
             $aVariant['VV']['WNOTSUPPORTED'] = 'This variant description is not currently supported by VariantValidator.';
+        } elseif (!empty($aVariant['variant_info']['warnings']['WREFERENCENOTSUPPORTED'])) {
+            $aVariant['VV']['WNOTSUPPORTED'] = 'This reference sequence type is not currently supported by VariantValidator.';
         } elseif (!$aVariant['is_hgvs']) {
             $aVariant['VV']['EFAIL'] = 'Please first correct the variant description to run VariantValidator.';
         } elseif (!$aVariant['has_refseq']) {
