@@ -1534,8 +1534,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     ' Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.';
             }
 
-            if ($bCheckHGVS) {
-                return (isset($aResponse['warnings']['WREFERENCENOTSUPPORTED']));
+            if ($bCheckHGVS && !isset($aResponse['warnings']['WREFERENCENOTSUPPORTED'])) {
+                return false;
             }
         }
     }
