@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2024-10-31
+ * Modified    : 2024-11-01
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1457,14 +1457,22 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     ' NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.';
 
             } elseif (preg_match('/^([NX][MR]_[0-9]{6,9}\.[0-9]+)\((N[CGTW]_[0-9]{6}\.[0-9]+)\)$/', $sReferenceSequence, $aRegs)) {
+                // NM(NC) that should be swapped.
                 $aResponse['warnings']['WREFERENCEFORMAT'] =
                     'The genomic and transcript reference sequence IDs have been swapped.' .
                     ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[2] . '(' . $aRegs[1] . ')".';
 
             } elseif (preg_match('/^([NX][MR]_[0-9]{6,9}\.[0-9]+)\(([A-Z][A-Za-z0-9#@-]*(_v[0-9]+)?)\)$/', $sReferenceSequence, $aRegs)) {
+                // NM(GENE) that should lose the gene.
                 $aResponse['warnings']['WREFERENCEFORMAT'] =
                     'The reference sequence ID should not include a gene symbol.' .
                     ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . '".';
+
+            } elseif (preg_match('/^([A-Z][A-Za-z0-9#@-]*)\(([NX][MR]_[0-9]{6,9}\.[0-9]+)\)$/', $sReferenceSequence, $aRegs)) {
+                // GENE(NM) that should be just NM.
+                $aResponse['warnings']['WREFERENCEFORMAT'] =
+                    'The reference sequence ID should not include a gene symbol.' .
+                    ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[2] . '".';
 
             } elseif (preg_match('/([NX][CGMRTW])-?([0-9]+)/', $sReferenceSequence, $aRegs)) {
                 // The user forgot the underscore or used a hyphen.

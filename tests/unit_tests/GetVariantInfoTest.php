@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2024-10-31
+ * Modified    : 2024-11-01
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -3033,6 +3033,18 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'range' => false,
                 'warnings' => array(
                     'WREFERENCEFORMAT' => 'The reference sequence ID should not include a gene symbol. Please rewrite "NM_123456.1(GENE_v001)" to "NM_123456.1".',
+                ),
+                'errors' => array(),
+            )),
+            array('GENE(NM_123456.1):c.100del', array(
+                'position_start' => 100,
+                'position_end' => 100,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WREFERENCEFORMAT' => 'The reference sequence ID should not include a gene symbol. Please rewrite "GENE(NM_123456.1)" to "NM_123456.1".',
                 ),
                 'errors' => array(),
             )),
