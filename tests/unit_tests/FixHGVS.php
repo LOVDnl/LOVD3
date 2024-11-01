@@ -220,6 +220,7 @@ class FixHGVSTest extends PHPUnit\Framework\TestCase
                   'c.1_2ins[NC_000001.10:g.(100_200)_300]'),
             array('g.((1_5)ins(50))', 'g.((1_5)insN[50])'),
             array('g.1_2ins[ACT;(20)]', 'g.1_2ins[ACT;N[20]]'),
+            array('g.(100_200)delN[(50)]', 'g.(100_200)delN[50]'),
             array('g.(100_200)del50', 'g.(100_200)delN[50]'),
             array('g.(100_200)del(50_50)', 'g.(100_200)delN[50]'),
             array('g.(100_200)del(60_50)', 'g.(100_200)delN[(50_60)]'),
