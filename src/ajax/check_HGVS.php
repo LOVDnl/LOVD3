@@ -182,7 +182,7 @@ foreach ($aVariants as $sVariant => $aVariant) {
             (
                 empty($aVariant['fixed_variant_variant_info']['warnings'])
                 ||
-                empty(array_diff(array_keys($aVariant['variant_info']['warnings']), ['WNOTSUPPORTED', 'WREFERENCENOTSUPPORTED']))
+                empty(array_diff(array_keys($aVariant['fixed_variant_variant_info']['warnings']), ['WNOTSUPPORTED', 'WREFERENCENOTSUPPORTED']))
             )
         );
 
