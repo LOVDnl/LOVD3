@@ -2674,6 +2674,24 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                                     '(' . $nSuffixMinLength . '_' . $nSuffixMaxLength . ')') . ']")?';
                         }
 
+                    } elseif (preg_match('/^([A-Z]+)\[\(([0-9]+|\?)\)\]$/', strtoupper($sInsertion), $aRegs)) {
+                        // c.1_2insN[(10)].
+                        $bCaseOK = ($sInsertion == strtoupper($sInsertion));
+                        list(, $sSequence, $nSuffixLength) = $aRegs;
+
+                        // Check if only correct bases have been used.
+                        $sUnknownBases = preg_replace(
+                            '/' . $_LIBRARIES['regex_patterns']['bases']['alt'] . '+/',
+                            '',
+                            $sSequence
+                        );
+                        if ($sUnknownBases) {
+                            $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', str_split($sUnknownBases)) . '".';
+                        }
+                        $aResponse['warnings']['WSUFFIXFORMAT'] =
+                            'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
+                            ' Please rewrite "' . $sInsertion . '" to "' . $sSequence . '[' . $nSuffixLength . ']".';
+
                     } elseif (preg_match('/^([A-Z]+)\[(([0-9]+|\?)_([0-9]+|\?))\]$/', strtoupper($sInsertion), $aRegs)) {
                         // c.1_2insN[10_20].
                         $bCaseOK = ($sInsertion == strtoupper($sInsertion));
