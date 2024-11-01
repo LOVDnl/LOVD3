@@ -1724,7 +1724,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         if ($aVariant) {
             foreach ($aVariant as $sKey => $Value) {
                 if (is_array($Value)) {
-                    $aResponse[$sKey] = array_merge($aResponse[$sKey], $Value);
+                    $aResponse[$sKey] = array_merge(($aResponse[$sKey] ?? []), $Value);
                 } else {
                     $aResponse[$sKey] = $Value;
                 }
