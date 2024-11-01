@@ -3183,6 +3183,17 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.1_2ins[AA123456.1:1_100]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(
+                    'WREFERENCENOTSUPPORTED' => 'Currently, variant descriptions using "AA123456.1" are not yet supported. This does not necessarily mean the description is not valid HGVS. Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.',
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Please rewrite "1_100" to "g.1_100".',
+                ),
+                'errors' => array(),
+            )),
 
             // Non-DNA input.
             array('R123L', array(

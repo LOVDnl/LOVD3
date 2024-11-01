@@ -56,6 +56,7 @@ $_LIBRARIES = array(
             '/^ENSG/'                     => array('g', 'm'),
             '/^NC_(001807\.|012920\.).$/' => array('m'),
             '/^(N[CGTW]_[0-9]+\.[0-9]+$|LRG_[0-9]+$)/' => array('g'),
+            '/^([A-Z][0-9]{5}|[A-Z]{2}[0-9]{6})(\.[0-9]+)$/' => array('g'),
         ),
     ),
 );
@@ -2763,8 +2764,23 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                             // Not a valid description. We might still be able to fix this, but we don't know right now.
                             // We could try to tell the difference, but in this case, we'll just store a warning.
                             $aResponse['warnings']['WSUFFIXFORMAT'] =
-                                'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
-                                ' Failed to recognize a valid sequence or position in "' . $sInsertion . '".';
+                                'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.';
+                            $bSuggestions = false;
+                            foreach ($aVariantInInsertion['warnings'] ?? [] as $sWarning) {
+                                if (preg_match('/Please rewrite "([^"]+)" to "([^"]+)"\.$/', $sWarning, $aRegs)) {
+                                    $bSuggestions = true;
+                                    $aResponse['warnings']['WSUFFIXFORMAT'] .=
+                                        ' Please rewrite "' . str_replace('del', '', $aRegs[1]) . '" to "' . str_replace('del', '', $aRegs[2]) . '".';
+                                }
+                            }
+                            if (!$bSuggestions) {
+                                $aResponse['warnings']['WSUFFIXFORMAT'] .= ' Failed to recognize a valid sequence or position in "' . $sInsertion . '".';
+                            }
+                            // If also a WREFERENCENOTSUPPORTED was thrown, include that, too.
+                            if (!isset($aResponse['warnings']['WREFERENCENOTSUPPORTED']) && isset($aVariantInInsertion['warnings']['WREFERENCENOTSUPPORTED'])) {
+                                $aResponse['warnings']['WREFERENCENOTSUPPORTED'] = $aVariantInInsertion['warnings']['WREFERENCENOTSUPPORTED'];
+                            }
+
                         } elseif (isset($aVariantInInsertion['warnings']['WREFERENCENOTSUPPORTED'])) {
                             // The insertion uses an unsupported reference sequence. Copy the warning to our output.
                             if (!isset($aResponse['warnings']['WREFERENCENOTSUPPORTED'])) {
