@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2024-11-01
+ * Modified    : 2024-11-04
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -3571,6 +3571,20 @@ function lovd_guessVariantInfo ($sReferenceSequence, $sVariant)
                 $aVariant['warnings']
             );
             return $aVariant;
+
+        } elseif (preg_match('/^[cgmn]:/', $sVariant)) {
+            // Variant actually does have a prefix, but a colon instead of a period, e.g., c:100A>T.
+            // Add the period and try again.
+            $sFixedVariant = $sVariant[0] . '.' . substr($sVariant, 2);
+            $aVariant = lovd_getVariantInfo(($sReferenceSequence? $sReferenceSequence . ':' : '') . $sFixedVariant, false);
+            if ($aVariant) {
+                // Make sure this warning comes first. If the fixed variant has warnings as well, these need to come later.
+                $aVariant['warnings'] = array_merge(
+                    ['WPREFIXFORMAT' => 'This is not a valid HGVS description. Molecule types in variant descriptions should be followed by a period (e.g., "' . $sVariant[0] . '."). Please rewrite "' . $sVariant . '" to "' . $sFixedVariant . '".'],
+                    $aVariant['warnings']
+                );
+                return $aVariant;
+            }
 
         } elseif (preg_match('/^[cgmn][0-9(-]/', $sVariant)) {
             // Variant actually does have a prefix, but not a period, e.g., c100A>T.

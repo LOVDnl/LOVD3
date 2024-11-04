@@ -3448,6 +3448,18 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 ),
                 'errors' => array(),
             )),
+            array('c:123A>C', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'subst',
+                'range' => false,
+                'warnings' => array(
+                    'WPREFIXFORMAT' => 'This is not a valid HGVS description. Molecule types in variant descriptions should be followed by a period (e.g., "c."). Please rewrite "c:123A>C" to "c.123A>C".',
+                ),
+                'errors' => array(),
+            )),
             array('c123A>C', array(
                 'position_start' => 123,
                 'position_end' => 123,
