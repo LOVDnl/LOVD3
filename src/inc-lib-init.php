@@ -3603,19 +3603,33 @@ function lovd_guessVariantInfo ($sReferenceSequence, $sVariant)
     }
 
     if (preg_match('/^([cgmn]\.)\[(.+)\]$/', $sVariant, $aMatches) && strpos($aMatches[2], ';') === false) {
-        // E.g., c.[100A>C]. Perhaps from people trying out the allele notation? There is no ';' in there, though.
-        // We don't currently handle the allele notation, so lovd_getVariantInfo() doesn't know what to do with this.
-        // Just remove the square brackets and try again.
-        $sFixedVariant =
-            $aMatches[1] . $aMatches[2];
-        $aVariant = lovd_getVariantInfo(($sReferenceSequence? $sReferenceSequence . ':' : '') . $sFixedVariant);
-        if ($aVariant) {
-            // Make sure this error comes first. If the fixed variant has errors as well, these need to come later.
-            $aVariant['warnings'] = array_merge(
-                ['WWRONGTYPE' => 'The allele syntax with square brackets is meant for multiple variants. Please rewrite "' . $sVariant . '" to "' . $sFixedVariant . '".',],
-                $aVariant['warnings']
-            );
-            return $aVariant;
+        if (strpos($aMatches[2], ',') !== false) {
+            // E.g., c.[100A>C,101del]. This should have used a semicolon.
+            $sFixedVariant = str_replace(',', ';', $sVariant);
+            $aVariant = lovd_getVariantInfo(($sReferenceSequence? $sReferenceSequence . ':' : '') . $sFixedVariant);
+            if ($aVariant) {
+                // Make sure this error comes first. If the fixed variant has errors as well, these need to come later.
+                $aVariant['warnings'] = array_merge(
+                    ['WALLELEFORMAT' => 'The allele syntax uses semicolons (;) to separate variants, not commas. Please rewrite "' . $sVariant . '" to "' . $sFixedVariant . '".',],
+                    $aVariant['warnings']
+                );
+                return $aVariant;
+            }
+
+        } else {
+            // E.g., c.[100A>C]. Perhaps from people trying out the allele notation? There is no ';' in there, though.
+            // We don't currently handle the allele notation, so lovd_getVariantInfo() doesn't know what to do with this.
+            // Just remove the square brackets and try again.
+            $sFixedVariant = $aMatches[1] . $aMatches[2];
+            $aVariant = lovd_getVariantInfo(($sReferenceSequence? $sReferenceSequence . ':' : '') . $sFixedVariant);
+            if ($aVariant) {
+                // Make sure this error comes first. If the fixed variant has errors as well, these need to come later.
+                $aVariant['warnings'] = array_merge(
+                    ['WWRONGTYPE' => 'The allele syntax with square brackets is meant for multiple variants. Please rewrite "' . $sVariant . '" to "' . $sFixedVariant . '".',],
+                    $aVariant['warnings']
+                );
+                return $aVariant;
+            }
         }
     }
 

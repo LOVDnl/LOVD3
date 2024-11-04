@@ -2711,6 +2711,18 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                     'ENOTSUPPORTED' => 'Currently, variant descriptions of combined variants are not yet supported. This does not necessarily mean the description is not valid HGVS. Please submit your variants separately.',
                 ),
             )),
+            array('g.[123A>C,124A>C]', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => ';',
+                'range' => false,
+                'warnings' => array(
+                    'WALLELEFORMAT' => 'The allele syntax uses semicolons (;) to separate variants, not commas. Please rewrite "g.[123A>C,124A>C]" to "g.[123A>C;124A>C]".',
+                ),
+                'errors' => array(
+                    'ENOTSUPPORTED' => 'Currently, variant descriptions of combined variants are not yet supported. This does not necessarily mean the description is not valid HGVS. Please submit your variants separately.',
+                ),
+            )),
             array('g.1_qterdel', array(
                 'position_start' => 0,
                 'position_end' => 0,

@@ -315,6 +315,7 @@ class FixHGVSTest extends PHPUnit\Framework\TestCase
             array('g.[123A>C;124A>C]', 'g.[123A>C;124A>C]'),
             array('g.[123A>C(;)124A>C]', 'g.[123A>C(;)124A>C]'),
             array('g.[123A>C];[124A>C]', 'g.[123A>C];[124A>C]'),
+            array('g.[123A>C,124A>C]', 'g.[123A>C;124A>C]'),
 
             // Multiple issues fixed in once.
             array('C123A', 'c.123C>A'),
