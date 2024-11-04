@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2024-11-01
+ * Modified    : 2024-11-04
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -904,7 +904,7 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'range' => false,
                 'warnings' => array(
                     'WWRONGTYPE' => 'A conversion should be described as a deletion-insertion. Please rewrite "con" to "delins".',
-                    'WSUFFIXFORMAT' => 'The part after "con" does not follow HGVS guidelines. Failed to recognize a valid sequence or position in "NC_000001.10:100_200".',
+                    'WSUFFIXFORMAT' => 'The part after "con" does not follow HGVS guidelines. Please rewrite "100_200" to "g.100_200".',
                 ),
                 'errors' => array(),
             )),
@@ -2044,7 +2044,7 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'type' => 'ins',
                 'range' => true,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Failed to recognize a valid sequence or position in "NC123456.1:g.1_10".',
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Please rewrite "NC123456" to "NC_123456".',
                 ),
                 'errors' => array(),
             )),
