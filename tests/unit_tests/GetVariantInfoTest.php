@@ -3399,6 +3399,16 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.[123del]', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WWRONGTYPE' => 'The allele syntax with square brackets is meant for multiple variants. Please rewrite "g.[123del]" to "g.123del".',
+                ),
+                'errors' => array(),
+            )),
             array('123A', array(
                 'position_start' => 123,
                 'position_end' => 123,
