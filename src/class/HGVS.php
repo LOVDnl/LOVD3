@@ -39,6 +39,7 @@ if (!defined('ROOT_PATH')) {
 
 class HGVS {
     public array $messages = [];
+    public array $regex = [];
     public bool $matched = false;
     public string $input;
     public string $matched_pattern;
@@ -61,6 +62,22 @@ class HGVS {
                 if ($sInputToParse === '') {
                     $bMatching = false;
                     break;
+                }
+
+                if (strlen($sPattern) >= 3 && substr($sPattern, 0, 1) == '/' && substr($sPattern, -1) == '/') {
+                    // Regex. Make sure it matches the start of the string.
+                    $sPattern = '/^' . substr($sPattern, 1);
+                    if (preg_match($sPattern, $sInputToParse, $aRegs)) {
+                        // This pattern matched. Store what is left, if anything is left.
+                        // Note that regexes should not be part of a pattern array, but only get their own pattern line. E.g., this object is all about this regex, or we messed up.
+                        $sInputToParse = substr($sInputToParse, strlen($aRegs[0]));
+                        // Store the regex values for further processing, if needed.
+                        $this->regex = $aRegs;
+                    } else {
+                        // Didn't match.
+                        $bMatching = false;
+                        break;
+                    }
                 }
             }
 
