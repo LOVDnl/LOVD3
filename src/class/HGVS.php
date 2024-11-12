@@ -132,6 +132,15 @@ class HGVS {
 
 
 
+    public function getMessages ()
+    {
+        return ($this->messages ?? []);
+    }
+
+
+
+
+
     public function getSuffix ()
     {
         return ($this->suffix ?? '');
