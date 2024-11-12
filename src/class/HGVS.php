@@ -49,5 +49,54 @@ class HGVS {
     public function __construct($sValue, $Parent = null) {
         $this->input = $sValue;
         $this->parent = $Parent;
+
+        // Loop through all patterns and match them.
+        foreach ($this->patterns as $sPatternName => $aPattern) {
+            $aMessages = array_pop($aPattern);
+            $sInputToParse = $sValue;
+            $bMatching = true;
+
+            foreach ($aPattern as $i => $sPattern) {
+                // Quick check: do we still have something left?
+                if ($sInputToParse === '') {
+                    $bMatching = false;
+                    break;
+                }
+            }
+
+            if (!$bMatching) {
+                continue;
+            } else {
+                $this->matched_pattern = $sPatternName;
+            }
+
+            if ($sInputToParse) {
+                // We matched everything, but there is a suffix, something left that didn't match.
+                // In the main HGVS object, this is a problem. Otherwise, this is what we have to return to the parent.
+                $this->value = substr($sValue, 0, -strlen($sInputToParse));
+                $this->suffix = $sInputToParse;
+                if (!isset($this->parent)) {
+                    // This is the main HGVS class. The variant has a suffix that we didn't identify.
+                    $this->messages['WSUFFIXGIVEN'] = 'Nothing should follow "' . $this->value . '".';
+                }
+
+            } else {
+                // Nothing left at all. We're done!
+                $this->value = $sValue;
+            }
+
+            // Add the messages.
+            $this->messages = array_merge(
+                $this->messages,
+                $aMessages
+            );
+
+            break;
+        }
+
+        $this->matched = $bMatching;
+        if (!$bMatching) {
+            $this->messages['EFAIL'] = 'Failed to recognize a HGVS nomenclature-compliant variant description in your input.';
+        }
     }
 }
