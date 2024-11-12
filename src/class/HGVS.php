@@ -132,6 +132,15 @@ class HGVS {
 
 
 
+    public function getSuffix ()
+    {
+        return ($this->suffix ?? '');
+    }
+
+
+
+
+
     public function hasMatched ()
     {
         return ($this->matched ?? false);
