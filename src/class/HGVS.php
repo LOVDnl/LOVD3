@@ -39,6 +39,7 @@ if (!defined('ROOT_PATH')) {
 
 class HGVS {
     public array $messages = [];
+    public array $properties = [];
     public array $regex = [];
     public bool $matched = false;
     public string $input;
@@ -76,6 +77,22 @@ class HGVS {
                             $aPattern[$i]->getMessages()
                         );
 
+                        // Also store the properties already. Later objects may want to refer to these already
+                        //  (e.g., the positions want to check the used prefix).
+                        // Get the name, cut "HGVS_" off.
+                        $sName = substr($sPattern, 5);
+                        // Sometimes we have multiple values. E.g., positions. Store them in an array.
+                        if (isset($this->$sName)) {
+                            if (!is_array($this->$sName)) {
+                                $this->$sName = [ $this->$sName ];
+                            }
+                            $this->$sName[] = $aPattern[$i];
+                        } else {
+                            $this->$sName = $aPattern[$i];
+                            // Also store this property's name, so we can later unset it if this whole rule didn't match after all.
+                            $this->properties[] = $sName;
+                        }
+
                     } else {
                         // Didn't match.
                         $bMatching = false;
@@ -111,6 +128,10 @@ class HGVS {
             }
 
             if (!$bMatching) {
+                // The rule didn't match, unset any properties that we may have set.
+                foreach ($this->properties as $sProperty) {
+                    unset($this->$sProperty);
+                }
                 continue;
             } else {
                 $this->matched_pattern = $sPatternName;
