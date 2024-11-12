@@ -64,7 +64,25 @@ class HGVS {
                     break;
                 }
 
-                if (strlen($sPattern) >= 3 && substr($sPattern, 0, 1) == '/' && substr($sPattern, -1) == '/') {
+                if (substr($sPattern, 0, 5) == 'HGVS_') {
+                    // This is a class.
+                    $aPattern[$i] = new $sPattern($sInputToParse, $this);
+                    if ($aPattern[$i]->hasMatched()) {
+                        // This pattern matched. Store what is left, if anything is left.
+                        $sInputToParse = $aPattern[$i]->getSuffix();
+                        // Merge their messages with ours.
+                        $this->messages = array_merge(
+                            $this->messages,
+                            $aPattern[$i]->getMessages()
+                        );
+
+                    } else {
+                        // Didn't match.
+                        $bMatching = false;
+                        break;
+                    }
+
+                } elseif (strlen($sPattern) >= 3 && substr($sPattern, 0, 1) == '/' && substr($sPattern, -1) == '/') {
                     // Regex. Make sure it matches the start of the string.
                     $sPattern = '/^' . substr($sPattern, 1);
                     if (preg_match($sPattern, $sInputToParse, $aRegs)) {
