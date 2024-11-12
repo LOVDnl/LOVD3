@@ -127,4 +127,13 @@ class HGVS {
             $this->messages['EFAIL'] = 'Failed to recognize a HGVS nomenclature-compliant variant description in your input.';
         }
     }
+
+
+
+
+
+    public function hasMatched ()
+    {
+        return ($this->matched ?? false);
+    }
 }
