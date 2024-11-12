@@ -78,6 +78,17 @@ class HGVS {
                         $bMatching = false;
                         break;
                     }
+
+                } else {
+                    // Assume a simple string match.
+                    if (strlen($sInputToParse) >= strlen($sPattern) && substr($sInputToParse, 0, strlen($sPattern)) == $sPattern) {
+                        // This pattern matched. Store what is left, if anything is left.
+                        $sInputToParse = substr($sInputToParse, strlen($sPattern));
+                    } else {
+                        // Didn't match.
+                        $bMatching = false;
+                        break;
+                    }
                 }
             }
 
