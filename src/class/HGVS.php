@@ -207,3 +207,13 @@ class HGVS_ReferenceSequence extends HGVS {
         [ '/NC_[0-9]{6}\.[0-9]{1,2}/', [] ],
     ];
 }
+
+
+
+
+
+class HGVS_Variant extends HGVS {
+    public array $patterns = [
+        'DNA' => [ 'HGVS_DNAPrefix', '.', 'HGVS_DNAVariantBody', [] ],
+    ];
+}
