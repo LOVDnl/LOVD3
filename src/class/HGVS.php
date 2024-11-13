@@ -216,6 +216,22 @@ class HGVS {
 
 
 
+class HGVS_DNADel extends HGVS {
+    public array $patterns = [
+        [ 'del', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->data['type'] = 'del';
+    }
+}
+
+
+
+
+
 class HGVS_DNAPrefix extends HGVS {
     public array $patterns = [
         'coding'     => [ 'c', [] ],
