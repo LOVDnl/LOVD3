@@ -41,6 +41,7 @@ class HGVS {
     public array $patterns = [
         'full_variant' => [ 'HGVS_ReferenceSequence', ':', 'HGVS_Variant', [] ],
     ];
+    public array $data = [];
     public array $messages = [];
     public array $properties = [];
     public array $regex = [];
@@ -74,7 +75,11 @@ class HGVS {
                     if ($aPattern[$i]->hasMatched()) {
                         // This pattern matched. Store what is left, if anything is left.
                         $sInputToParse = $aPattern[$i]->getSuffix();
-                        // Merge their messages with ours.
+                        // Merge their data and messages with ours.
+                        $this->data = array_merge(
+                            $this->data,
+                            $aPattern[$i]->getData()
+                        );
                         $this->messages = array_merge(
                             $this->messages,
                             $aPattern[$i]->getMessages()
@@ -168,6 +173,15 @@ class HGVS {
         if (!$bMatching) {
             $this->messages['EFAIL'] = 'Failed to recognize a HGVS nomenclature-compliant variant description in your input.';
         }
+    }
+
+
+
+
+
+    public function getData ()
+    {
+        return ($this->data ?? []);
     }
 
 
