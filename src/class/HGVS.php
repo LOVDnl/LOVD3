@@ -169,8 +169,11 @@ class HGVS {
             break;
         }
 
+        // If we have matched, make sure we run additional checks.
         $this->matched = $bMatching;
-        if (!$bMatching) {
+        if ($bMatching) {
+            $this->validate();
+        } else {
             $this->messages['EFAIL'] = 'Failed to recognize a HGVS nomenclature-compliant variant description in your input.';
         }
     }
@@ -209,6 +212,15 @@ class HGVS {
     public function hasMatched ()
     {
         return ($this->matched ?? false);
+    }
+
+
+
+
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
     }
 }
 
