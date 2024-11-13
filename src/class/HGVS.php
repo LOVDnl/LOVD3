@@ -244,6 +244,31 @@ class HGVS_DNADel extends HGVS {
 
 
 
+class HGVS_DNAPosition extends HGVS {
+    public array $patterns = [
+        'unknown' => [ '?', [] ],
+        'known'   => [ '/([-*]?([0-9]+))([+-]([0-9]+))?/', [] ], // Note: We're using these sub patterns in the validation.
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->unknown = ($this->matched_pattern == 'unknown');
+        if ($this->unknown) {
+            $this->UTR = false;
+            $this->intronic = false;
+
+        } else {
+            $this->UTR = !ctype_digit($this->value[0]);
+            $this->intronic = isset($this->regex[3]);
+        }
+    }
+}
+
+
+
+
+
 class HGVS_DNAPositions extends HGVS {
     public array $patterns = [
         'uncertain_range' => [ '(', 'HGVS_DNAPositionStart', '_', 'HGVS_DNAPositionEnd', ')', [] ],
