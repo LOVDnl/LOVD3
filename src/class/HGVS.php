@@ -232,6 +232,24 @@ class HGVS_DNADel extends HGVS {
 
 
 
+class HGVS_DNAPositions extends HGVS {
+    public array $patterns = [
+        'uncertain_range' => [ '(', 'HGVS_DNAPositionStart', '_', 'HGVS_DNAPositionEnd', ')', [] ],
+        'range'           => [ 'HGVS_DNAPositionStart', '_', 'HGVS_DNAPositionEnd', [] ],
+        'single'          => [ 'HGVS_DNAPosition', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->range = ($this->matched_pattern != 'single');
+    }
+}
+
+
+
+
+
 class HGVS_DNAPrefix extends HGVS {
     public array $patterns = [
         'coding'     => [ 'c', [] ],
