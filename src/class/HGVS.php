@@ -222,6 +222,17 @@ class HGVS_DNAPrefix extends HGVS {
 
 
 
+class HGVS_DNAVariantBody extends HGVS {
+    public array $patterns = [
+        [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNADelSuffix', [] ],
+        [ 'HGVS_DNAPositions', 'HGVS_DNADel', [] ],
+    ];
+}
+
+
+
+
+
 class HGVS_ReferenceSequence extends HGVS {
     public array $patterns = [
         [ '/NC_[0-9]{6}\.[0-9]{1,2}/', [] ],
