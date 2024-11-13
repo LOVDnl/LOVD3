@@ -202,6 +202,26 @@ class HGVS {
 
 
 
+class HGVS_DNAPrefix extends HGVS {
+    public array $patterns = [
+        'coding'     => [ 'c', [] ],
+        'genomic'    => [ 'g', [] ],
+        'mito'       => [ 'm', [] ],
+        'non-coding' => [ 'n', [] ],
+        'circular'   => [ 'o', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->molecule_type = (in_array($this->matched_pattern, ['coding', 'non-coding'])? 'transcript' : 'genome');
+    }
+}
+
+
+
+
+
 class HGVS_ReferenceSequence extends HGVS {
     public array $patterns = [
         [ '/NC_[0-9]{6}\.[0-9]{1,2}/', [] ],
