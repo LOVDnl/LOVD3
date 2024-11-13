@@ -38,6 +38,9 @@ if (!defined('ROOT_PATH')) {
 
 
 class HGVS {
+    public array $patterns = [
+        'full_variant' => [ 'HGVS_ReferenceSequence', ':', 'HGVS_Variant', [] ],
+    ];
     public array $messages = [];
     public array $properties = [];
     public array $regex = [];
@@ -193,4 +196,14 @@ class HGVS {
     {
         return ($this->matched ?? false);
     }
+}
+
+
+
+
+
+class HGVS_ReferenceSequence extends HGVS {
+    public array $patterns = [
+        [ '/NC_[0-9]{6}\.[0-9]{1,2}/', [] ],
+    ];
 }
