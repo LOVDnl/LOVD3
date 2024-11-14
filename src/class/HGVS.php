@@ -281,6 +281,19 @@ class HGVS_DNAPosition extends HGVS {
             } else {
                 $this->offset = (int) $this->regex[3];
             }
+
+            // Check for values with zeros.
+            if (!$this->position || $this->position == '*0') {
+                $this->messages['EPOSITIONFORMAT'] = 'This variant description contains an invalid position: "' . $this->value . '".';
+            } elseif ((string) $this->position != $this->regex[1]) {
+                $this->messages['WPOSITIONFORMAT'] = 'Variant positions should not be prefixed by a 0.';
+            } elseif ($this->intronic) {
+                if (!$this->offset) {
+                    $this->messages['EPOSITIONFORMAT'] = 'This variant description contains an invalid intronic position: "' . $this->value . '".';
+                } elseif ((string) abs($this->offset) != $this->regex[4]) {
+                    $this->messages['WPOSITIONFORMAT'] = 'Intronic positions should not be prefixed by a 0.';
+                }
+            }
         }
     }
 }
