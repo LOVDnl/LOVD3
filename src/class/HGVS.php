@@ -246,15 +246,16 @@ class HGVS_DNADel extends HGVS {
 
 class HGVS_DNAPosition extends HGVS {
     public array $patterns = [
-        'unknown' => [ '?', [] ],
-        'known'   => [ '/([-*]?([0-9]+))([+-]([0-9]+))?/', [] ], // Note: We're using these sub patterns in the validation.
+        'unknown'          => [ '?', [] ],
+        'unknown_intronic' => [ '/([-*]?([0-9]+))([+-]?)/', [] ],
+        'known'            => [ '/([-*]?([0-9]+))([+-]([0-9]+))?/', [] ], // Note: We're using these sub patterns in the validation.
     ];
 
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
-        $this->unknown = ($this->matched_pattern == 'unknown');
-        if ($this->unknown) {
+        $this->unknown = ($this->matched_pattern != 'known');
+        if ($this->matched_pattern == 'unknown') {
             $this->UTR = false;
             $this->intronic = false;
             $this->position = $this->value;
@@ -279,7 +280,12 @@ class HGVS_DNAPosition extends HGVS {
             if (!$this->intronic) {
                 $this->offset = 0;
             } else {
-                $this->offset = (int) $this->regex[3];
+                if ($this->matched_pattern == 'unknown_intronic') {
+                    // +? == +1, -? == -1.
+                    $this->offset = (int) ($this->regex[3][0] . '1');
+                } else {
+                    $this->offset = (int) $this->regex[3];
+                }
             }
 
             // Check for values with zeros.
@@ -287,7 +293,7 @@ class HGVS_DNAPosition extends HGVS {
                 $this->messages['EPOSITIONFORMAT'] = 'This variant description contains an invalid position: "' . $this->value . '".';
             } elseif ((string) $this->position != $this->regex[1]) {
                 $this->messages['WPOSITIONFORMAT'] = 'Variant positions should not be prefixed by a 0.';
-            } elseif ($this->intronic) {
+            } elseif ($this->intronic && !$this->unknown) {
                 if (!$this->offset) {
                     $this->messages['EPOSITIONFORMAT'] = 'This variant description contains an invalid intronic position: "' . $this->value . '".';
                 } elseif ((string) abs($this->offset) != $this->regex[4]) {
