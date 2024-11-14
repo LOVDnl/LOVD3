@@ -257,10 +257,30 @@ class HGVS_DNAPosition extends HGVS {
         if ($this->unknown) {
             $this->UTR = false;
             $this->intronic = false;
+            $this->position = $this->value;
+            $this->position_sortable = null; // This depends on how this position is used.
+            $this->offset = 0;
 
         } else {
             $this->UTR = !ctype_digit($this->value[0]);
             $this->intronic = isset($this->regex[3]);
+
+            // Store the position and sortable position separately.
+            if ($this->value[0] == '*') {
+                // 3' UTR. Force the number to an int, to remove 0-prefixed values.
+                $this->position = '*' . (int) $this->regex[2];
+                $this->position_sortable = 1000000 + (int) $this->regex[2];
+            } else {
+                $this->position = (int) $this->regex[1];
+                $this->position_sortable = $this->position;
+            }
+
+            // For intronic positions, split the value in position and offset.
+            if (!$this->intronic) {
+                $this->offset = 0;
+            } else {
+                $this->offset = (int) $this->regex[3];
+            }
         }
     }
 }
