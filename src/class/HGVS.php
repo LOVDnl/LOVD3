@@ -308,6 +308,25 @@ class HGVS_DNAPosition extends HGVS {
 
 
 
+class HGVS_DNAPositionStart extends HGVS {
+    public array $patterns = [
+        'uncertain_range' => [ '(', 'HGVS_DNAPosition', '_', 'HGVS_DNAPosition', ')', [] ],
+        'single'          => [ 'HGVS_DNAPosition', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->range = is_array($this->DNAPosition); // This will fail if we don't have this property, which is good, because that shouldn't happen.
+        $this->uncertain = ($this->matched_pattern == 'uncertain_range');
+    }
+}
+class HGVS_DNAPositionEnd extends HGVS_DNAPositionStart {}
+
+
+
+
+
 class HGVS_DNAPositions extends HGVS {
     public array $patterns = [
         'uncertain_range' => [ '(', 'HGVS_DNAPositionStart', '_', 'HGVS_DNAPositionEnd', ')', [] ],
