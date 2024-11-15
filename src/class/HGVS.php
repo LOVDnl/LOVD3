@@ -37,6 +37,7 @@ if (!defined('ROOT_PATH')) {
 
 
 
+#[AllowDynamicProperties]
 class HGVS {
     public array $patterns = [
         'full_variant' => [ 'HGVS_ReferenceSequence', ':', 'HGVS_Variant', [] ],
