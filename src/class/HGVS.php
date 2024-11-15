@@ -382,8 +382,8 @@ class HGVS_DNAPositionEnd extends HGVS_DNAPositionStart {}
 
 class HGVS_DNAPositions extends HGVS {
     public array $patterns = [
-        'uncertain_range' => [ '(', 'HGVS_DNAPositionStart', '_', 'HGVS_DNAPositionEnd', ')', [] ],
         'range'           => [ 'HGVS_DNAPositionStart', '_', 'HGVS_DNAPositionEnd', [] ],
+        'uncertain_range' => [ '(', 'HGVS_DNAPositionStart', '_', 'HGVS_DNAPositionEnd', ')', [] ],
         'single'          => [ 'HGVS_DNAPosition', [] ],
     ];
 
