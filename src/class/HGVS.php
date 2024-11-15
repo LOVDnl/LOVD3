@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-11-12
+ * Modified    : 2024-11-15
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -247,7 +247,7 @@ class HGVS_DNADel extends HGVS {
 class HGVS_DNAPosition extends HGVS {
     public array $patterns = [
         'unknown'          => [ '?', [] ],
-        'unknown_intronic' => [ '/([-*]?([0-9]+))([+-]?)/', [] ],
+        'unknown_intronic' => [ '/([-*]?([0-9]+))([+-]\?)/', [] ],
         'known'            => [ '/([-*]?([0-9]+))([+-]([0-9]+))?/', [] ], // Note: We're using these sub patterns in the validation.
     ];
 
