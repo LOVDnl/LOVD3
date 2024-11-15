@@ -368,6 +368,12 @@ class HGVS_DNAPosition extends HGVS {
             } elseif ($this->matched_pattern != 'unknown_intronic') {
                 $this->position_limits[2] = $this->offset;
                 $this->position_limits[3] = $this->offset;
+            } elseif ($this->offset > 0) {
+                // +?, minimum is 1.
+                $this->position_limits[2] = $this->offset;
+            } else {
+                // -?, maximum is -1.
+                $this->position_limits[3] = $this->offset;
             }
         }
     }
