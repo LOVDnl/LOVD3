@@ -160,7 +160,7 @@ class HGVS {
                 $this->value = $sValue;
             }
 
-            // Add the messages.
+            // Add the message(s) from this specific rule.
             $this->messages = array_merge(
                 $this->messages,
                 $aMessages
@@ -372,6 +372,34 @@ class HGVS_DNAPositionStart extends HGVS {
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->range = is_array($this->DNAPosition); // This will fail if we don't have this property, which is good, because that shouldn't happen.
         $this->uncertain = ($this->matched_pattern == 'uncertain_range');
+
+        if (!$this->range) {
+            // A single position, just copy everything.
+            foreach (['unknown', 'UTR', 'intronic', 'position', 'position_sortable', 'position_limits', 'offset'] as $variable) {
+                $this->$variable = $this->DNAPosition->$variable;
+            }
+
+        } else {
+            // Copy the booleans first.
+            foreach (['unknown', 'UTR', 'intronic'] as $variable) {
+                $this->$variable = ($this->DNAPosition[0]->$variable || $this->DNAPosition[1]->$variable);
+            }
+
+            // Before we add more errors or warnings, check if we have multiple errors that are the same.
+            // We currently don't handle arrays as error messages.
+            $sVariantPrefix = $this->getParent('HGVS_Variant')->DNAPrefix->getValue();
+            // Get new messages for errors that occurred twice.
+            $aDoubleMessages = array_intersect_key(
+                [
+                    'EFALSEUTR' => 'Only coding transcripts (c. prefix) have a UTR region. Multiple positions given describe a position in the UTR and are invalid when using the "' . $sVariantPrefix . '" prefix.',
+                    'EPOSITIONLIMIT' => 'Multiple position given are beyond the possible limits of its type.',
+                    'EFALSEINTRONIC' => 'Only transcripts (c. or n. prefixes) have introns. Multiple positions given describe a position in the intron and are invalid when using the "' . $sVariantPrefix . '" prefix.',
+                ],
+                $this->DNAPosition[0]->getMessages(),
+                $this->DNAPosition[1]->getMessages()
+            );
+            $this->messages = array_merge($this->messages, $aDoubleMessages);
+        }
     }
 }
 class HGVS_DNAPositionEnd extends HGVS_DNAPositionStart {}
