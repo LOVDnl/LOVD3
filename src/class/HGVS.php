@@ -200,6 +200,28 @@ class HGVS {
 
 
 
+    public function getParent ($sClassName = null)
+    {
+        // Gets the current parent, or, when a class name has been given, returns that specific parent.
+        if (!$this->parent) {
+            return false;
+        } elseif (is_null($sClassName)) {
+            return $this->parent;
+        } else {
+            $o = $this->parent;
+            // Let's keep the code simple by using recursion.
+            if (get_class($o) == $sClassName) {
+                return $o;
+            } else {
+                return $o->getParent($sClassName);
+            }
+        }
+    }
+
+
+
+
+
     public function getSuffix ()
     {
         return ($this->suffix ?? '');
