@@ -231,6 +231,15 @@ class HGVS {
 
 
 
+    public function getValue ()
+    {
+        return ($this->value ?? '');
+    }
+
+
+
+
+
     public function hasMatched ()
     {
         return ($this->matched ?? false);
