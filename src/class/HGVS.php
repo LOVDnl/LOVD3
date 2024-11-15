@@ -281,6 +281,12 @@ class HGVS_DNAPosition extends HGVS {
         'unknown_intronic' => [ '/([-*]?([0-9]+))([+-]\?)/', [] ],
         'known'            => [ '/([-*]?([0-9]+))([+-]([0-9]+))?/', [] ], // Note: We're using these sub patterns in the validation.
     ];
+    public array $position_limits = [
+        'g' => [1, 4294967295, 0, 0], // position min, position max, offset min, offset max.
+        'm' => [1, 4294967295, 0, 0],
+        'c' => [-8388608, 8388607, -2147483648, 2147483647],
+        'n' => [1, 8388607, -2147483648, 2147483647],
+    ];
 
     public function validate ()
     {
@@ -290,7 +296,7 @@ class HGVS_DNAPosition extends HGVS {
             $this->UTR = false;
             $this->intronic = false;
             $this->position = $this->value;
-            $this->position_sortable = null; // This depends on how this position is used.
+            $this->position_sortable = null; // This depends on how this position is used; start or end?
             $this->offset = 0;
 
         } else {
@@ -329,6 +335,22 @@ class HGVS_DNAPosition extends HGVS {
                     $this->messages['EPOSITIONFORMAT'] = 'This variant description contains an invalid intronic position: "' . $this->value . '".';
                 } elseif ((string) abs($this->offset) != $this->regex[4]) {
                     $this->messages['WPOSITIONFORMAT'] = 'Intronic positions should not be prefixed by a 0.';
+                }
+            }
+
+            // Check minimum and maximum values.
+            // E.g., disallow negative values for genomic sequences, etc.
+            $sVariantPrefix = $this->getParent('HGVS_Variant')->DNAPrefix->getValue();
+            $this->position_limits = $this->position_limits[$sVariantPrefix];
+            if ($this->position_limits[0] == 1 && $this->UTR) {
+                $this->messages['EFALSEUTR'] = 'Only coding transcripts (c. prefix) have a UTR region. Therefore, position "' . $this->value . '" which describes a position in the UTR, is invalid when using the "' . $sVariantPrefix . '" prefix.';
+            } elseif ($this->position_sortable < $this->position_limits[0] || $this->position_sortable > $this->position_limits[1]) {
+                $this->messages['EPOSITIONLIMIT'] = 'Position is beyond the possible limits of its type: "' . $this->value . '".';
+            } elseif ($this->intronic) {
+                if ($this->position_limits[2] == 0) {
+                    $this->messages['EFALSEINTRONIC'] = 'Only transcripts (c. or n. prefixes) have introns. Therefore, position "' . $this->value . '" which describes a position in the intron, is invalid when using the "' . $sVariantPrefix . '" prefix.';
+                } elseif ($this->offset < $this->position_limits[2] || $this->offset > $this->position_limits[3]) {
+                    $this->messages['EPOSITIONLIMIT'] = 'Position is beyond the possible limits of its type: "' . $this->value . '".';
                 }
             }
         }
