@@ -293,12 +293,18 @@ class HGVS_DNAPosition extends HGVS {
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->unknown = ($this->matched_pattern != 'known');
+        $sVariantPrefix = $this->getParent('HGVS_Variant')->DNAPrefix->getValue();
+        $this->position_limits = $this->position_limits[$sVariantPrefix];
+
         if ($this->matched_pattern == 'unknown') {
             $this->UTR = false;
             $this->intronic = false;
             $this->position = $this->value;
             $this->position_sortable = null; // This depends on how this position is used; start or end?
             $this->offset = 0;
+            // Set the intronic range to 0.
+            $this->position_limits[2] = 0;
+            $this->position_limits[3] = 0;
 
         } else {
             $this->UTR = !ctype_digit($this->value[0]);
@@ -341,8 +347,6 @@ class HGVS_DNAPosition extends HGVS {
 
             // Check minimum and maximum values.
             // E.g., disallow negative values for genomic sequences, etc.
-            $sVariantPrefix = $this->getParent('HGVS_Variant')->DNAPrefix->getValue();
-            $this->position_limits = $this->position_limits[$sVariantPrefix];
             if ($this->position_limits[0] == 1 && $this->UTR) {
                 $this->messages['EFALSEUTR'] = 'Only coding transcripts (c. prefix) have a UTR region. Therefore, position "' . $this->value . '" which describes a position in the UTR, is invalid when using the "' . $sVariantPrefix . '" prefix.';
             } elseif ($this->position_sortable < $this->position_limits[0] || $this->position_sortable > $this->position_limits[1]) {
@@ -353,6 +357,17 @@ class HGVS_DNAPosition extends HGVS {
                 } elseif ($this->offset < $this->position_limits[2] || $this->offset > $this->position_limits[3]) {
                     $this->messages['EPOSITIONLIMIT'] = 'Position is beyond the possible limits of its type: "' . $this->value . '".';
                 }
+            }
+
+            // Adjust minimum and maximum values, to be used in further processing.
+            $this->position_limits[0] = $this->position_sortable;
+            $this->position_limits[1] = $this->position_sortable;
+            if (!$this->intronic) {
+                $this->position_limits[2] = 0;
+                $this->position_limits[3] = 0;
+            } elseif ($this->matched_pattern != 'unknown_intronic') {
+                $this->position_limits[2] = $this->offset;
+                $this->position_limits[3] = $this->offset;
             }
         }
     }
