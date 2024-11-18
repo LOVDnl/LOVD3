@@ -386,6 +386,10 @@ class HGVS_DNAPosition extends HGVS {
                 // -?, maximum is -1.
                 $this->position_limits[3] = $this->offset;
             }
+
+            // Store the corrected value.
+            $this->corrected_value = $this->position .
+                ($this->offset? ($this->offset > 0? '+' : '-') . ($this->unknown? '?' : $this->offset) : '');
         }
     }
 }
