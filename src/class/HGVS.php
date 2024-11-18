@@ -489,6 +489,16 @@ class HGVS_DNAPositionStart extends HGVS {
                     $this->messages['EPOSITIONFORMAT'] = 'This variant description contains an invalid position: "' . $this->value . '".';
                 }
             }
+
+            // Check if the positions are given in the right order and store values.
+            if ($this->range) {
+                // OK, we're still a range. Check the variant's order.
+                if (!$this->arePositionsSorted($this->DNAPosition[0], $this->DNAPosition[1])) {
+                    $this->messages['WPOSITIONFORMAT'] = "The variant's positions are not given in the correct order.";
+                    // Swap the positions.
+                    $this->DNAPosition = [$this->DNAPosition[1], $this->DNAPosition[0]];
+                }
+            }
         }
     }
 }
