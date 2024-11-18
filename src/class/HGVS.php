@@ -436,6 +436,24 @@ class HGVS_DNAPositionStart extends HGVS {
                 $this->DNAPosition[1]->getMessages()
             );
             $this->messages = array_merge($this->messages, $aDoubleMessages);
+
+            // If the positions are the same, warn and remove one.
+            if ($this->DNAPosition[0]->position == $this->DNAPosition[1]->position) {
+                if ($this->DNAPosition[0]->getCorrectedValue() == $this->DNAPosition[1]->getCorrectedValue()) {
+                    $this->messages['WPOSITIONFORMAT'] = 'This variant description contains two positions that are the same.';
+                    // Discard the other object.
+                    $this->DNAPosition = $this->DNAPosition[0];
+                    $this->range = false;
+                    foreach (['position', 'position_sortable', 'position_limits', 'offset'] as $variable) {
+                        $this->$variable = $this->DNAPosition->$variable;
+                    }
+
+                } elseif (($this->DNAPosition[0]->offset < 0 && $this->DNAPosition[1]->offset > 0)
+                    || ($this->DNAPosition[0]->offset > 0 && $this->DNAPosition[1]->offset < 0)) {
+                    // The offsets are not on the same side of the intron. That is an error.
+                    $this->messages['EPOSITIONFORMAT'] = 'This variant description contains an invalid position: "' . $this->value . '".';
+                }
+            }
         }
     }
 }
