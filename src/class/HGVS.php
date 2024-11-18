@@ -51,6 +51,7 @@ class HGVS {
     public string $matched_pattern;
     public string $suffix;
     public string $value;
+    public string $corrected_value;
     public $parent;
 
     public function __construct($sValue, $Parent = null) {
@@ -178,6 +179,15 @@ class HGVS {
         } else {
             $this->messages['EFAIL'] = 'Failed to recognize a HGVS nomenclature-compliant variant description in your input.';
         }
+    }
+
+
+
+
+
+    public function getCorrectedValue ()
+    {
+        return ($this->corrected_value ?? $this->value);
     }
 
 
