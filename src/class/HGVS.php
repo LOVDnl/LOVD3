@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-11-15
+ * Modified    : 2024-11-18
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -141,6 +141,7 @@ class HGVS {
                 foreach ($this->properties as $sProperty) {
                     unset($this->$sProperty);
                 }
+                $this->properties = []; // Reset the array, too.
                 continue;
             } else {
                 $this->matched_pattern = $sPatternName;
