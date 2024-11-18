@@ -185,6 +185,41 @@ class HGVS {
 
 
 
+    public function arePositionsSorted ($PositionStart, $PositionEnd)
+    {
+        // This function compares two positions and returns true when $PositionStart is smaller than $PositionEnd,
+        //  when there is an unknown value involved, or when the two positions are equal.
+
+        // We can't compare an unknown position with anything, and if the positions are equal, we return true as well.
+        if ($PositionStart->position == '?' || $PositionEnd->position == '?'
+            || $PositionStart->getCorrectedValue() == $PositionEnd->getCorrectedValue()) {
+            return true;
+        }
+
+        // When the positions are equal, the offsets must be different.
+        if ($PositionStart->position == $PositionEnd->position) {
+            // We still have the possibility of unknown offsets,
+            //  but they can't both be unknown because equal positions have been handled.
+            // We decide hereby that unknown offsets should be on the "inside" of the intron (away from the exon).
+            // So, we decide 100-?_100 is OK and 100_100+? is OK.
+            if ($PositionStart->unknown) {
+                return ($PositionStart->offset == -1);
+            } elseif ($PositionEnd->unknown) {
+                return ($PositionEnd->offset == 1);
+            } else {
+                // No unknowns left, only numeric offsets.
+                return ($PositionStart->offset < $PositionEnd->offset);
+            }
+
+        } else {
+            return ($PositionStart->position_sortable < $PositionEnd->position_sortable);
+        }
+    }
+
+
+
+
+
     public function getCorrectedValue ()
     {
         return ($this->corrected_value ?? $this->value);
