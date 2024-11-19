@@ -586,12 +586,34 @@ class HGVS_DNAPositions extends HGVS {
             || ($this->matched_pattern == 'range'
                 && ($this->DNAPositionStart->uncertain || $this->DNAPositionEnd->uncertain))
         );
+        $VariantPrefix = $this->getParent('HGVS_Variant')->DNAPrefix;
 
         if (!$this->range) {
             // A single position, just copy everything.
             foreach (['unknown', 'UTR', 'intronic', 'position', 'position_sortable', 'position_limits', 'offset'] as $variable) {
                 $this->$variable = $this->DNAPosition->$variable;
             }
+
+        } else {
+            // Copy only the booleans; the rest doesn't apply to a range.
+            foreach (['unknown', 'UTR', 'intronic'] as $variable) {
+                $this->$variable = ($this->DNAPositionStart->$variable || $this->DNAPositionEnd->$variable);
+            }
+
+            // Before we add more errors or warnings, check if we have multiple errors that are the same.
+            // We currently don't handle arrays as error messages.
+            $sVariantPrefix = $VariantPrefix->getValue();
+            // Get new messages for errors that occurred twice.
+            $aDoubleMessages = array_intersect_key(
+                [
+                    'EFALSEUTR' => 'Only coding transcripts (c. prefix) have a UTR region. Multiple positions given describe a position in the UTR and are invalid when using the "' . $sVariantPrefix . '" prefix.',
+                    'EPOSITIONLIMIT' => 'Multiple position given are beyond the possible limits of its type.',
+                    'EFALSEINTRONIC' => 'Only transcripts (c. or n. prefixes) have introns. Multiple positions given describe a position in the intron and are invalid when using the "' . $sVariantPrefix . '" prefix.',
+                ],
+                $this->DNAPositionStart->getMessages(),
+                $this->DNAPositionEnd->getMessages()
+            );
+            $this->messages = array_merge($this->messages, $aDoubleMessages);
         }
     }
 }
