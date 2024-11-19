@@ -519,6 +519,15 @@ class HGVS_DNAPositionStart extends HGVS {
                     // Swap the positions.
                     $this->DNAPosition = [$this->DNAPosition[1], $this->DNAPosition[0]];
                 }
+
+                // Give unknown positions a sortable position (which is currently set to null).
+                if ($this->DNAPosition[0]->unknown) {
+                    // Position starts with "?_", store the smallest possible value.
+                    $this->DNAPosition[0]->position_sortable = $this->DNAPosition[0]->position_limits[0];
+                } elseif ($this->DNAPosition[1]->unknown) {
+                    // Position ends with "_?", store the highest possible value.
+                    $this->DNAPosition[1]->position_sortable = $this->DNAPosition[1]->position_limits[1];
+                }
             }
         }
     }
