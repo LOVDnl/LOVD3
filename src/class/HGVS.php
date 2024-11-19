@@ -581,6 +581,18 @@ class HGVS_DNAPositions extends HGVS {
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->range = ($this->matched_pattern != 'single');
+        $this->uncertain = (
+            $this->matched_pattern == 'uncertain_range'
+            || ($this->matched_pattern == 'range'
+                && ($this->DNAPositionStart->uncertain || $this->DNAPositionEnd->uncertain))
+        );
+
+        if (!$this->range) {
+            // A single position, just copy everything.
+            foreach (['unknown', 'UTR', 'intronic', 'position', 'position_sortable', 'position_limits', 'offset'] as $variable) {
+                $this->$variable = $this->DNAPosition->$variable;
+            }
+        }
     }
 }
 
