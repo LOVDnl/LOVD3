@@ -614,6 +614,19 @@ class HGVS_DNAPositions extends HGVS {
                 $this->DNAPositionEnd->getMessages()
             );
             $this->messages = array_merge($this->messages, $aDoubleMessages);
+
+            // If the positions are the same, warn and remove one.
+            if ($this->DNAPositionStart->getCorrectedValue() == $this->DNAPositionEnd->getCorrectedValue()
+                && !$this->DNAPositionStart->unknown) {
+                // Exception: Start and End _can_ be both unknown, e.g., g.?_?ins[...].
+                $this->messages['WPOSITIONFORMAT'] = 'This variant description contains two positions that are the same.';
+                // Discard the other object.
+                $this->DNAPosition = $this->DNAPositionStart;
+                $this->range = false;
+                foreach (['position', 'position_sortable', 'position_limits', 'offset'] as $variable) {
+                    $this->$variable = $this->DNAPosition->$variable;
+                }
+            }
         }
     }
 }
