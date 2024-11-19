@@ -191,7 +191,7 @@ class HGVS {
         //  when there is an unknown value involved, or when the two positions are equal.
 
         // We can't compare an unknown position with anything, and if the positions are equal, we return true as well.
-        if ($PositionStart->position == '?' || $PositionEnd->position == '?'
+        if ($PositionStart->unknown || $PositionEnd->unknown
             || $PositionStart->getCorrectedValue() == $PositionEnd->getCorrectedValue()) {
             return true;
         }
@@ -202,9 +202,9 @@ class HGVS {
             //  but they can't both be unknown because equal positions have been handled.
             // We decide hereby that unknown offsets should be on the "inside" of the intron (away from the exon).
             // So, we decide 100-?_100 is OK and 100_100+? is OK.
-            if ($PositionStart->unknown) {
+            if ($PositionStart->unknown_offset) {
                 return ($PositionStart->offset == -1);
-            } elseif ($PositionEnd->unknown) {
+            } elseif ($PositionEnd->unknown_offset) {
                 return ($PositionEnd->offset == 1);
             } else {
                 // No unknowns left, only numeric offsets.
@@ -338,7 +338,8 @@ class HGVS_DNAPosition extends HGVS {
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
-        $this->unknown = ($this->matched_pattern != 'known');
+        $this->unknown = ($this->matched_pattern == 'unknown');
+        $this->unknown_offset = ($this->matched_pattern == 'unknown_intronic');
         $sVariantPrefix = $this->getParent('HGVS_Variant')->DNAPrefix->getValue();
         $this->position_limits = $this->position_limits[$sVariantPrefix];
 
@@ -383,7 +384,7 @@ class HGVS_DNAPosition extends HGVS {
                 $this->messages['EPOSITIONFORMAT'] = 'This variant description contains an invalid position: "' . $this->value . '".';
             } elseif ((string) $this->position != $this->regex[1]) {
                 $this->messages['WPOSITIONFORMAT'] = 'Variant positions should not be prefixed by a 0.';
-            } elseif ($this->intronic && !$this->unknown) {
+            } elseif ($this->intronic && !$this->unknown_offset) {
                 if (!$this->offset) {
                     $this->messages['EPOSITIONFORMAT'] = 'This variant description contains an invalid intronic position: "' . $this->value . '".';
                 } elseif ((string) abs($this->offset) != $this->regex[4]) {
@@ -424,7 +425,7 @@ class HGVS_DNAPosition extends HGVS {
 
             // Store the corrected value.
             $this->corrected_value = $this->position .
-                ($this->offset? ($this->offset > 0? '+' : '-') . ($this->unknown? '?' : $this->offset) : '');
+                ($this->offset? ($this->offset > 0? '+' : '-') . ($this->unknown_offset? '?' : $this->offset) : '');
         }
     }
 }
