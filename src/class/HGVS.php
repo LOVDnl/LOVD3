@@ -553,6 +553,13 @@ class HGVS_DNAPositionStart extends HGVS {
                 ];
             }
         }
+
+        // Now, store the corrected value.
+        if ($this->range) {
+            $this->corrected_value = '(' . $this->DNAPosition[0]->getCorrectedValue() . '_' . $this->DNAPosition[1]->getCorrectedValue() . ')';
+        } else {
+            $this->corrected_value = $this->DNAPosition->getCorrectedValue();
+        }
     }
 }
 class HGVS_DNAPositionEnd extends HGVS_DNAPositionStart {}
