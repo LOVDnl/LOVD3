@@ -528,6 +528,29 @@ class HGVS_DNAPositionStart extends HGVS {
                     // Position ends with "_?", store the highest possible value.
                     $this->DNAPosition[1]->position_sortable = $this->DNAPosition[1]->position_limits[1];
                 }
+
+                // Start positions, when a range, internally store the lowest known value.
+                // End positions, when a range, internally store the highest known value.
+                if (get_class($this) == 'HGVS_DNAPositionStart') {
+                    $iPositionToStore = ($this->DNAPosition[0]->unknown? 1 : 0);
+                } else {
+                    $iPositionToStore = ($this->DNAPosition[1]->unknown? 0 : 1);
+                }
+                foreach (['position', 'position_sortable', 'offset'] as $variable) {
+                    $this->$variable = $this->DNAPosition[$iPositionToStore]->$variable;
+                }
+
+                // For the limits of this range, store the start position minimum values,
+                //  and the end position's maximum values. That does change the meaning of the values a bit.
+                // Normally, either the position range is fixed or the offset range is fixed. Now, both can be a range.
+                // The minimum values for position and offset together form the minimum position.
+                // The maximum values for position and offset together form the maximum position.
+                $this->position_limits = [
+                    $this->DNAPosition[0]->position_limits[0],
+                    $this->DNAPosition[1]->position_limits[1],
+                    $this->DNAPosition[0]->position_limits[2],
+                    $this->DNAPosition[1]->position_limits[3],
+                ];
             }
         }
     }
