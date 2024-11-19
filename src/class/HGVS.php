@@ -493,6 +493,7 @@ class HGVS_DNAPositionStart extends HGVS {
                 $this->DNAPosition[0]->position_limits[1] = $this->DNAPosition[1]->position_limits[1];
                 $this->DNAPosition = $this->DNAPosition[0];
                 $this->DNAPosition->uncertain = true;
+                $this->unknown = false;
 
             } elseif (get_class($this) == 'HGVS_DNAPositionEnd' && $this->DNAPosition[0]->unknown) {
                 // The inner positions cannot be unknown. E.g., g.(100_?)_(?_200) should become g.(100_200).
@@ -501,6 +502,7 @@ class HGVS_DNAPositionStart extends HGVS {
                 $this->DNAPosition[1]->position_limits[0] = $this->DNAPosition[0]->position_limits[0];
                 $this->DNAPosition = $this->DNAPosition[1];
                 $this->DNAPosition->uncertain = true;
+                $this->unknown = false;
             }
 
 
