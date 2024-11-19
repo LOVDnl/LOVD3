@@ -479,20 +479,40 @@ class HGVS_DNAPositionStart extends HGVS {
                     $this->messages['WPOSITIONFORMAT'] = 'This variant description contains two positions that are the same.';
                     // Discard the other object.
                     $this->DNAPosition = $this->DNAPosition[0];
-                    $this->range = false;
-                    foreach (['position', 'position_sortable', 'position_limits', 'offset'] as $variable) {
-                        $this->$variable = $this->DNAPosition->$variable;
-                    }
 
                 } elseif (($this->DNAPosition[0]->offset < 0 && $this->DNAPosition[1]->offset > 0)
                     || ($this->DNAPosition[0]->offset > 0 && $this->DNAPosition[1]->offset < 0)) {
                     // The offsets are not on the same side of the intron. That is an error.
                     $this->messages['EPOSITIONFORMAT'] = 'This variant description contains an invalid position: "' . $this->value . '".';
                 }
+
+            } elseif (get_class($this) == 'HGVS_DNAPositionStart' && $this->DNAPosition[1]->unknown) {
+                // The inner positions cannot be unknown. E.g., g.(100_?)_(?_200) should become g.(100_200).
+                $this->messages['WPOSITIONFORMAT'] = 'This variant description contains redundant unknown positions.';
+                // Copy the maximum limit from this unknown position to the remaining position. It's not precise.
+                $this->DNAPosition[0]->position_limits[1] = $this->DNAPosition[1]->position_limits[1];
+                $this->DNAPosition = $this->DNAPosition[0];
+                $this->DNAPosition->uncertain = true;
+
+            } elseif (get_class($this) == 'HGVS_DNAPositionEnd' && $this->DNAPosition[0]->unknown) {
+                // The inner positions cannot be unknown. E.g., g.(100_?)_(?_200) should become g.(100_200).
+                $this->messages['WPOSITIONFORMAT'] = 'This variant description contains redundant unknown positions.';
+                // Copy the minimum limit from this unknown position to the remaining position. It's not precise.
+                $this->DNAPosition[1]->position_limits[0] = $this->DNAPosition[0]->position_limits[0];
+                $this->DNAPosition = $this->DNAPosition[1];
+                $this->DNAPosition->uncertain = true;
             }
 
+
+
             // Check if the positions are given in the right order and store values.
-            if ($this->range) {
+            if (!is_array($this->DNAPosition)) {
+                foreach (['position', 'position_sortable', 'position_limits', 'offset'] as $variable) {
+                    $this->$variable = $this->DNAPosition->$variable;
+                }
+                $this->range = false;
+
+            } else {
                 // OK, we're still a range. Check the variant's order.
                 if (!$this->arePositionsSorted($this->DNAPosition[0], $this->DNAPosition[1])) {
                     $this->messages['WPOSITIONFORMAT'] = "The variant's positions are not given in the correct order.";
