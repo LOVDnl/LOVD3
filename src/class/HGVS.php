@@ -578,6 +578,122 @@ class HGVS_DNAPositions extends HGVS {
         'uncertain_single' => [ '(', 'HGVS_DNAPosition', ')', [ 'WPOSITIONFORMAT' => "The variant's position contains redundant parentheses." ] ],
         'single'           => [ 'HGVS_DNAPosition', [] ],
     ];
+    public array $lengths = [];
+
+    public function getLengths ()
+    {
+        // This function calculates the minimum and maximum lengths of these positions, and returns them in an array.
+        // This function isn't very precise. The given lengths will be incorrect when:
+        // - introns are included in the range (applies to c. variants);
+        // - the stop codon is included in the range (applies to c. variants).
+        // The given lengths can not be determined at all when:
+        // - breakpoints are unknown (not uncertain), e.g., g.?_100del;
+        // - intronic positions are used and the center of the intron is passed (e.g., c.100+123_101-456del).
+        // When a distance can't be determined at all, this function may choose to return false for that length.
+        // Note that the distance between the Start and End is not the variant length.
+        // E.g., c.1_2 has a distance of 1 and a length of 2. The minimum distance is 0, but the minimum length is 1.
+        $aReturn = [0,0];
+
+        // An array with the positions to check for the minimum (key: 0) and maximum (key: 1) lengths.
+        $aPositionsToCheck = [];
+
+        // If this were called repeatedly, cache the results.
+        if ($this->lengths) {
+            return $this->lengths;
+        }
+
+        if (!$this->range) {
+            return [1,1];
+        }
+
+        // Store the positions that we'll use to determine the length.
+        // The maximum length can always be determined by our own limits.
+        $aPositionsToCheck[1] = [
+            [ // position, offset (leftmost position)
+                $this->position_limits[0], $this->position_limits[2]
+            ],
+            [ // position, offset (rightmost position)
+                $this->position_limits[1], $this->position_limits[3]
+            ],
+        ];
+
+        // If either Start or End is a single unknown position, we'll have a minimum length of 1.
+        if ($this->DNAPositionStart->getCorrectedValue() == '?'
+            || $this->DNAPositionEnd->getCorrectedValue() == '?') {
+            $aReturn[0] = 1;
+
+        } elseif (!$this->uncertain && !$this->unknown_offset) {
+            // The minimum distance is the maximum distance.
+            $aPositionsToCheck[0] = $aPositionsToCheck[1];
+
+        } else {
+            // We have a single Start and End within uncertainty or unknown offset,
+            //  or Start and/or End are ranges, causing uncertainty.
+            // There are no single unknown positions here.
+            // There may be outer unknown positions, but those don't matter here.
+            if (!$this->DNAPositionStart->range && !$this->DNAPositionEnd->range && !$this->unknown_offset) {
+                // The uncertainty is indicated by the user. E.g., g.(100_200)del. Min length is 1.
+                $aReturn[0] = 1;
+            } else {
+                // Take the inner ranges.
+                $aPositionsToCheck[0] = [
+                    [
+                        $this->DNAPositionStart->position_limits[1],
+                        $this->DNAPositionStart->position_limits[3]
+                    ],
+                    [
+                        $this->DNAPositionEnd->position_limits[0],
+                        $this->DNAPositionEnd->position_limits[2]
+                    ],
+                ];
+            }
+        }
+
+        // Now that we collected the positions to compare, calculate the distance.
+        foreach ($aPositionsToCheck as $i => $aPositions) {
+            list($PosStart, $PosEnd) = $aPositions;
+            $nBasicLength = $PosEnd[0] - $PosStart[0] + 1;
+
+            // For the minimum distance, we're doing a simple trick to handle crossing intron centers.
+            // E.g., we can't determine the length of c.100+10_200-10del. We'll change it to c.101-10_199+10del to at least have something.
+            if (!$i && $nBasicLength > 2) {
+                if ($PosStart[1] > 0) {
+                    $PosStart[0] ++;
+                    $PosStart[1] *= -1;
+                    $nBasicLength --;
+                }
+                if ($PosEnd[1] < 0) {
+                    $PosEnd[0] --;
+                    $PosEnd[1] *= -1;
+                    $nBasicLength --;
+                }
+            }
+
+            if (!$PosStart[1] && !$PosEnd[1]) {
+                // Simple case; genomic variant or simply no introns involved.
+                $aReturn[$i] = $nBasicLength;
+
+            } elseif ($PosStart[0] < $PosEnd[0] && ($PosStart[1] > 0 || $PosEnd[1] < 0)) {
+                // Exonic positions are not the same, and we're crossing the center of an intron.
+                // We implemented a trick for the minimum distance, but it can still happen for c.100+10_101-10del,
+                //  because I have no clue how to nicely handle that.
+                // All maximum distances crossing intron centers also end up here.
+                $aReturn[$i] = false;
+
+            } else{
+                // We know we're not crossing intron centers. This calculation works for variants
+                //  inside the same intron as well as variants in different introns.
+                $aReturn[$i] = $nBasicLength + $PosEnd[1] - $PosStart[1];
+            }
+        }
+
+        $this->lengths = $aReturn; // Cache it for next time.
+        return $aReturn;
+    }
+
+
+
+
 
     public function validate ()
     {
