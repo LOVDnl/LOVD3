@@ -627,6 +627,38 @@ class HGVS_DNAPositions extends HGVS {
                     $this->$variable = $this->DNAPosition->$variable;
                 }
             }
+
+
+
+            // Check if the positions are given in the right order and store values.
+            if ($this->range) {
+                // Checking the positions is a bit more complex now, because start and end _can_ be ranges, too.
+                // It's unclear whether the HGVS nomenclature allows for, e.g., g.100_(100_200)del.
+                // However, I see no other clear way of saying "a deletion starting at 100, and possibly extending up to 200".
+                // g.(99_100)_(100_200)del does not seem to be a good alternative to me,
+                //  especially considering the ambiguity in its interpretation about whether A and D are included in the deletion.
+                // Therefore, we will allow B and C to be equal, regardless of whether Start and End are ranges or not.
+
+                // In (A_B)_(C_D), the positions are in the wrong order when D<A, they overlap when C<B, and they're OK when B>C.
+                $PositionA = $this->DNAPositionStart; // Will anyway be B if A == ?.
+                $PositionB = ($this->DNAPositionStart->range? $this->DNAPositionStart->DNAPosition[1] : $this->DNAPositionStart);
+                $PositionC = ($this->DNAPositionEnd->range? $this->DNAPositionEnd->DNAPosition[0] : $this->DNAPositionEnd);
+                $PositionD = $this->DNAPositionEnd; // Will anyway be C if D == ?.
+
+                if (!$this->arePositionsSorted($PositionA, $PositionD)) {
+                    $this->messages['WPOSITIONFORMAT'] = "The variant's positions are not given in the correct order.";
+                    // Due to excessive complexity with ranges and possible solutions and assumptions,
+                    //  we'll only swap positions when neither Start nor End is a range.
+                    if (!$this->DNAPositionStart->range && !$this->DNAPositionEnd->range) {
+                        // Resort the positions.
+                        list($this->DNAPositionStart, $this->DNAPositionEnd) = [$this->DNAPositionEnd, $this->DNAPositionStart];
+                    }
+
+                } elseif (!$this->arePositionsSorted($PositionB, $PositionC)) {
+                    // We can't fix that, so throw an error, not a warning.
+                    $this->messages['EPOSITIONFORMAT'] = "The variant's positions overlap but are not the same.";
+                }
+            }
         }
     }
 }
