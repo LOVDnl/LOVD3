@@ -658,6 +658,32 @@ class HGVS_DNAPositions extends HGVS {
                     // We can't fix that, so throw an error, not a warning.
                     $this->messages['EPOSITIONFORMAT'] = "The variant's positions overlap but are not the same.";
                 }
+
+                // I earlier removed internal uncertainty, e.g., g.(100_?)_(?_200) to g.(100_200).
+                // I then set the position_limits of Start and End to those of "?".
+                // Now that we both have a Start and an End, fix this.
+                if (!$this->DNAPositionStart->range && $this->DNAPositionStart->uncertain
+                    && ($this->DNAPositionEnd->range || !$this->DNAPositionEnd->unknown)) {
+                    $this->DNAPositionStart->position_limits[1] = $PositionC->position_sortable;
+                    $this->DNAPositionStart->position_limits[3] = $PositionC->offset;
+                }
+                if (!$this->DNAPositionEnd->range && $this->DNAPositionEnd->uncertain
+                    && ($this->DNAPositionStart->range || !$this->DNAPositionStart->unknown)) {
+                    $this->DNAPositionEnd->position_limits[0] = $PositionB->position_sortable;
+                    $this->DNAPositionEnd->position_limits[2] = $PositionB->offset;
+                }
+
+                // For the limits of this range, store the start position minimum values,
+                //  and the end position's maximum values. That does change the meaning of the values a bit.
+                // Normally, either the position range is fixed or the offset range is fixed. Now, both can be a range.
+                // The minimum values for position and offset together form the minimum position.
+                // The maximum values for position and offset together form the maximum position.
+                $this->position_limits = [
+                    $this->DNAPositionStart->position_limits[0],
+                    $this->DNAPositionEnd->position_limits[1],
+                    $this->DNAPositionStart->position_limits[2],
+                    $this->DNAPositionEnd->position_limits[3],
+                ];
             }
         }
     }
