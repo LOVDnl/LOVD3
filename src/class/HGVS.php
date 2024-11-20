@@ -696,6 +696,15 @@ class HGVS_DNAPositions extends HGVS {
             $this->data['position_end_intron'] = $aPositions[1]->offset;
         }
         $this->data['range'] = $this->range;
+
+        // Now, store the corrected value.
+        if ($this->matched_pattern == 'uncertain_range') {
+            $this->corrected_value = '(' . $this->DNAPositionStart->getCorrectedValue() . '_' . $this->DNAPositionEnd->getCorrectedValue() . ')';
+        } elseif ($this->range) {
+            $this->corrected_value = $this->DNAPositionStart->getCorrectedValue() . '_' . $this->DNAPositionEnd->getCorrectedValue();
+        } else {
+            $this->corrected_value = $this->DNAPosition->getCorrectedValue();
+        }
     }
 }
 
