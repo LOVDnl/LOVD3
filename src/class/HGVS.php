@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-11-18
+ * Modified    : 2024-11-20
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -448,13 +448,13 @@ class HGVS_DNAPositionStart extends HGVS {
 
         if (!$this->range) {
             // A single position, just copy everything.
-            foreach (['unknown', 'UTR', 'intronic', 'position', 'position_sortable', 'position_limits', 'offset'] as $variable) {
+            foreach (['unknown', 'unknown_offset', 'UTR', 'intronic', 'position', 'position_sortable', 'position_limits', 'offset'] as $variable) {
                 $this->$variable = $this->DNAPosition->$variable;
             }
 
         } else {
             // Copy the booleans first.
-            foreach (['unknown', 'UTR', 'intronic'] as $variable) {
+            foreach (['unknown', 'unknown_offset', 'UTR', 'intronic'] as $variable) {
                 $this->$variable = ($this->DNAPosition[0]->$variable || $this->DNAPosition[1]->$variable);
             }
 
@@ -590,13 +590,13 @@ class HGVS_DNAPositions extends HGVS {
 
         if (!$this->range) {
             // A single position, just copy everything.
-            foreach (['unknown', 'UTR', 'intronic', 'position', 'position_sortable', 'position_limits', 'offset'] as $variable) {
+            foreach (['unknown', 'unknown_offset', 'UTR', 'intronic', 'position', 'position_sortable', 'position_limits', 'offset'] as $variable) {
                 $this->$variable = $this->DNAPosition->$variable;
             }
 
         } else {
             // Copy only the booleans; the rest doesn't apply to a range.
-            foreach (['unknown', 'UTR', 'intronic'] as $variable) {
+            foreach (['unknown', 'unknown_offset', 'UTR', 'intronic'] as $variable) {
                 $this->$variable = ($this->DNAPositionStart->$variable || $this->DNAPositionEnd->$variable);
             }
 
