@@ -573,15 +573,16 @@ class HGVS_DNAPositionEnd extends HGVS_DNAPositionStart {}
 
 class HGVS_DNAPositions extends HGVS {
     public array $patterns = [
-        'range'           => [ 'HGVS_DNAPositionStart', '_', 'HGVS_DNAPositionEnd', [] ],
-        'uncertain_range' => [ '(', 'HGVS_DNAPositionStart', '_', 'HGVS_DNAPositionEnd', ')', [] ],
-        'single'          => [ 'HGVS_DNAPosition', [] ],
+        'range'            => [ 'HGVS_DNAPositionStart', '_', 'HGVS_DNAPositionEnd', [] ],
+        'uncertain_range'  => [ '(', 'HGVS_DNAPositionStart', '_', 'HGVS_DNAPositionEnd', ')', [] ],
+        'uncertain_single' => [ '(', 'HGVS_DNAPosition', ')', [ 'WPOSITIONFORMAT' => "The variant's position contains redundant parentheses." ] ],
+        'single'           => [ 'HGVS_DNAPosition', [] ],
     ];
 
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
-        $this->range = ($this->matched_pattern != 'single');
+        $this->range = (in_array($this->matched_pattern, ['range', 'uncertain_range']));
         $this->uncertain = (
             $this->matched_pattern == 'uncertain_range'
             || ($this->matched_pattern == 'range'
