@@ -436,8 +436,9 @@ class HGVS_DNAPosition extends HGVS {
 
 class HGVS_DNAPositionStart extends HGVS {
     public array $patterns = [
-        'uncertain_range' => [ '(', 'HGVS_DNAPosition', '_', 'HGVS_DNAPosition', ')', [] ],
-        'single'          => [ 'HGVS_DNAPosition', [] ],
+        'uncertain_range'  => [ '(', 'HGVS_DNAPosition', '_', 'HGVS_DNAPosition', ')', [] ],
+        'uncertain_single' => [ '(', 'HGVS_DNAPosition', ')', [ 'WPOSITIONFORMAT' => "The variant's positions contain redundant parentheses." ] ],
+        'single'           => [ 'HGVS_DNAPosition', [] ],
     ];
 
     public function validate ()
