@@ -343,6 +343,7 @@ class HGVS_DNADel extends HGVS {
 
 class HGVS_DNADelSuffix extends HGVS {
     public array $patterns = [
+        // Since none of these match "ins", a "delAinsC" won't ever pass here.
         [ 'HGVS_DNARefs', [] ],
     ];
 
@@ -919,7 +920,8 @@ class HGVS_DNAPrefix extends HGVS {
 
 class HGVS_DNARefs extends HGVS {
     public array $patterns = [
-        [ '/[ACGTN]+/', [] ],
+        'valid'   => [ '/[ACGTN]+/', [] ],
+        'invalid' => [ '/[A-Z]+/', [] ],
     ];
 
     public function validate ()
@@ -927,6 +929,21 @@ class HGVS_DNARefs extends HGVS {
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->corrected_value = strtoupper($this->value);
         $this->caseOK = ($this->value == $this->corrected_value);
+
+        // Check for invalid nucleotides.
+        if ($this->matched_pattern == 'invalid') {
+            // This is a special case. We need to prevent that we're matching "ins".
+            // If we do, we need to pretend that we never matched at all.
+            if (strpos($this->corrected_value, 'INS') !== false) {
+                // Nope, no, we should pretend that we never matched.
+                $this->matched = false;
+                return;
+            }
+
+            // List the invalid nucleotides.
+            $sUnknownBases = preg_replace($this->patterns['valid'][0], '', $this->corrected_value);
+            $this->messages['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
+        }
     }
 }
 
