@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-11-20
+ * Modified    : 2024-11-21
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -316,6 +316,16 @@ class HGVS_DNADel extends HGVS {
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->data['type'] = 'del';
     }
+}
+
+
+
+
+
+class HGVS_DNADelSuffix extends HGVS {
+    public array $patterns = [
+        [ 'HGVS_DNARefs', [] ],
+    ];
 }
 
 
@@ -844,6 +854,16 @@ class HGVS_DNAPrefix extends HGVS {
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->molecule_type = (in_array($this->matched_pattern, ['coding', 'non-coding'])? 'transcript' : 'genome');
     }
+}
+
+
+
+
+
+class HGVS_DNARefs extends HGVS {
+    public array $patterns = [
+        [ '/[ACGTN]+/', [] ],
+    ];
 }
 
 
