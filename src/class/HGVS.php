@@ -371,14 +371,38 @@ class HGVS_DNADelSuffix extends HGVS {
         } else {
             // Check all length requirements.
             // The suffix should not have been used only when the variant length matches the length given in the suffix.
-            $aPositionLengths = $Positions->getLengths();
-            $bPositionLengthIsCertain = ($aPositionLengths[0] == $aPositionLengths[1]);
-            $aSuffixLengths = $this->getLengths();
-            $bSuffixLengthIsCertain = ($aSuffixLengths[0] == $aSuffixLengths[1]);
+            // Then, also the positions should not be uncertain, if they are.
+            // Furthermore, the suffix can never be shorter than the minimum length given by the positions,
+            //  and the suffix can never be bigger than the maximum length given by the positions.
+            list($nMinLengthVariant, $nMaxLengthVariant) = $Positions->getLengths();
+            $bPositionLengthIsCertain = ($nMinLengthVariant == $nMaxLengthVariant);
+            list($nMinLengthSuffix, $nMaxLengthSuffix) = $this->getLengths();
+            $bSuffixLengthIsCertain = ($nMinLengthSuffix == $nMaxLengthSuffix);
 
             // Simplest situation first: certain everything, length matches.
-            if ($bPositionLengthIsCertain && $bSuffixLengthIsCertain && $aPositionLengths[0] == $aSuffixLengths[0]) {
+            if ($bPositionLengthIsCertain && $bSuffixLengthIsCertain && $nMinLengthVariant == $nMinLengthSuffix) {
                 $this->messages['WSUFFIXGIVEN'] = "The deleted sequence is redundant and should be removed.";
+
+            } elseif ($bPositionLengthIsCertain && !$bSuffixLengthIsCertain && $nMaxLengthSuffix <= $nMaxLengthVariant) {
+                // A special case: When the positions are certain but the deletion is uncertain but fits, this is a special class of warning.
+                $this->messages['WPOSITIONCERTAIN'] =
+                    "The variant's positions indicate a certain sequence, but the deletion itself indicates the deleted sequence is uncertain." .
+                    " This is a conflict; when the deleted sequence is uncertain, make the variant's positions uncertain by adding parentheses.";
+
+            } else {
+                // Universal length checks. These messages are kept universal and slightly simplified.
+                // E.g., an ESUFFIXTOOLONG may mean that the deleted sequence CAN BE too long, but isn't always.
+                // (e.g., g.(100_200)del(100_300).
+                if ($nMinLengthSuffix < $nMinLengthVariant) {
+                    $this->messages['ESUFFIXTOOSHORT'] =
+                        "The variant's positions indicate a sequence that's longer than the given deleted sequence." .
+                        " Please adjust either the variant's positions or the given deleted sequence.";
+                }
+                if ($nMaxLengthSuffix > $nMaxLengthVariant) {
+                    $this->messages['ESUFFIXTOOLONG'] =
+                        "The variant's positions indicate a sequence that's shorter than the given deleted sequence." .
+                        " Please adjust either the variant's positions or the given deleted sequence.";
+                }
             }
         }
     }
