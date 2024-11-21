@@ -385,9 +385,16 @@ class HGVS_DNADelSuffix extends HGVS {
 
             } elseif ($bPositionLengthIsCertain && !$bSuffixLengthIsCertain && $nMaxLengthSuffix <= $nMaxLengthVariant) {
                 // A special case: When the positions are certain but the deletion is uncertain but fits, this is a special class of warning.
-                $this->messages['WPOSITIONCERTAIN'] =
+                $this->messages['WPOSITIONSCERTAIN'] =
                     "The variant's positions indicate a certain sequence, but the deletion itself indicates the deleted sequence is uncertain." .
                     " This is a conflict; when the deleted sequence is uncertain, make the variant's positions uncertain by adding parentheses.";
+
+            } elseif (!$bPositionLengthIsCertain && $bSuffixLengthIsCertain && $nMaxLengthSuffix == $nMaxLengthVariant) {
+                // A special case: When the positions are uncertain but the deletion is certain and fits
+                //  the maximum length precisely, this is a special class of warning.
+                $this->messages['WPOSITIONSUNCERTAIN'] =
+                    "The variant's positions indicate an uncertain sequence, but the deletion itself indicates a deleted sequence that fits the given positions precisely." .
+                    " This is a conflict; when the deleted sequence is certain, make the variant's positions certain by removing the parentheses.";
 
             } else {
                 // Universal length checks. These messages are kept universal and slightly simplified.
