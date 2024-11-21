@@ -327,6 +327,18 @@ class HGVS_DNADelSuffix extends HGVS {
         [ 'HGVS_DNARefs', [] ],
     ];
 
+    public function getLengths ()
+    {
+        // This function calculates the suffix's minimum and maximum length, and returns this into an array.
+
+        $nSequenceLength = strlen($this->DNARefs->getValue());
+        return [$nSequenceLength, $nSequenceLength];
+    }
+
+
+
+
+
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
@@ -336,6 +348,18 @@ class HGVS_DNADelSuffix extends HGVS {
         // Don't check anything about the suffix length when there are problems with the positions.
         if (isset($aMessages['EPOSITIONFORMAT'])) {
             $this->messages['ISUFFIXNOTVALIDATED'] = "Due to the invalid variant position, the variant's suffix couldn't be fully validated.";
+        } else {
+            // Check all length requirements.
+            // The suffix should not have been used only when the variant length matches the length given in the suffix.
+            $aPositionLengths = $Positions->getLengths();
+            $bPositionLengthIsCertain = ($aPositionLengths[0] == $aPositionLengths[1]);
+            $aSuffixLengths = $this->getLengths();
+            $bSuffixLengthIsCertain = ($aSuffixLengths[0] == $aSuffixLengths[1]);
+
+            // Simplest situation first: certain everything, length matches.
+            if ($bPositionLengthIsCertain && $bSuffixLengthIsCertain && $aPositionLengths[0] == $aSuffixLengths[0]) {
+                $this->messages['WSUFFIXGIVEN'] = "The deleted sequence is redundant and should be removed.";
+            }
         }
     }
 }
