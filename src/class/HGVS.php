@@ -148,6 +148,9 @@ class HGVS {
                 continue;
             } else {
                 $this->matched_pattern = $sPatternName;
+                // Permanently store the objects, useful for rebuilding the corrected value later.
+                // Restore the messages just in case.
+                $this->patterns[$sPatternName] = array_merge($aPattern, [$aMessages]);
             }
 
             if ($sInputToParse) {
@@ -224,7 +227,32 @@ class HGVS {
 
     public function getCorrectedValue ()
     {
-        return ($this->corrected_value ?? $this->value);
+        if (isset($this->corrected_value)) {
+            return $this->corrected_value;
+        }
+
+        // We didn't correct the value ourselves, which usually means that we are
+        //  a high-level class that doesn't do any fixes, or the value is always fine.
+        // Let's check.
+        $sCorrectedValue = '';
+        foreach (array_slice($this->patterns[$this->matched_pattern], 0, -1) as $Part) {
+            if (is_object($Part)) {
+                $sCorrectedValue .= $Part->getCorrectedValue();
+            } else {
+                // String or regex?
+                if ($Part[0] == '/') {
+                    // A regex. This requires the fix to be manually created because of the case check.
+                    // If this is not set, then we will default to the input value.
+                    $this->corrected_value = $this->value;
+                    return $this->corrected_value;
+                }
+                $sCorrectedValue .= $Part;
+            }
+        }
+
+        // If we end up here, we have built something.
+        $this->corrected_value = $sCorrectedValue;
+        return $this->corrected_value;
     }
 
 
