@@ -46,6 +46,7 @@ class HGVS {
     public array $messages = [];
     public array $properties = [];
     public array $regex = [];
+    public bool $caseOK = true;
     public bool $matched = false;
     public string $input;
     public string $matched_pattern;
@@ -86,6 +87,7 @@ class HGVS {
                             $this->messages,
                             $aPattern[$i]->getMessages()
                         );
+                        $this->caseOK &= $aPattern[$i]->isTheCaseOK();
 
                         // Also store the properties already. Later objects may want to refer to these already
                         //  (e.g., the positions want to check the used prefix).
@@ -110,8 +112,8 @@ class HGVS {
                     }
 
                 } elseif (strlen($sPattern) >= 3 && substr($sPattern, 0, 1) == '/' && substr($sPattern, -1) == '/') {
-                    // Regex. Make sure it matches the start of the string.
-                    $sPattern = '/^' . substr($sPattern, 1);
+                    // Regex. Make sure it matches the start of the string. Make sure it's case-insensitive.
+                    $sPattern = '/^' . substr($sPattern, 1) . 'i';
                     if (preg_match($sPattern, $sInputToParse, $aRegs)) {
                         // This pattern matched. Store what is left, if anything is left.
                         // Note that regexes should not be part of a pattern array, but only get their own pattern line. E.g., this object is all about this regex, or we messed up.
@@ -296,9 +298,24 @@ class HGVS {
 
 
 
+    public function isTheCaseOK ()
+    {
+        return $this->caseOK;
+    }
+
+
+
+
+
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
+        if (!$this->parent) {
+            // Top-level validation.
+            if (!$this->caseOK) {
+                $this->messages['WWRONGCASE'] = 'This is not a valid HGVS description, due to characters being in the wrong case.';
+            }
+        }
     }
 }
 
@@ -314,7 +331,9 @@ class HGVS_DNADel extends HGVS {
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
-        $this->data['type'] = 'del';
+        $this->corrected_value = strtolower($this->value);
+        $this->data['type'] = $this->corrected_value;
+        $this->caseOK = ($this->value == $this->corrected_value);
     }
 }
 
@@ -889,6 +908,8 @@ class HGVS_DNAPrefix extends HGVS {
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->molecule_type = (in_array($this->matched_pattern, ['coding', 'non-coding'])? 'transcript' : 'genome');
+        $this->corrected_value = strtolower($this->value);
+        $this->caseOK = ($this->value == $this->corrected_value);
     }
 }
 
@@ -900,6 +921,13 @@ class HGVS_DNARefs extends HGVS {
     public array $patterns = [
         [ '/[ACGTN]+/', [] ],
     ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->corrected_value = strtoupper($this->value);
+        $this->caseOK = ($this->value == $this->corrected_value);
+    }
 }
 
 
@@ -921,6 +949,13 @@ class HGVS_ReferenceSequence extends HGVS {
     public array $patterns = [
         [ '/NC_[0-9]{6}\.[0-9]{1,2}/', [] ],
     ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->corrected_value = strtoupper($this->value);
+        $this->caseOK = ($this->value == $this->corrected_value);
+    }
 }
 
 
