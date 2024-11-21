@@ -326,6 +326,18 @@ class HGVS_DNADelSuffix extends HGVS {
     public array $patterns = [
         [ 'HGVS_DNARefs', [] ],
     ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $Positions = $this->getParent('HGVS_DNAVariantBody')->DNAPositions;
+        $aMessages = $Positions->getMessages();
+
+        // Don't check anything about the suffix length when there are problems with the positions.
+        if (isset($aMessages['EPOSITIONFORMAT'])) {
+            $this->messages['ISUFFIXNOTVALIDATED'] = "Due to the invalid variant position, the variant's suffix couldn't be fully validated.";
+        }
+    }
 }
 
 
