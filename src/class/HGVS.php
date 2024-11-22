@@ -652,7 +652,7 @@ class HGVS_DNAPositionStart extends HGVS {
 
             } elseif (get_class($this) == 'HGVS_DNAPositionStart' && $this->DNAPosition[1]->unknown) {
                 // The inner positions cannot be unknown. E.g., g.(100_?)_(?_200) should become g.(100_200).
-                $this->messages['WPOSITIONFORMAT'] = 'This variant description contains redundant unknown positions.';
+                $this->messages['WTOOMUCHUNKNOWN'] = 'This variant description contains redundant unknown positions.';
                 // Copy the maximum limit from this unknown position to the remaining position. It's not precise.
                 $this->DNAPosition[0]->position_limits[1] = $this->DNAPosition[1]->position_limits[1];
                 $this->DNAPosition = $this->DNAPosition[0];
@@ -661,7 +661,7 @@ class HGVS_DNAPositionStart extends HGVS {
 
             } elseif (get_class($this) == 'HGVS_DNAPositionEnd' && $this->DNAPosition[0]->unknown) {
                 // The inner positions cannot be unknown. E.g., g.(100_?)_(?_200) should become g.(100_200).
-                $this->messages['WPOSITIONFORMAT'] = 'This variant description contains redundant unknown positions.';
+                $this->messages['WTOOMUCHUNKNOWN'] = 'This variant description contains redundant unknown positions.';
                 // Copy the minimum limit from this unknown position to the remaining position. It's not precise.
                 $this->DNAPosition[1]->position_limits[0] = $this->DNAPosition[0]->position_limits[0];
                 $this->DNAPosition = $this->DNAPosition[1];
