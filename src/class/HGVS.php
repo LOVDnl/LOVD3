@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-11-21
+ * Modified    : 2024-11-22
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -373,6 +373,8 @@ class HGVS_DNADelSuffix extends HGVS {
     public array $patterns = [
         // Since none of these match "ins", a "delAinsC" won't ever pass here.
         [ 'HGVS_DNARefs', [] ],
+        [ '(', 'HGVS_DNARefs', ')', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
+        [ '[', 'HGVS_DNARefs', ']', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
     ];
 
     public function getLengths ()
@@ -439,6 +441,14 @@ class HGVS_DNADelSuffix extends HGVS {
                         " Please adjust either the variant's positions or the given deleted sequence.";
                 }
             }
+        }
+
+        // Store the corrected value.
+        if (isset($this->messages['WSUFFIXGIVEN'])) {
+            // The suffix should be removed.
+            $this->corrected_value = '';
+        } else {
+            $this->corrected_value = $this->DNARefs->getCorrectedValue();
         }
     }
 }
