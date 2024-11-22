@@ -1061,8 +1061,19 @@ class HGVS_Length extends HGVS {
         $this->lengths[0] = (int) $this->regex[1];
         if (!$this->range) {
             $this->lengths[1] = $this->lengths[0];
+            // A bit of a hack because I put everything in one class instead of using a subclass for a single length.
+            $this->regex[2] = $this->regex[1];
         } else {
             $this->lengths[1] = (int) $this->regex[2];
+        }
+
+        // Check for values with zeros.
+        foreach ($this->lengths as $i => $nLength) {
+            if (!$nLength) {
+                $this->messages['ELENGTHFORMAT'] = 'This variant description contains an invalid sequence length: "' . $nLength . '".';
+            } elseif ((string) $nLength != $this->regex[$i + 1]) {
+                $this->messages['WLENGTHFORMAT'] = 'Sequence lengths should not be prefixed by a 0.';
+            }
         }
     }
 }
