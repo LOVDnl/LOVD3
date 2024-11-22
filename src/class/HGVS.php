@@ -166,6 +166,7 @@ class HGVS {
             } else {
                 // Nothing left at all. We're done!
                 $this->value = $sValue;
+                $this->suffix = '';
             }
 
             // Add the message(s) from this specific rule.
@@ -1074,10 +1075,19 @@ class HGVS_DNARefs extends HGVS {
         if ($this->matched_pattern == 'invalid') {
             // This is a special case. We need to prevent that we're matching "ins".
             // If we do, we need to pretend that we never matched at all.
-            if (strpos($this->corrected_value, 'INS') !== false) {
-                // Nope, no, we should pretend that we never matched.
-                $this->matched = false;
-                return;
+            $nINS = strpos($this->corrected_value, 'INS');
+            if ($nINS !== false) {
+                // OK, we can't match this part. We can match anything that came before, though.
+                if (!$nINS) {
+                    // The string starts with "ins". Pretend that didn't match anything.
+                    $this->matched = false;
+                    return;
+                } else {
+                    // Register that we matched up to 'ins'.
+                    $this->suffix = substr($this->value, $nINS) . $this->suffix;
+                    $this->value = substr($this->value, 0, $nINS);
+                    $this->corrected_value = strtoupper($this->value);
+                }
             }
 
             // List the invalid nucleotides.
