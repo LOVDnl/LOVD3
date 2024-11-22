@@ -369,6 +369,31 @@ class HGVS_DNADel extends HGVS {
 
 
 
+class HGVS_DNAAlts extends HGVS {
+    public array $patterns = [
+        'valid'   => [ '/[ACGTMRWSYKVHDBN]+/', [] ],
+        'invalid' => [ '/[A-Z]+/', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->corrected_value = strtoupper($this->value);
+        $this->caseOK = ($this->value == $this->corrected_value);
+
+        // Check for invalid nucleotides.
+        if ($this->matched_pattern == 'invalid') {
+            // List the invalid nucleotides.
+            $sUnknownBases = preg_replace($this->patterns['valid'][0], '', $this->corrected_value);
+            $this->messages['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
+        }
+    }
+}
+
+
+
+
+
 class HGVS_DNADelSuffix extends HGVS {
     public array $patterns = [
         // Since none of these match "ins", a "delAinsC" won't ever pass here.
