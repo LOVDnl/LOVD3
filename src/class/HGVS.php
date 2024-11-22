@@ -485,6 +485,24 @@ class HGVS_DNADelSuffix extends HGVS {
 
 
 
+class HGVS_DNAIns extends HGVS {
+    public array $patterns = [
+        [ 'ins', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->corrected_value = strtolower($this->value);
+        $this->data['type'] = (($this->parent->data['type'] ?? '') == 'del'? 'delins' : 'ins');
+        $this->caseOK = ($this->value == $this->corrected_value);
+    }
+}
+
+
+
+
+
 class HGVS_DNAPosition extends HGVS {
     public array $patterns = [
         'unknown'          => [ '?', [] ],
