@@ -1031,6 +1031,46 @@ class HGVS_DNAVariantBody extends HGVS {
 
 
 
+class HGVS_Length extends HGVS {
+    public array $patterns = [
+        'range'              => [ '/([0-9]+)_([0-9]+)/', [] ],
+        'range_with_parens'  => [ '/\(([0-9]+)_([0-9]+)\)/', [] ],
+        'single'             => [ '/([0-9]+)/', [] ],
+        'single_with_parens' => [ '/\(([0-9]+)\)/', [] ],
+    ];
+    public array $lengths = [];
+
+    public function getLengths ()
+    {
+        return ($this->lengths ?? [0,0]);
+    }
+
+
+
+
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->range = (substr($this->matched_pattern, 0, 5) == 'range');
+        if (in_array($this->matched_pattern, ['range', 'single_with_parens'])) {
+            $this->messages['WLENGTHFORMAT'] = 'This variant description contains an invalid sequence length: "' . $this->value . '".';
+        }
+
+        // Store the lengths.
+        $this->lengths[0] = (int) $this->regex[1];
+        if (!$this->range) {
+            $this->lengths[1] = $this->lengths[0];
+        } else {
+            $this->lengths[1] = (int) $this->regex[2];
+        }
+    }
+}
+
+
+
+
+
 class HGVS_ReferenceSequence extends HGVS {
     public array $patterns = [
         [ '/NC_[0-9]{6}\.[0-9]{1,2}/', [] ],
