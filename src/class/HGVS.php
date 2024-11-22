@@ -1075,6 +1075,29 @@ class HGVS_Length extends HGVS {
                 $this->messages['WLENGTHFORMAT'] = 'Sequence lengths should not be prefixed by a 0.';
             }
         }
+
+        // Check ranges.
+        if ($this->range) {
+            if ($this->lengths[0] == $this->lengths[1]) {
+                // If the lengths are the same, warn and remove one.
+                $this->messages['WLENGTHFORMAT'] = 'This variant description contains two sequence lengths that are the same.';
+                // Discard the other object.
+                $this->range = false;
+
+            } elseif ($this->lengths[0] > $this->lengths[1]) {
+                // Lengths aren't given in the right order.
+                $this->messages['WLENGTHFORMAT'] = 'This variant description contains two sequence lengths that are not given in the correct order.';
+                // Swap the lengths.
+                list($this->lengths[0], $this->lengths[1]) = [$this->lengths[1], $this->lengths[0]];
+            }
+        }
+
+        // Store the corrected value.
+        if (!$this->range) {
+            $this->corrected_value = $this->lengths[0];
+        } else {
+            $this->corrected_value = '(' . $this->lengths[0] . '_' . $this->lengths[1] . ')';
+        }
     }
 }
 
