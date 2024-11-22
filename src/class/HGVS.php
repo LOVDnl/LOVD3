@@ -476,7 +476,7 @@ class HGVS_DNADelSuffix extends HGVS {
             $this->corrected_value = $this->DNARefs->getCorrectedValue();
         } else {
             $this->corrected_value = (isset($this->DNARefs)? $this->DNARefs->getCorrectedValue() : 'N') .
-                '[' . $this->Length->getCorrectedValue() . ']';
+                (!$this->Length->getCorrectedValue()? '' : '[' . $this->Length->getCorrectedValue() . ']');
         }
     }
 }
@@ -1122,7 +1122,12 @@ class HGVS_Length extends HGVS {
 
         // Store the corrected value.
         if (!$this->range) {
-            $this->corrected_value = $this->lengths[0];
+            // Actually, when the length is 1, it's redundant, and it shouldn't be given.
+            if ($this->lengths[0] == 1) {
+                $this->corrected_value = '';
+            } else {
+                $this->corrected_value = $this->lengths[0];
+            }
         } else {
             $this->corrected_value = '(' . $this->lengths[0] . '_' . $this->lengths[1] . ')';
         }
