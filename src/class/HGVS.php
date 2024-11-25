@@ -191,6 +191,28 @@ class HGVS {
 
 
 
+    public function __debugInfo()
+    {
+        // This functions is called whenever a var_dump() is called on the object.
+        // Because we want to limit the space taken up in the var_dump() output, we'll limit it here.
+
+        $aReturn = [
+            '__note' => 'The output of var_dump() is reduced by __debugInfo().'
+        ];
+
+        foreach ($this as $sPropertyName => $Property) {
+            if (!in_array($sPropertyName, ['parent', 'patterns'])) {
+                $aReturn[$sPropertyName] = $Property;
+            }
+        }
+
+        return $aReturn;
+    }
+
+
+
+
+
     public function arePositionsSorted ($PositionStart, $PositionEnd)
     {
         // This function compares two positions and returns true when $PositionStart is smaller than $PositionEnd,
