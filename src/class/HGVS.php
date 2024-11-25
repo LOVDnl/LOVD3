@@ -529,6 +529,59 @@ class HGVS_DNAIns extends HGVS {
 
 
 
+class HGVS_DNAInsSuffix extends HGVS {
+    public array $patterns = [
+        [ 'HGVS_Length', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
+        [ '[', 'HGVS_Length', ']', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
+        [ 'HGVS_DNAAlts', 'HGVS_Length', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
+        [ 'HGVS_DNAAlts', '[', 'HGVS_Length', ']', [] ],
+        [ 'HGVS_DNAAlts', [] ],
+        [ '(', 'HGVS_DNAAlts', ')', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
+        [ '(', 'HGVS_DNAAlts', 'HGVS_Length', ')', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
+        [ '(', 'HGVS_DNAAlts', '[', 'HGVS_Length', '])', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
+        [ '[', 'HGVS_DNAAlts', ']', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
+        [ '[', 'HGVS_DNAAlts', 'HGVS_Length', ']', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
+        [ '[', 'HGVS_DNAAlts', '[', 'HGVS_Length', ']]', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
+    ];
+
+    public function getLengths ()
+    {
+        // This function calculates the suffix's minimum and maximum length, and returns this into an array.
+
+        if (isset($this->DNAAlts)) {
+            $nSequenceLength = strlen($this->DNAAlts->getValue());
+            if (!isset($this->Length)) {
+                // Simple sequence is given.
+                return [$nSequenceLength, $nSequenceLength];
+            } else {
+                // Combination of sequence and length given.
+                $aLengths = $this->Length->getLengths();
+                return [($nSequenceLength * $aLengths[0]), ($nSequenceLength * $aLengths[1])];
+            }
+        } else {
+            // Deliberately not checking for this object's existence, so we break when we made a bug somewhere.
+            return $this->Length->getLengths();
+        }
+    }
+
+
+
+
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        // Remove any complaints that HGVS_Length may have had, when we already threw a WSUFFIXFORMAT.
+        if (isset($this->messages['WSUFFIXFORMAT'])) {
+            unset($this->messages['WLENGTHFORMAT']);
+        }
+    }
+}
+
+
+
+
+
 class HGVS_DNAPosition extends HGVS {
     public array $patterns = [
         'unknown'          => [ '?', [] ],
