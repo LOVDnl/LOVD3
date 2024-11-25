@@ -575,6 +575,15 @@ class HGVS_DNAInsSuffix extends HGVS {
         if (isset($this->messages['WSUFFIXFORMAT'])) {
             unset($this->messages['WLENGTHFORMAT']);
         }
+
+        // A deletion-insertion of one base to one base, is a substitution.
+        if ($this->parent->getData()['type'] == 'delins'
+            && $this->getParent('HGVS_DNAVariantBody')->DNAPositions->getLengths() == [1,1]
+            && isset($this->DNAAlts)
+            && $this->getLengths() == [1,1]) {
+            $this->messages['WWRONGTYPE'] =
+                'A deletion-insertion of one base to one base should be described as a substitution.';
+        }
     }
 }
 
@@ -1159,6 +1168,24 @@ class HGVS_DNAVariantBody extends HGVS {
         [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNADelSuffix', [] ],
         [ 'HGVS_DNAPositions', 'HGVS_DNADel', [] ],
     ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        if (isset($this->messages['WWRONGTYPE'])) {
+            // We need to convert the variant from one type into the next.
+            if ($this->data['type'] == 'delins'
+                && strpos($this->messages['WWRONGTYPE'], 'substitution') !== false
+                && isset($this->DNADelSuffix)) {
+                $this->corrected_value = $this->DNAPositions->getCorrectedValue() .
+                    $this->DNADelSuffix->DNARefs->getCorrectedValue() .
+                    '>' .
+                    $this->DNAInsSuffix->getCorrectedValue();
+                // Remove the warning that complained about the base after the del.
+                unset($this->messages['WSUFFIXGIVEN']);
+            }
+        }
+    }
 }
 
 
