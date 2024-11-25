@@ -564,6 +564,24 @@ class HGVS_DNAIns extends HGVS {
                 // An insertion should not be defined using more than two positions.
                 $this->messages['EPOSITIONFORMAT'] =
                     'An insertion must be provided with the two positions between which the insertion has taken place.';
+
+            } elseif (!$Positions->uncertain && $Positions->getLengths() != [2,2]) {
+                // An insertion must always get two positions which are next to each other,
+                //  since the inserted nucleotides will be placed in the middle of those.
+                $this->messages['WPOSITIONFORMAT'] =
+                    'An insertion must have taken place between two neighboring positions.' .
+                    ' If the exact location is unknown, please indicate this by placing parentheses around the positions.';
+                $Positions->makeUncertain();
+
+            } elseif ($Positions->uncertain && $Positions->getLengths() == [1,2]) {
+                // If the exact location of an insertion is unknown, this can be indicated
+                //  by placing the positions in the range-format, e.g. c.(1_10)insA. In this
+                //  case, the two positions should not be neighbours, since that would imply that
+                //  the position is certain.
+                $this->messages['WPOSITIONFORMAT'] =
+                    'The two positions do not indicate a range longer than two bases.' .
+                    ' Please remove the parentheses if the positions are certain.';
+                $Positions->makeCertain();
             }
         }
     }
@@ -1039,6 +1057,52 @@ class HGVS_DNAPositions extends HGVS {
 
         $this->lengths = $aReturn; // Cache it for next time.
         return $aReturn;
+    }
+
+
+
+
+
+    public function makeCertain ()
+    {
+        // This function makes the current Positions certain, if possible.
+        if ($this->range && $this->uncertain
+            && !$this->DNAPositionStart->uncertain && !$this->DNAPositionEnd->uncertain) {
+            // Trick validate() into thinking we matched a different pattern.
+            $this->matched_pattern = 'range';
+            // Also unset the length, so it will be re-calculated.
+            $this->lengths = [];
+            // Re-run the entire validation, so that all internal values will be set correctly.
+            // This may cause issues with errors that don't reflect the user's input.
+            $this->validate();
+            return true;
+        }
+
+        // We're not a range, we were already certain,
+        //  or I can't make us certain because the Start or End are uncertain.
+        return false;
+    }
+
+
+
+
+
+    public function makeUncertain ()
+    {
+        // This function makes the current Positions uncertain.
+        if ($this->range && !$this->uncertain) {
+            // Trick validate() into thinking we matched a different pattern.
+            $this->matched_pattern = 'uncertain_range';
+            // Also unset the length, so it will be re-calculated.
+            $this->lengths = [];
+            // Re-run the entire validation, so that all internal values will be set correctly.
+            // This may cause issues with errors that don't reflect the user's input.
+            $this->validate();
+            return true;
+        }
+
+        // We're not a range, or we were already uncertain.
+        return false;
     }
 
 
