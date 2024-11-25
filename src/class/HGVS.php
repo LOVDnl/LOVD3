@@ -1173,8 +1173,14 @@ class HGVS_DNARefs extends HGVS {
 
 class HGVS_DNAVariantBody extends HGVS {
     public array $patterns = [
-        [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNADelSuffix', [] ],
-        [ 'HGVS_DNAPositions', 'HGVS_DNADel', [] ],
+        'delXins_with_suffix' => [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNADelSuffix', 'HGVS_DNAIns', 'HGVS_DNAInsSuffix', [] ],
+        'delXins'             => [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNADelSuffix', 'HGVS_DNAIns', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
+        'delins_with_suffix'  => [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNAIns', 'HGVS_DNAInsSuffix', [] ],
+        'delins'              => [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNAIns', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
+        'del_with_suffix'     => [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNADelSuffix', [] ],
+        'del'                 => [ 'HGVS_DNAPositions', 'HGVS_DNADel', [] ],
+        'ins_with_suffix'     => [ 'HGVS_DNAPositions', 'HGVS_DNAIns', 'HGVS_DNAInsSuffix', [] ],
+        'ins'                 => [ 'HGVS_DNAPositions', 'HGVS_DNAIns', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for insertions.' ] ],
     ];
 
     public function validate ()
