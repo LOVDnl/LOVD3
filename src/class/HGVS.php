@@ -584,6 +584,14 @@ class HGVS_DNAInsSuffix extends HGVS {
             $this->messages['WWRONGTYPE'] =
                 'A deletion-insertion of one base to one base should be described as a substitution.';
         }
+
+        // Store the corrected value.
+        if (isset($this->DNAAlts) && !isset($this->Length)) {
+            $this->corrected_value = $this->DNAAlts->getCorrectedValue();
+        } else {
+            $this->corrected_value = (isset($this->DNAAlts)? $this->DNAAlts->getCorrectedValue() : 'N') .
+                (!$this->Length->getCorrectedValue()? '' : '[' . $this->Length->getCorrectedValue() . ']');
+        }
     }
 }
 
