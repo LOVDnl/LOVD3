@@ -522,6 +522,23 @@ class HGVS_DNAIns extends HGVS {
         $this->corrected_value = strtolower($this->value);
         $this->data['type'] = (($this->parent->data['type'] ?? '') == 'del'? 'delins' : 'ins');
         $this->caseOK = ($this->value == $this->corrected_value);
+
+        if ($this->data['type'] == 'ins') {
+            // Insertions have some specific needs.
+            $Positions = $this->getParent('HGVS_DNAVariantBody')->DNAPositions;
+            // If one position is given, this is a problem. Only if it's a question mark, can we fix it.
+            if (!$Positions->range) {
+                if ($Positions->unknown) {
+                    // We can correct this.
+                    $Positions->addPosition('?');
+                    $sCode = 'WPOSITIONMISSING';
+                } else {
+                    $sCode = 'EPOSITIONMISSING';
+                }
+                $this->messages[$sCode] =
+                    'An insertion must be provided with the two positions between which the insertion has taken place.';
+            }
+        }
     }
 }
 
