@@ -559,6 +559,11 @@ class HGVS_DNAIns extends HGVS {
                 }
                 $this->messages[$sCode] =
                     'An insertion must be provided with the two positions between which the insertion has taken place.';
+
+            } elseif ($Positions->DNAPositionStart->range || $Positions->DNAPositionEnd->range) {
+                // An insertion should not be defined using more than two positions.
+                $this->messages['EPOSITIONFORMAT'] =
+                    'An insertion must be provided with the two positions between which the insertion has taken place.';
             }
         }
     }
