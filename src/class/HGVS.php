@@ -857,6 +857,35 @@ class HGVS_DNAPositions extends HGVS {
     ];
     public array $lengths = [];
 
+    public function addPosition ($sValue)
+    {
+        // This function adds a position to the current position, making this position a range.
+        if (!$this->range) {
+            $NewPosition = new HGVS_DNAPositionEnd($sValue, $this);
+            if ($NewPosition->hasMatched() && !$NewPosition->getSuffix()) {
+                // All seems well. We'll have to create a new object for the Start as well to prevent errors.
+                $this->DNAPositionStart = new HGVS_DNAPositionStart($this->DNAPosition->getCorrectedValue(), $this);
+                $this->DNAPositionEnd = $NewPosition;
+                unset($this->DNAPosition);
+                // Re-run the entire validation, so that all internal values will be set correctly.
+                // This may cause issues with errors that don't reflect the user's input.
+                // Trick validate() into thinking we matched a different pattern.
+                $this->matched_pattern = str_replace('single', 'range', $this->matched_pattern);
+                // Also unset the length, so it will be re-calculated.
+                $this->lengths = [];
+                $this->validate();
+                return true;
+            }
+        }
+
+        // We already have two positions, or something is wrong with the given value.
+        return false;
+    }
+
+
+
+
+
     public function getLengths ()
     {
         // This function calculates the minimum and maximum lengths of these positions, and returns them in an array.
