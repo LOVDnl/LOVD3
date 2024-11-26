@@ -38,7 +38,8 @@ if (!defined('ROOT_PATH')) {
 
 
 #[AllowDynamicProperties]
-class HGVS {
+class HGVS
+{
     public array $patterns = [
         'full_variant' => [ 'HGVS_ReferenceSequence', ':', 'HGVS_Variant', [] ],
     ];
@@ -417,6 +418,16 @@ class HGVS {
 
 
 
+    public function setCorrectedValue ($sValue, $nConfidence = 1)
+    {
+        // Conveniently sets the corrected value for us.
+        $this->corrected_values = [[$sValue, $nConfidence]];
+    }
+
+
+
+
+
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
@@ -441,9 +452,9 @@ class HGVS_DNADel extends HGVS {
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
-        $this->corrected_value = strtolower($this->value);
-        $this->data['type'] = $this->corrected_value;
-        $this->caseOK = ($this->value == $this->corrected_value);
+        $this->setCorrectedValue(strtolower($this->value));
+        $this->data['type'] = $this->getCorrectedValue();
+        $this->caseOK = ($this->value == $this->getCorrectedValue());
     }
 }
 
@@ -460,13 +471,13 @@ class HGVS_DNAAlts extends HGVS {
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
-        $this->corrected_value = strtoupper($this->value);
-        $this->caseOK = ($this->value == $this->corrected_value);
+        $this->setCorrectedValue(strtoupper($this->value));
+        $this->caseOK = ($this->value == $this->getCorrectedValue());
 
         // Check for invalid nucleotides.
         if ($this->matched_pattern == 'invalid') {
             // List the invalid nucleotides.
-            $sUnknownBases = preg_replace($this->patterns['valid'][0], '', $this->corrected_value);
+            $sUnknownBases = preg_replace($this->patterns['valid'][0], '', $this->getCorrectedValue());
             $this->messages['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
         }
     }
@@ -578,12 +589,15 @@ class HGVS_DNADelSuffix extends HGVS {
         // Store the corrected value.
         if (isset($this->messages['WSUFFIXGIVEN'])) {
             // The suffix should be removed.
-            $this->corrected_value = '';
+            $this->setCorrectedValue('');
         } elseif (!isset($this->Length)) {
-            $this->corrected_value = $this->DNARefs->getCorrectedValue();
+            $this->corrected_values = $this->DNARefs->getCorrectedValues();
         } else {
-            $this->corrected_value = (isset($this->DNARefs)? $this->DNARefs->getCorrectedValue() : 'N') .
-                (!$this->Length->getCorrectedValue()? '' : '[' . $this->Length->getCorrectedValue() . ']');
+            $this->corrected_values = $this->buildCorrectedValues(
+                (isset($this->DNARefs)? $this->DNARefs->getCorrectedValues() : 'N'),
+                (!$this->Length->getCorrectedValues()? '' :
+                    $this->buildCorrectedValues('[', $this->Length->getCorrectedValues(), ']'))
+            );
         }
     }
 }
@@ -600,9 +614,9 @@ class HGVS_DNAIns extends HGVS {
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
-        $this->corrected_value = strtolower($this->value);
+        $this->setCorrectedValue(strtolower($this->value));
         $this->data['type'] = (($this->parent->data['type'] ?? '') == 'del'? 'delins' : 'ins');
-        $this->caseOK = ($this->value == $this->corrected_value);
+        $this->caseOK = ($this->value == $this->getCorrectedValue());
 
         if ($this->data['type'] == 'ins') {
             // Insertions have some specific needs.
@@ -708,10 +722,13 @@ class HGVS_DNAInsSuffix extends HGVS {
 
         // Store the corrected value.
         if (isset($this->DNAAlts) && !isset($this->Length)) {
-            $this->corrected_value = $this->DNAAlts->getCorrectedValue();
+            $this->corrected_values = $this->DNAAlts->getCorrectedValues();
         } else {
-            $this->corrected_value = (isset($this->DNAAlts)? $this->DNAAlts->getCorrectedValue() : 'N') .
-                (!$this->Length->getCorrectedValue()? '' : '[' . $this->Length->getCorrectedValue() . ']');
+            $this->corrected_values = $this->buildCorrectedValues(
+                (isset($this->DNAAlts)? $this->DNAAlts->getCorrectedValues() : 'N'),
+                (!$this->Length->getCorrectedValues()? '' :
+                    $this->buildCorrectedValues('[', $this->Length->getCorrectedValues(), ']'))
+            );
         }
     }
 }
@@ -822,8 +839,10 @@ class HGVS_DNAPosition extends HGVS {
             }
 
             // Store the corrected value.
-            $this->corrected_value = $this->position .
-                ($this->offset? ($this->offset > 0? '+' : '-') . ($this->unknown_offset? '?' : $this->offset) : '');
+            $this->corrected_values = $this->buildCorrectedValues(
+                $this->position .
+                ($this->offset? ($this->offset > 0? '+' : '-') . ($this->unknown_offset? '?' : $this->offset) : '')
+            );
         }
     }
 }
@@ -957,9 +976,13 @@ class HGVS_DNAPositionStart extends HGVS {
 
         // Now, store the corrected value.
         if ($this->range) {
-            $this->corrected_value = '(' . $this->DNAPosition[0]->getCorrectedValue() . '_' . $this->DNAPosition[1]->getCorrectedValue() . ')';
+            $this->corrected_values = $this->buildCorrectedValues(
+                '(', $this->DNAPosition[0]->getCorrectedValues(), '_', $this->DNAPosition[1]->getCorrectedValues(), ')'
+            );
         } else {
-            $this->corrected_value = $this->DNAPosition->getCorrectedValue();
+            $this->corrected_values = $this->buildCorrectedValues(
+                $this->DNAPosition->getCorrectedValues()
+            );
         }
     }
 }
@@ -1290,11 +1313,17 @@ class HGVS_DNAPositions extends HGVS {
 
         // Now, store the corrected value.
         if ($this->matched_pattern == 'uncertain_range') {
-            $this->corrected_value = '(' . $this->DNAPositionStart->getCorrectedValue() . '_' . $this->DNAPositionEnd->getCorrectedValue() . ')';
+            $this->corrected_values = $this->buildCorrectedValues(
+                '(', $this->DNAPositionStart->getCorrectedValues(), '_', $this->DNAPositionEnd->getCorrectedValues(), ')'
+            );
         } elseif ($this->range) {
-            $this->corrected_value = $this->DNAPositionStart->getCorrectedValue() . '_' . $this->DNAPositionEnd->getCorrectedValue();
+            $this->corrected_values = $this->buildCorrectedValues(
+                $this->DNAPositionStart->getCorrectedValues(), '_', $this->DNAPositionEnd->getCorrectedValues()
+            );
         } else {
-            $this->corrected_value = $this->DNAPosition->getCorrectedValue();
+            $this->corrected_values = $this->buildCorrectedValues(
+                $this->DNAPosition->getCorrectedValues()
+            );
         }
     }
 }
@@ -1316,8 +1345,8 @@ class HGVS_DNAPrefix extends HGVS {
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->molecule_type = (in_array($this->matched_pattern, ['coding', 'non-coding'])? 'transcript' : 'genome');
-        $this->corrected_value = strtolower($this->value);
-        $this->caseOK = ($this->value == $this->corrected_value);
+        $this->setCorrectedValue(strtolower($this->value));
+        $this->caseOK = ($this->value == $this->getCorrectedValue());
     }
 }
 
@@ -1334,14 +1363,14 @@ class HGVS_DNARefs extends HGVS {
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
-        $this->corrected_value = strtoupper($this->value);
-        $this->caseOK = ($this->value == $this->corrected_value);
+        $this->setCorrectedValue(strtoupper($this->value));
+        $this->caseOK = ($this->value == $this->getCorrectedValue());
 
         // Check for invalid nucleotides.
         if ($this->matched_pattern == 'invalid') {
             // This is a special case. We need to prevent that we're matching "ins".
             // If we do, we need to pretend that we never matched at all.
-            $nINS = strpos($this->corrected_value, 'INS');
+            $nINS = strpos($this->getCorrectedValue(), 'INS');
             if ($nINS !== false) {
                 // OK, we can't match this part. We can match anything that came before, though.
                 if (!$nINS) {
@@ -1352,12 +1381,12 @@ class HGVS_DNARefs extends HGVS {
                     // Register that we matched up to 'ins'.
                     $this->suffix = substr($this->value, $nINS) . $this->suffix;
                     $this->value = substr($this->value, 0, $nINS);
-                    $this->corrected_value = strtoupper($this->value);
+                    $this->setCorrectedValue(strtoupper($this->value));
                 }
             }
 
             // List the invalid nucleotides.
-            $sUnknownBases = preg_replace($this->patterns['valid'][0], '', $this->corrected_value);
+            $sUnknownBases = preg_replace($this->patterns['valid'][0], '', $this->getCorrectedValue());
             $this->messages['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
         }
     }
@@ -1387,10 +1416,12 @@ class HGVS_DNAVariantBody extends HGVS {
             if ($this->data['type'] == 'delins'
                 && strpos($this->messages['WWRONGTYPE'], 'substitution') !== false
                 && isset($this->DNADelSuffix)) {
-                $this->corrected_value = $this->DNAPositions->getCorrectedValue() .
-                    $this->DNADelSuffix->DNARefs->getCorrectedValue() .
-                    '>' .
-                    $this->DNAInsSuffix->getCorrectedValue();
+                $this->corrected_values = $this->buildCorrectedValues(
+                    $this->DNAPositions->getCorrectedValues(),
+                    $this->DNADelSuffix->DNARefs->getCorrectedValues(),
+                    '>',
+                    $this->DNAInsSuffix->getCorrectedValues()
+                );
                 // Remove the warning that complained about the base after the del.
                 unset($this->messages['WSUFFIXGIVEN']);
             }
@@ -1467,12 +1498,16 @@ class HGVS_Length extends HGVS {
         if (!$this->range) {
             // Actually, when the length is 1, it's redundant, and it shouldn't be given.
             if ($this->lengths[0] == 1) {
-                $this->corrected_value = '';
+                $this->setCorrectedValue('');
             } else {
-                $this->corrected_value = $this->lengths[0];
+                $this->corrected_values = $this->buildCorrectedValues(
+                    $this->lengths[0]
+                );
             }
         } else {
-            $this->corrected_value = '(' . $this->lengths[0] . '_' . $this->lengths[1] . ')';
+            $this->corrected_values = $this->buildCorrectedValues(
+                '(' . $this->lengths[0] . '_' . $this->lengths[1] . ')'
+            );
         }
     }
 }
@@ -1489,8 +1524,8 @@ class HGVS_ReferenceSequence extends HGVS {
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
-        $this->corrected_value = strtoupper($this->value);
-        $this->caseOK = ($this->value == $this->corrected_value);
+        $this->setCorrectedValue(strtoupper($this->value));
+        $this->caseOK = ($this->value == $this->getCorrectedValue());
     }
 }
 
