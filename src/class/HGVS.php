@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-11-22
+ * Modified    : 2024-11-26
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -55,7 +55,8 @@ class HGVS {
     public string $corrected_value;
     public $parent;
 
-    public function __construct($sValue, $Parent = null) {
+    public function __construct ($sValue, $Parent = null)
+    {
         $this->input = $sValue;
         $this->parent = $Parent;
 
@@ -191,7 +192,7 @@ class HGVS {
 
 
 
-    public function __debugInfo()
+    public function __debugInfo ()
     {
         // This functions is called whenever a var_dump() is called on the object.
         // Because we want to limit the space taken up in the var_dump() output, we'll limit it here.
@@ -242,6 +243,53 @@ class HGVS {
         } else {
             return ($PositionStart->position_sortable < $PositionEnd->position_sortable);
         }
+    }
+
+
+
+
+
+    public function buildCorrectedValues (...$aParts)
+    {
+        // Since this object can provide multiple choices for corrected values and also produces confidence values,
+        //  we need to be a bit intelligent about how to build our values.
+        $aCorrectedValues = [['',1]];
+        $aKeys = [0];
+
+        foreach ($aParts as $Part) {
+            if (!is_array($Part)) {
+                // Simple addition, full confidence.
+                foreach ($aKeys as $nKey) {
+                    $aCorrectedValues[$nKey][0] .= $Part;
+                    $aCorrectedValues[$nKey][1] = ($aCorrectedValues[$nKey][1] ?? 1);
+                }
+            } else {
+                // Determine whether this is a simple array with _one_ option, or multiple options.
+                if (!is_array($Part[0])) {
+                    // String and given confidence.
+                    foreach ($aKeys as $nKey) {
+                        $aCorrectedValues[$nKey][0] .= $Part[0];
+                        $aCorrectedValues[$nKey][1] = ($aCorrectedValues[$nKey][1] * $Part[1]);
+                    }
+
+                } else {
+                    // Multiple options, rebuild the whole array, combining all options.
+                    $aNewValues = [];
+                    foreach ($aKeys as $nKey) {
+                        foreach ($Part as $Value) {
+                            $aNewValues = array_merge(
+                                $aNewValues,
+                                $this->buildCorrectedValues($aCorrectedValues[$nKey], $Value)
+                            );
+                        }
+                    }
+                    $aCorrectedValues = $aNewValues;
+                    $aKeys = array_keys($aCorrectedValues);
+                }
+            }
+        }
+
+        return $aCorrectedValues;
     }
 
 
