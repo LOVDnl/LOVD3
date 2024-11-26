@@ -797,7 +797,7 @@ class HGVS_DNAPosition extends HGVS {
             // Check for values with zeros.
             if (!$this->position || $this->position == '*0') {
                 $this->messages['EPOSITIONFORMAT'] = 'This variant description contains an invalid position: "' . $this->value . '".';
-            } elseif ((string) $this->position != $this->regex[1]) {
+            } elseif ((string) $this->position !== $this->regex[1]) {
                 $this->messages['WPOSITIONFORMAT'] = 'Variant positions should not be prefixed by a 0.';
             } elseif ($this->intronic && !$this->unknown_offset) {
                 if (!$this->offset) {
@@ -1473,7 +1473,7 @@ class HGVS_Length extends HGVS {
         foreach ($this->lengths as $i => $nLength) {
             if (!$nLength) {
                 $this->messages['ELENGTHFORMAT'] = 'This variant description contains an invalid sequence length: "' . $nLength . '".';
-            } elseif ((string) $nLength != $this->regex[$i + 1]) {
+            } elseif ((string) $nLength !== $this->regex[$i + 1]) {
                 $this->messages['WLENGTHFORMAT'] = 'Sequence lengths should not be prefixed by a 0.';
             }
         }
