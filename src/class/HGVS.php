@@ -43,7 +43,7 @@ class HGVS
     public array $patterns = [
         'full_variant' => [ 'HGVS_ReferenceSequence', ':', 'HGVS_Variant', [] ],
     ];
-    public array $corrected_values = [['', 1]];
+    public array $corrected_values = [];
     public array $data = [];
     public array $messages = [];
     public array $properties = [];
@@ -254,38 +254,22 @@ class HGVS
     {
         // Since this object can provide multiple choices for corrected values and also produces confidence values,
         //  we need to be a bit intelligent about how to build our values.
-        $aCorrectedValues = [['',1]];
-        $aKeys = [0];
+        $aCorrectedValues = ['' => 1];
 
         foreach ($aParts as $Part) {
             if (!is_array($Part)) {
                 // Simple addition, full confidence.
-                foreach ($aKeys as $nKey) {
-                    $aCorrectedValues[$nKey][0] .= $Part;
-                    $aCorrectedValues[$nKey][1] = ($aCorrectedValues[$nKey][1] ?? 1);
+                foreach ($aCorrectedValues as $sCorrectedValue => $nConfidence) {
+                    unset($aCorrectedValues[$sCorrectedValue]);
+                    $aCorrectedValues[$sCorrectedValue . $Part] = $nConfidence;
                 }
             } else {
-                // Determine whether this is a simple array with _one_ option, or multiple options.
-                if (!is_array($Part[0])) {
-                    // String and given confidence.
-                    foreach ($aKeys as $nKey) {
-                        $aCorrectedValues[$nKey][0] .= $Part[0];
-                        $aCorrectedValues[$nKey][1] = ($aCorrectedValues[$nKey][1] * $Part[1]);
+                // Parts and their confidence.
+                foreach ($aCorrectedValues as $sCorrectedValue => $nConfidence) {
+                    unset($aCorrectedValues[$sCorrectedValue]);
+                    foreach ($Part as $sPart => $nPartConfidence) {
+                        $aCorrectedValues[$sCorrectedValue . $sPart] = ($nConfidence * $nPartConfidence);
                     }
-
-                } else {
-                    // Multiple options, rebuild the whole array, combining all options.
-                    $aNewValues = [];
-                    foreach ($aKeys as $nKey) {
-                        foreach ($Part as $Value) {
-                            $aNewValues = array_merge(
-                                $aNewValues,
-                                $this->buildCorrectedValues($aCorrectedValues[$nKey], $Value)
-                            );
-                        }
-                    }
-                    $aCorrectedValues = $aNewValues;
-                    $aKeys = array_keys($aCorrectedValues);
                 }
             }
         }
@@ -300,7 +284,7 @@ class HGVS
     public function getCorrectedValue ($nKey = 0)
     {
         // This function gets the first corrected value and returns the string.
-        return ($this->getCorrectedValues()[$nKey][0] ?? '');
+        return (array_keys($this->getCorrectedValues())[$nKey] ?? '');
     }
 
 
@@ -310,14 +294,18 @@ class HGVS
     public function getCorrectedValues ()
     {
         // This function returns the corrected values, possibly building them first.
-        if (!empty($this->corrected_values[0][0])) {
+        if ($this->corrected_values) {
             return $this->corrected_values;
+        }
+
+        if (isset($this->getMessages()['EFAIL'])) {
+            return [];
         }
 
         // We didn't correct the value ourselves, which usually means that we are
         //  a high-level class that doesn't do any fixes, or the value is always fine.
         // Let's check.
-        $aCorrectedValues = $this->corrected_values;
+        $aCorrectedValues = ['' => 1]; // Initialize the array.
         foreach (array_slice($this->patterns[$this->matched_pattern], 0, -1) as $Part) {
             if (is_object($Part)) {
                 $aCorrectedValues = $this->buildCorrectedValues($aCorrectedValues, $Part->getCorrectedValues());
@@ -325,8 +313,8 @@ class HGVS
                 // String or regex?
                 if ($Part[0] == '/') {
                     // A regex. This requires the fix to be manually created because of the case check.
-                    // If this is not set, then we will default to the input value.
-                    $this->corrected_values = [[$this->value, 0.5]];
+                    // If this is not set, then we will default to the input value with a confidence of 50%.
+                    $this->corrected_values = [$this->value => 0.5];
                     return $this->corrected_values;
                 }
                 $aCorrectedValues = $this->buildCorrectedValues($aCorrectedValues, $Part);
@@ -421,7 +409,7 @@ class HGVS
     public function setCorrectedValue ($sValue, $nConfidence = 1)
     {
         // Conveniently sets the corrected value for us.
-        $this->corrected_values = [[$sValue, $nConfidence]];
+        $this->corrected_values = [$sValue => $nConfidence];
     }
 
 
@@ -843,7 +831,7 @@ class HGVS_DNAPosition extends HGVS {
 
             // Store the corrected value.
             $this->corrected_values = $this->buildCorrectedValues(
-                ['', $nCorrectionConfidence],
+                ['' => $nCorrectionConfidence],
                 $this->position .
                 ($this->offset? ($this->offset > 0? '+' : '-') . ($this->unknown_offset? '?' : $this->offset) : '')
             );
@@ -867,7 +855,7 @@ class HGVS_DNAPositionStart extends HGVS {
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->range = is_array($this->DNAPosition); // This will fail if we don't have this property, which is good, because that shouldn't happen.
         $this->uncertain = ($this->matched_pattern == 'uncertain_range');
-        $nCorrectionConfidence = $this->corrected_values[0][1]; // Fetch current one, because this object can be revalidated.
+        $nCorrectionConfidence = (current($this->corrected_values) ?: 1); // Fetch current one, because this object can be revalidated.
 
         if (!$this->range) {
             // A single position, just copy everything.
@@ -984,12 +972,12 @@ class HGVS_DNAPositionStart extends HGVS {
         // Now, store the corrected value.
         if ($this->range) {
             $this->corrected_values = $this->buildCorrectedValues(
-                ['', $nCorrectionConfidence],
+                ['' => $nCorrectionConfidence],
                 '(', $this->DNAPosition[0]->getCorrectedValues(), '_', $this->DNAPosition[1]->getCorrectedValues(), ')'
             );
         } else {
             $this->corrected_values = $this->buildCorrectedValues(
-                ['', $nCorrectionConfidence],
+                ['' => $nCorrectionConfidence],
                 $this->DNAPosition->getCorrectedValues()
             );
         }
@@ -1167,7 +1155,7 @@ class HGVS_DNAPositions extends HGVS {
             // This may cause issues with errors that don't reflect the user's input.
             $this->validate();
             // We're not super confident about this.
-            $this->corrected_values[0][1] *= 0.75;
+            $this->corrected_values[$this->getCorrectedValue()] *= 0.75;
             return true;
         }
 
@@ -1192,7 +1180,7 @@ class HGVS_DNAPositions extends HGVS {
             // This may cause issues with errors that don't reflect the user's input.
             $this->validate();
             // We're not super confident about this.
-            $this->corrected_values[0][1] *= 0.75;
+            $this->corrected_values[$this->getCorrectedValue()] *= 0.75;
             return true;
         }
 
@@ -1214,7 +1202,7 @@ class HGVS_DNAPositions extends HGVS {
                 && ($this->DNAPositionStart->uncertain || $this->DNAPositionEnd->uncertain))
         );
         $VariantPrefix = $this->getParent('HGVS_Variant')->DNAPrefix;
-        $nCorrectionConfidence = $this->corrected_values[0][1]; // Fetch current one, because this object can be revalidated.
+        $nCorrectionConfidence = (current($this->corrected_values) ?: 1); // Fetch current one, because this object can be revalidated.
 
         if (!$this->range) {
             // A single position, just copy everything.
@@ -1330,17 +1318,17 @@ class HGVS_DNAPositions extends HGVS {
         // Now, store the corrected value.
         if ($this->matched_pattern == 'uncertain_range') {
             $this->corrected_values = $this->buildCorrectedValues(
-                ['', $nCorrectionConfidence],
+                ['' => $nCorrectionConfidence],
                 '(', $this->DNAPositionStart->getCorrectedValues(), '_', $this->DNAPositionEnd->getCorrectedValues(), ')'
             );
         } elseif ($this->range) {
             $this->corrected_values = $this->buildCorrectedValues(
-                ['', $nCorrectionConfidence],
+                ['' => $nCorrectionConfidence],
                 $this->DNAPositionStart->getCorrectedValues(), '_', $this->DNAPositionEnd->getCorrectedValues()
             );
         } else {
             $this->corrected_values = $this->buildCorrectedValues(
-                ['', $nCorrectionConfidence],
+                ['' => $nCorrectionConfidence],
                 $this->DNAPosition->getCorrectedValues()
             );
         }
@@ -1528,13 +1516,13 @@ class HGVS_Length extends HGVS {
                 $this->setCorrectedValue('');
             } else {
                 $this->corrected_values = $this->buildCorrectedValues(
-                    ['', $nCorrectionConfidence],
+                    ['' => $nCorrectionConfidence],
                     $this->lengths[0]
                 );
             }
         } else {
             $this->corrected_values = $this->buildCorrectedValues(
-                ['', $nCorrectionConfidence],
+                ['' => $nCorrectionConfidence],
                 '(' . $this->lengths[0] . '_' . $this->lengths[1] . ')'
             );
         }
