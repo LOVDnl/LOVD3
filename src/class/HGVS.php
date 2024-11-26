@@ -42,6 +42,7 @@ class HGVS {
     public array $patterns = [
         'full_variant' => [ 'HGVS_ReferenceSequence', ':', 'HGVS_Variant', [] ],
     ];
+    public array $corrected_values = [['', 1]];
     public array $data = [];
     public array $messages = [];
     public array $properties = [];
@@ -52,7 +53,6 @@ class HGVS {
     public string $matched_pattern;
     public string $suffix;
     public string $value;
-    public string $corrected_value;
     public $parent;
 
     public function __construct ($sValue, $Parent = null)
@@ -296,34 +296,45 @@ class HGVS {
 
 
 
-    public function getCorrectedValue ()
+    public function getCorrectedValue ($nKey = 0)
     {
-        if (isset($this->corrected_value)) {
-            return $this->corrected_value;
+        // This function gets the first corrected value and returns the string.
+        return ($this->getCorrectedValues()[$nKey][0] ?? '');
+    }
+
+
+
+
+
+    public function getCorrectedValues ()
+    {
+        // This function returns the corrected values, possibly building them first.
+        if (!empty($this->corrected_values[0][0])) {
+            return $this->corrected_values;
         }
 
         // We didn't correct the value ourselves, which usually means that we are
         //  a high-level class that doesn't do any fixes, or the value is always fine.
         // Let's check.
-        $sCorrectedValue = '';
+        $aCorrectedValues = $this->corrected_values;
         foreach (array_slice($this->patterns[$this->matched_pattern], 0, -1) as $Part) {
             if (is_object($Part)) {
-                $sCorrectedValue .= $Part->getCorrectedValue();
+                $aCorrectedValues = $this->buildCorrectedValues($aCorrectedValues, $Part->getCorrectedValues());
             } else {
                 // String or regex?
                 if ($Part[0] == '/') {
                     // A regex. This requires the fix to be manually created because of the case check.
                     // If this is not set, then we will default to the input value.
-                    $this->corrected_value = $this->value;
-                    return $this->corrected_value;
+                    $this->corrected_values = [[$this->value, 0.5]];
+                    return $this->corrected_values;
                 }
-                $sCorrectedValue .= $Part;
+                $aCorrectedValues = $this->buildCorrectedValues($aCorrectedValues, $Part);
             }
         }
 
         // If we end up here, we have built something.
-        $this->corrected_value = $sCorrectedValue;
-        return $this->corrected_value;
+        $this->corrected_values = $aCorrectedValues;
+        return $this->corrected_values;
     }
 
 
