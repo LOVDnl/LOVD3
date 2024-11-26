@@ -580,6 +580,7 @@ class HGVS_DNADelSuffix extends HGVS
         // Store the corrected value.
         if (isset($this->messages['WSUFFIXGIVEN'])) {
             // The suffix should be removed.
+            // NOTE: This is not true for delAinsG, but we don't know that here yet.
             $this->setCorrectedValue('');
         } elseif (!isset($this->Length)) {
             $this->corrected_values = $this->DNARefs->getCorrectedValues();
@@ -715,6 +716,12 @@ class HGVS_DNAInsSuffix extends HGVS
             && $this->getLengths() == [1,1]) {
             $this->messages['WWRONGTYPE'] =
                 'A deletion-insertion of one base to one base should be described as a substitution.';
+            // Force the corrected value of the DelSuffix to NOT empty.
+            $DelSuffix = ($this->getParent('HGVS_DNAVariantBody')->DNADelSuffix ?? false);
+            if ($DelSuffix && $DelSuffix->getMessages()['WSUFFIXGIVEN']) {
+                // Undo that change.
+                $DelSuffix->setCorrectedValue($DelSuffix->DNARefs->getCorrectedValue());
+            }
         }
 
         // Store the corrected value.
