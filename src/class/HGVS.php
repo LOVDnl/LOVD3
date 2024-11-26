@@ -432,7 +432,8 @@ class HGVS
 
 
 
-class HGVS_DNADel extends HGVS {
+class HGVS_DNADel extends HGVS
+{
     public array $patterns = [
         [ 'del', [] ],
     ];
@@ -450,7 +451,8 @@ class HGVS_DNADel extends HGVS {
 
 
 
-class HGVS_DNAAlts extends HGVS {
+class HGVS_DNAAlts extends HGVS
+{
     public array $patterns = [
         'valid'   => [ '/[ACGTMRWSYKVHDBN]+/', [] ],
         'invalid' => [ '/[A-Z]+/', [] ],
@@ -475,7 +477,8 @@ class HGVS_DNAAlts extends HGVS {
 
 
 
-class HGVS_DNADelSuffix extends HGVS {
+class HGVS_DNADelSuffix extends HGVS
+{
     public array $patterns = [
         // Since none of these match "ins", a "delAinsC" won't ever pass here.
         [ 'HGVS_Length', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
@@ -594,7 +597,8 @@ class HGVS_DNADelSuffix extends HGVS {
 
 
 
-class HGVS_DNAIns extends HGVS {
+class HGVS_DNAIns extends HGVS
+{
     public array $patterns = [
         [ 'ins', [] ],
     ];
@@ -612,7 +616,11 @@ class HGVS_DNAIns extends HGVS {
             // If one position is given, this is a problem. Only if it's a question mark, can we fix it.
             if (!$Positions->range) {
                 if ($Positions->unknown) {
-                    // We can correct this.
+                    // We can correct this. In this case, I think it's better to correct the Positions object than
+                    //  to just fix the corrected_value. It's also kinda hard to change the corrected value of some
+                    //  other object than our current one. If other changes are needed for whatever reason,
+                    //  our sent corrected value may disappear. However, this has a side effect.
+                    //  It'll change the variant's getInfo() output.
                     $Positions->addPosition('?');
                     $sCode = 'WPOSITIONMISSING';
                 } else {
@@ -652,7 +660,8 @@ class HGVS_DNAIns extends HGVS {
 
 
 
-class HGVS_DNAInsSuffix extends HGVS {
+class HGVS_DNAInsSuffix extends HGVS
+{
     public array $patterns = [
         [ 'HGVS_Length', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
         [ '[', 'HGVS_Length', ']', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
@@ -725,7 +734,8 @@ class HGVS_DNAInsSuffix extends HGVS {
 
 
 
-class HGVS_DNAPosition extends HGVS {
+class HGVS_DNAPosition extends HGVS
+{
     public array $patterns = [
         'unknown'          => [ '?', [] ],
         'unknown_intronic' => [ '/([-*]?([0-9]+))([+-]\?)/', [] ],
@@ -843,7 +853,8 @@ class HGVS_DNAPosition extends HGVS {
 
 
 
-class HGVS_DNAPositionStart extends HGVS {
+class HGVS_DNAPositionStart extends HGVS
+{
     public array $patterns = [
         'uncertain_range'  => [ '(', 'HGVS_DNAPosition', '_', 'HGVS_DNAPosition', ')', [] ],
         'uncertain_single' => [ '(', 'HGVS_DNAPosition', ')', [ 'WPOSITIONFORMAT' => "The variant's positions contain redundant parentheses." ] ],
@@ -989,7 +1000,8 @@ class HGVS_DNAPositionEnd extends HGVS_DNAPositionStart {}
 
 
 
-class HGVS_DNAPositions extends HGVS {
+class HGVS_DNAPositions extends HGVS
+{
     public array $patterns = [
         'range'            => [ 'HGVS_DNAPositionStart', '_', 'HGVS_DNAPositionEnd', [] ],
         'uncertain_range'  => [ '(', 'HGVS_DNAPositionStart', '_', 'HGVS_DNAPositionEnd', ')', [] ],
@@ -1339,7 +1351,8 @@ class HGVS_DNAPositions extends HGVS {
 
 
 
-class HGVS_DNAPrefix extends HGVS {
+class HGVS_DNAPrefix extends HGVS
+{
     public array $patterns = [
         'coding'     => [ 'c', [] ],
         'genomic'    => [ 'g', [] ],
@@ -1361,7 +1374,8 @@ class HGVS_DNAPrefix extends HGVS {
 
 
 
-class HGVS_DNARefs extends HGVS {
+class HGVS_DNARefs extends HGVS
+{
     public array $patterns = [
         'valid'   => [ '/[ACGTN]+/', [] ],
         'invalid' => [ '/[A-Z]+/', [] ],
@@ -1403,7 +1417,8 @@ class HGVS_DNARefs extends HGVS {
 
 
 
-class HGVS_DNAVariantBody extends HGVS {
+class HGVS_DNAVariantBody extends HGVS
+{
     public array $patterns = [
         'delXins_with_suffix' => [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNADelSuffix', 'HGVS_DNAIns', 'HGVS_DNAInsSuffix', [] ],
         'delXins'             => [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNADelSuffix', 'HGVS_DNAIns', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
@@ -1440,7 +1455,8 @@ class HGVS_DNAVariantBody extends HGVS {
 
 
 
-class HGVS_Length extends HGVS {
+class HGVS_Length extends HGVS
+{
     public array $patterns = [
         'range'              => [ '/([0-9]+)_([0-9]+)/', [] ],
         'range_with_parens'  => [ '/\(([0-9]+)_([0-9]+)\)/', [] ],
@@ -1533,7 +1549,8 @@ class HGVS_Length extends HGVS {
 
 
 
-class HGVS_ReferenceSequence extends HGVS {
+class HGVS_ReferenceSequence extends HGVS
+{
     public array $patterns = [
         [ '/NC_[0-9]{6}\.[0-9]{1,2}/', [] ],
     ];
@@ -1550,7 +1567,8 @@ class HGVS_ReferenceSequence extends HGVS {
 
 
 
-class HGVS_Variant extends HGVS {
+class HGVS_Variant extends HGVS
+{
     public array $patterns = [
         'DNA' => [ 'HGVS_DNAPrefix', '.', 'HGVS_DNAVariantBody', [] ],
     ];
