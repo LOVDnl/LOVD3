@@ -469,6 +469,8 @@ class HGVS_DNAAlts extends HGVS
             // List the invalid nucleotides.
             $sUnknownBases = preg_replace($this->patterns['valid'][0], '', $this->getCorrectedValue());
             $this->messages['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
+            // Then, replace the 'U's with 'T's.
+            $this->setCorrectedValue(str_replace('U', 'T', $this->getCorrectedValue()));
         }
     }
 }
@@ -1416,6 +1418,8 @@ class HGVS_DNARefs extends HGVS
             // List the invalid nucleotides.
             $sUnknownBases = preg_replace($this->patterns['valid'][0], '', $this->getCorrectedValue());
             $this->messages['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
+            // Then, replace the 'U's with 'T's.
+            $this->setCorrectedValue(str_replace('U', 'T', $this->getCorrectedValue()));
         }
     }
 }
