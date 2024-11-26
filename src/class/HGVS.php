@@ -757,6 +757,7 @@ class HGVS_DNAPosition extends HGVS {
         $this->unknown_offset = ($this->matched_pattern == 'unknown_intronic');
         $sVariantPrefix = $this->getParent('HGVS_Variant')->DNAPrefix->getValue();
         $this->position_limits = $this->position_limits[$sVariantPrefix];
+        $nCorrectionConfidence = 1;
 
         if ($this->matched_pattern == 'unknown') {
             $this->UTR = false;
@@ -799,11 +800,13 @@ class HGVS_DNAPosition extends HGVS {
                 $this->messages['EPOSITIONFORMAT'] = 'This variant description contains an invalid position: "' . $this->value . '".';
             } elseif ((string) $this->position !== $this->regex[1]) {
                 $this->messages['WPOSITIONFORMAT'] = 'Variant positions should not be prefixed by a 0.';
+                $nCorrectionConfidence *= 0.9;
             } elseif ($this->intronic && !$this->unknown_offset) {
                 if (!$this->offset) {
                     $this->messages['EPOSITIONFORMAT'] = 'This variant description contains an invalid intronic position: "' . $this->value . '".';
                 } elseif ((string) abs($this->offset) != $this->regex[4]) {
                     $this->messages['WPOSITIONFORMAT'] = 'Intronic positions should not be prefixed by a 0.';
+                    $nCorrectionConfidence *= 0.9;
                 }
             }
 
@@ -840,6 +843,7 @@ class HGVS_DNAPosition extends HGVS {
 
             // Store the corrected value.
             $this->corrected_values = $this->buildCorrectedValues(
+                ['', $nCorrectionConfidence],
                 $this->position .
                 ($this->offset? ($this->offset > 0? '+' : '-') . ($this->unknown_offset? '?' : $this->offset) : '')
             );
@@ -863,6 +867,7 @@ class HGVS_DNAPositionStart extends HGVS {
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->range = is_array($this->DNAPosition); // This will fail if we don't have this property, which is good, because that shouldn't happen.
         $this->uncertain = ($this->matched_pattern == 'uncertain_range');
+        $nCorrectionConfidence = $this->corrected_values[0][1]; // Fetch current one, because this object can be revalidated.
 
         if (!$this->range) {
             // A single position, just copy everything.
@@ -895,6 +900,7 @@ class HGVS_DNAPositionStart extends HGVS {
             if ($this->DNAPosition[0]->position == $this->DNAPosition[1]->position) {
                 if ($this->DNAPosition[0]->getCorrectedValue() == $this->DNAPosition[1]->getCorrectedValue()) {
                     $this->messages['WPOSITIONFORMAT'] = 'This variant description contains two positions that are the same.';
+                    $nCorrectionConfidence *= 0.9;
                     // Discard the other object.
                     $this->DNAPosition = $this->DNAPosition[0];
 
@@ -936,6 +942,7 @@ class HGVS_DNAPositionStart extends HGVS {
                 // OK, we're still a range. Check the variant's order.
                 if (!$this->arePositionsSorted($this->DNAPosition[0], $this->DNAPosition[1])) {
                     $this->messages['WPOSITIONFORMAT'] = "The variant's positions are not given in the correct order.";
+                    $nCorrectionConfidence *= 0.9;
                     // Swap the positions.
                     $this->DNAPosition = [$this->DNAPosition[1], $this->DNAPosition[0]];
                 }
@@ -977,10 +984,12 @@ class HGVS_DNAPositionStart extends HGVS {
         // Now, store the corrected value.
         if ($this->range) {
             $this->corrected_values = $this->buildCorrectedValues(
+                ['', $nCorrectionConfidence],
                 '(', $this->DNAPosition[0]->getCorrectedValues(), '_', $this->DNAPosition[1]->getCorrectedValues(), ')'
             );
         } else {
             $this->corrected_values = $this->buildCorrectedValues(
+                ['', $nCorrectionConfidence],
                 $this->DNAPosition->getCorrectedValues()
             );
         }
@@ -1157,6 +1166,8 @@ class HGVS_DNAPositions extends HGVS {
             // Re-run the entire validation, so that all internal values will be set correctly.
             // This may cause issues with errors that don't reflect the user's input.
             $this->validate();
+            // We're not super confident about this.
+            $this->corrected_values[0][1] *= 0.75;
             return true;
         }
 
@@ -1180,6 +1191,8 @@ class HGVS_DNAPositions extends HGVS {
             // Re-run the entire validation, so that all internal values will be set correctly.
             // This may cause issues with errors that don't reflect the user's input.
             $this->validate();
+            // We're not super confident about this.
+            $this->corrected_values[0][1] *= 0.75;
             return true;
         }
 
@@ -1201,6 +1214,7 @@ class HGVS_DNAPositions extends HGVS {
                 && ($this->DNAPositionStart->uncertain || $this->DNAPositionEnd->uncertain))
         );
         $VariantPrefix = $this->getParent('HGVS_Variant')->DNAPrefix;
+        $nCorrectionConfidence = $this->corrected_values[0][1]; // Fetch current one, because this object can be revalidated.
 
         if (!$this->range) {
             // A single position, just copy everything.
@@ -1234,6 +1248,7 @@ class HGVS_DNAPositions extends HGVS {
                 && !$this->DNAPositionStart->unknown) {
                 // Exception: Start and End _can_ be both unknown, e.g., g.?_?ins[...].
                 $this->messages['WPOSITIONFORMAT'] = 'This variant description contains two positions that are the same.';
+                $nCorrectionConfidence *= 0.9;
                 // Discard the other object.
                 $this->DNAPosition = $this->DNAPositionStart;
                 $this->range = false;
@@ -1266,6 +1281,7 @@ class HGVS_DNAPositions extends HGVS {
                     if (!$this->DNAPositionStart->range && !$this->DNAPositionEnd->range) {
                         // Resort the positions.
                         list($this->DNAPositionStart, $this->DNAPositionEnd) = [$this->DNAPositionEnd, $this->DNAPositionStart];
+                        $nCorrectionConfidence *= 0.9;
                     }
 
                 } elseif (!$this->arePositionsSorted($PositionB, $PositionC)) {
@@ -1314,14 +1330,17 @@ class HGVS_DNAPositions extends HGVS {
         // Now, store the corrected value.
         if ($this->matched_pattern == 'uncertain_range') {
             $this->corrected_values = $this->buildCorrectedValues(
+                ['', $nCorrectionConfidence],
                 '(', $this->DNAPositionStart->getCorrectedValues(), '_', $this->DNAPositionEnd->getCorrectedValues(), ')'
             );
         } elseif ($this->range) {
             $this->corrected_values = $this->buildCorrectedValues(
+                ['', $nCorrectionConfidence],
                 $this->DNAPositionStart->getCorrectedValues(), '_', $this->DNAPositionEnd->getCorrectedValues()
             );
         } else {
             $this->corrected_values = $this->buildCorrectedValues(
+                ['', $nCorrectionConfidence],
                 $this->DNAPosition->getCorrectedValues()
             );
         }
@@ -1455,6 +1474,8 @@ class HGVS_Length extends HGVS {
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->range = (substr($this->matched_pattern, 0, 5) == 'range');
+        $nCorrectionConfidence = 1;
+
         if (in_array($this->matched_pattern, ['range', 'single_with_parens'])) {
             $this->messages['WLENGTHFORMAT'] = 'This variant description contains an invalid sequence length: "' . $this->value . '".';
         }
@@ -1475,6 +1496,10 @@ class HGVS_Length extends HGVS {
                 $this->messages['ELENGTHFORMAT'] = 'This variant description contains an invalid sequence length: "' . $nLength . '".';
             } elseif ((string) $nLength !== $this->regex[$i + 1]) {
                 $this->messages['WLENGTHFORMAT'] = 'Sequence lengths should not be prefixed by a 0.';
+                // Adjust the confidence, but not twice.
+                if (!$i || $this->range) {
+                    $nCorrectionConfidence *= 0.9;
+                }
             }
         }
 
@@ -1483,12 +1508,14 @@ class HGVS_Length extends HGVS {
             if ($this->lengths[0] == $this->lengths[1]) {
                 // If the lengths are the same, warn and remove one.
                 $this->messages['WLENGTHFORMAT'] = 'This variant description contains two sequence lengths that are the same.';
+                $nCorrectionConfidence *= 0.9;
                 // Discard the other object.
                 $this->range = false;
 
             } elseif ($this->lengths[0] > $this->lengths[1]) {
                 // Lengths aren't given in the right order.
                 $this->messages['WLENGTHFORMAT'] = 'This variant description contains two sequence lengths that are not given in the correct order.';
+                $nCorrectionConfidence *= 0.9;
                 // Swap the lengths.
                 list($this->lengths[0], $this->lengths[1]) = [$this->lengths[1], $this->lengths[0]];
             }
@@ -1501,11 +1528,13 @@ class HGVS_Length extends HGVS {
                 $this->setCorrectedValue('');
             } else {
                 $this->corrected_values = $this->buildCorrectedValues(
+                    ['', $nCorrectionConfidence],
                     $this->lengths[0]
                 );
             }
         } else {
             $this->corrected_values = $this->buildCorrectedValues(
+                ['', $nCorrectionConfidence],
                 '(' . $this->lengths[0] . '_' . $this->lengths[1] . ')'
             );
         }
