@@ -1562,6 +1562,18 @@ class HGVS_Variant extends HGVS
 
 
 
+class HGVS_VCFAlts extends HGVS_DNAAlts
+{
+    public array $patterns = [
+        'valid'   => [ '/(\.|[ACGTMRWSYKVHDBN]+)/', [] ],
+        'invalid' => [ '/[A-Z]+/', [] ],
+    ];
+}
+
+
+
+
+
 class HGVS_VCFPosition extends HGVS_DNAPositions
 {
     // We use VCFPosition to enforce a single position
