@@ -1575,6 +1575,17 @@ class HGVS_VCFPosition extends HGVS_DNAPositions
 
 
 
+class HGVS_VCFSeparator extends HGVS
+{
+    public array $patterns = [
+        [ '/[: -]/', [] ],
+    ];
+}
+
+
+
+
+
 trait HGVS_DNASequence
 {
     // Useful for suffix classes; defining getSequence(), getSequences(), and getLengths().
