@@ -1562,6 +1562,19 @@ class HGVS_Variant extends HGVS
 
 
 
+class HGVS_VCFPosition extends HGVS_DNAPositions
+{
+    // We use VCFPosition to enforce a single position
+    //  while at the same time inheriting the helper methods from DNAPositions.
+    public array $patterns = [
+        'single' => [ 'HGVS_DNAPosition', [] ],
+    ];
+}
+
+
+
+
+
 trait HGVS_DNASequence
 {
     // Useful for suffix classes; defining getSequence(), getSequences(), and getLengths().
