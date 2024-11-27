@@ -1575,6 +1575,18 @@ class HGVS_VCFPosition extends HGVS_DNAPositions
 
 
 
+class HGVS_VCFRefs extends HGVS_DNARefs
+{
+    public array $patterns = [
+        'valid'   => [ '/(\.|[ACGTN]+)/', [] ],
+        'invalid' => [ '/[A-Z]+/', [] ],
+    ];
+}
+
+
+
+
+
 class HGVS_VCFSeparator extends HGVS
 {
     public array $patterns = [
