@@ -481,6 +481,7 @@ class HGVS_DNAAlts extends HGVS
 
 class HGVS_DNADelSuffix extends HGVS
 {
+    use HGVS_DNASequence; // Gets us getSequence() and getLengths().
     public array $patterns = [
         // Since none of these match "ins", a "delAinsC" won't ever pass here.
         [ 'HGVS_Length', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
@@ -495,30 +496,6 @@ class HGVS_DNADelSuffix extends HGVS
         [ '[', 'HGVS_DNARefs', 'HGVS_Length', ']', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
         [ '[', 'HGVS_DNARefs', '[', 'HGVS_Length', ']]', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
     ];
-
-    public function getLengths ()
-    {
-        // This function calculates the suffix's minimum and maximum length, and returns this into an array.
-
-        if (isset($this->DNARefs)) {
-            $nSequenceLength = strlen($this->DNARefs->getValue());
-            if (!isset($this->Length)) {
-                // Simple sequence is given.
-                return [$nSequenceLength, $nSequenceLength];
-            } else {
-                // Combination of sequence and length given.
-                $aLengths = $this->Length->getLengths();
-                return [($nSequenceLength * $aLengths[0]), ($nSequenceLength * $aLengths[1])];
-            }
-        } else {
-            // Deliberately not checking for this object's existence, so we break when we made a bug somewhere.
-            return $this->Length->getLengths();
-        }
-    }
-
-
-
-
 
     public function validate ()
     {
@@ -665,6 +642,7 @@ class HGVS_DNAIns extends HGVS
 
 class HGVS_DNAInsSuffix extends HGVS
 {
+    use HGVS_DNASequence; // Gets us getSequence() and getLengths().
     public array $patterns = [
         [ 'HGVS_Length', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
         [ '[', 'HGVS_Length', ']', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
@@ -678,30 +656,6 @@ class HGVS_DNAInsSuffix extends HGVS
         [ '[', 'HGVS_DNAAlts', 'HGVS_Length', ']', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
         [ '[', 'HGVS_DNAAlts', '[', 'HGVS_Length', ']]', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
     ];
-
-    public function getLengths ()
-    {
-        // This function calculates the suffix's minimum and maximum length, and returns this into an array.
-
-        if (isset($this->DNAAlts)) {
-            $nSequenceLength = strlen($this->DNAAlts->getValue());
-            if (!isset($this->Length)) {
-                // Simple sequence is given.
-                return [$nSequenceLength, $nSequenceLength];
-            } else {
-                // Combination of sequence and length given.
-                $aLengths = $this->Length->getLengths();
-                return [($nSequenceLength * $aLengths[0]), ($nSequenceLength * $aLengths[1])];
-            }
-        } else {
-            // Deliberately not checking for this object's existence, so we break when we made a bug somewhere.
-            return $this->Length->getLengths();
-        }
-    }
-
-
-
-
 
     public function validate ()
     {
@@ -1583,4 +1537,85 @@ class HGVS_Variant extends HGVS
     public array $patterns = [
         'DNA' => [ 'HGVS_DNAPrefix', '.', 'HGVS_DNAVariantBody', [] ],
     ];
+}
+
+
+
+
+
+trait HGVS_DNASequence
+{
+    // Useful for suffix classes; defining getSequence(), getSequences(), and getLengths().
+    public array $sequences = [];
+
+    public function getLengths ()
+    {
+        // This function calculates the sequence's minimum and maximum length, and returns this into an array.
+        if ($this->getSequences()) {
+            $nLengthMin = strlen($this->getSequences()[0]);
+            $nLengthMax = strlen($this->getSequences()[1]);
+            return [$nLengthMin, $nLengthMax];
+
+        } else {
+            return false;
+        }
+    }
+
+
+
+
+
+    public function getSequence ()
+    {
+        // This function returns the sequence, as long as the length is certain.
+        $aSequences = $this->getSequences();
+        if ($aSequences[0] == $aSequences[1]) {
+            return $aSequences[0];
+        } else {
+            return false;
+        }
+    }
+
+
+
+
+
+    public function getSequences ()
+    {
+        // This function gets the entire sequence.
+        if (!empty($this->sequences)) {
+            return $this->sequences;
+        }
+
+        $aSequencesMin = [];
+        $aSequencesMax = [];
+
+        foreach ($this->patterns[$this->matched_pattern] as $Pattern) {
+            if (is_object($Pattern)) {
+                if (in_array(get_class($Pattern), ['HGVS_DNARefs', 'HGVS_DNAAlts'])) {
+                    $aSequencesMin[] = $Pattern->getCorrectedValue();
+                    $aSequencesMax[] = $Pattern->getCorrectedValue();
+                } elseif (get_class($Pattern) == 'HGVS_Length') {
+                    $aLengths = $Pattern->getLengths();
+                    $nLastKey = array_key_last($aSequencesMin);
+                    if (!isset($nLastKey)) {
+                        // This sequence starts with a length.
+                        $aSequencesMin[] = 'N';
+                        $aSequencesMax[] = 'N';
+                        $nLastKey = 0;
+                    }
+
+                    $aSequencesMin[$nLastKey] = str_repeat($aSequencesMin[$nLastKey], $aLengths[0]);
+                    $aSequencesMin[$nLastKey] = str_repeat($aSequencesMax[$nLastKey], $aLengths[1]);
+                }
+            }
+            // Other patterns are ignored (strings and the message array).
+        }
+
+        $this->sequences = [
+            implode($aSequencesMin),
+            implode($aSequencesMax),
+        ];
+        return $this->sequences;
+    }
 }
