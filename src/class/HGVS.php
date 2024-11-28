@@ -1427,17 +1427,29 @@ class HGVS_DNAVariantBody extends HGVS
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
+
+        // Delins and substitution variants deserve some additional attention.
+        // Based on the REF and ALT info, we may need to shift the variant or change it to a different type.
+        if (in_array($this->matched_pattern, ['delXins_with_suffix', 'substitution'])
+            && !$this->DNAPositions->unknown && !$this->DNAPositions->uncertain
+            && count(array_unique($this->DNADelSuffix->getLengths())) == 1
+            && count(array_unique($this->DNAInsSuffix->getLengths())) == 1
+            && !array_filter(array_keys($this->messages), function ($sKey) { return ($sKey[0] == 'E' && $sKey != 'EINVALIDNUCLEOTIDES'); })) {
+            // Positions are known; REF and ALT are known. Toss it all in a VCF parser.
+            $this->VCF = new HGVS_VCFBody(
+                ($this->DNAPositions->DNAPosition ?? $this->DNAPositions->DNAPositionStart)->getCorrectedValue() . ':' .
+                $this->DNADelSuffix->getSequence() . ':' .
+                $this->DNAInsSuffix->getSequence(),
+                $this
+            );
+            $this->corrected_values = $this->VCF->getCorrectedValues();
+        }
+
         if (isset($this->messages['WWRONGTYPE'])) {
             // We need to convert the variant from one type into the next.
             if ($this->data['type'] == 'delins'
                 && strpos($this->messages['WWRONGTYPE'], 'substitution') !== false
                 && isset($this->DNADelSuffix)) {
-                $this->corrected_values = $this->buildCorrectedValues(
-                    $this->DNAPositions->getCorrectedValues(),
-                    $this->DNADelSuffix->DNARefs->getCorrectedValues(),
-                    '>',
-                    $this->DNAInsSuffix->getCorrectedValues()
-                );
                 // Remove the warning that complained about the base after the del.
                 unset($this->messages['WSUFFIXGIVEN']);
             }
