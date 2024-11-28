@@ -215,6 +215,16 @@ class HGVS
 
 
 
+    public function addCorrectedValue ($sValue, $nConfidence = 1)
+    {
+        // Conveniently adds the corrected value for us.
+        $this->corrected_values[$sValue] = $nConfidence;
+    }
+
+
+
+
+
     public function arePositionsSorted ($PositionStart, $PositionEnd)
     {
         // This function compares two positions and returns true when $PositionStart is smaller than $PositionEnd,
@@ -1676,6 +1686,51 @@ class HGVS_VCFBody extends HGVS
         }
         $nREF = strlen($sREF);
         $nALT = strlen($sALT);
+
+        // Now determine the actual variant type.
+        if ($nREF == 0 && $nALT == 0) {
+            // Nothing left. Take the original range and add '='.
+            $this->setCorrectedValue($this->getPositionString($sPosition, $nIntronOffset, 0, $nOffset) . '=');
+
+        } elseif ($nREF == 1 && $nALT == 1) {
+            // Substitution.
+            // Recalculate the position always; we might have started with a
+            //  range, but ended with just a single position.
+            $this->setCorrectedValue($this->getPositionString($sPosition, $nIntronOffset, $nOffset) . $sREF . '>' . $sALT);
+
+        } elseif ($nALT == 0) {
+            // Deletion.
+            $this->setCorrectedValue($this->getPositionString($sPosition, $nIntronOffset, $nOffset, $nREF) . 'del');
+
+        } elseif ($nREF == 0) {
+            // Something has been added... could be an insertion or a duplication.
+            if ($sALT != $sOriALT && substr($sOriALT, strrpos($sOriALT, $sALT) - $nALT, $nALT) == $sALT) {
+                // Duplication. Note that the start position might be quite
+                //  far from the actual insert.
+                $this->setCorrectedValue($this->getPositionString($sPosition, $nIntronOffset, ($nOffset - $nALT), $nALT) . 'dup');
+
+            } else {
+                // Insertion. We should check if we're sure about where the insertion should go.
+                // If the $sREF was '.' from the beginning, we can't be sure.
+                $this->setCorrectedValue($this->getPositionString($sPosition, $nIntronOffset, ($nOffset - 1), 2) . 'ins' . $sALT, (!$sOriREF? 0.7 : 1));
+                if (!$sOriREF) {
+                    // ADD (not replace) this suggestion to the list.
+                    $this->addCorrectedValue($this->getPositionString($sPosition, $nIntronOffset, $nOffset, 2) . 'ins' . $sALT, 0.3);
+                    // Add a warning that we're not sure.
+                    $this->messages['WVCFDOTREF'] = "The VCF standard doesn't allow empty REF or ALT fields. Since this variant had no REF field, we're not sure how to translate this variant to HGVS. Two options are given, but it depends on the software which generated these VCF values which option is correct.";
+                }
+            }
+
+        } else {
+            // Inversion or deletion-insertion. Both REF and ALT are >1.
+            if ($sREF == strrev(str_replace(array('A', 'C', 'G', 'T'), array('T', 'G', 'C', 'A'), strtoupper($sALT)))) {
+                // Inversion.
+                $this->setCorrectedValue($this->getPositionString($sPosition, $nIntronOffset, $nOffset, $nREF) . 'inv');
+            } else {
+                // Deletion-insertion. Both REF and ALT are >1.
+                $this->setCorrectedValue($this->getPositionString($sPosition, $nIntronOffset, $nOffset, $nREF) . 'delins' . $sALT);
+            }
+        }
     }
 }
 
