@@ -462,6 +462,24 @@ class HGVS
 
 
 
+    public function isValid ()
+    {
+        // Checks whether this is a valid HGVS-compliant variant description.
+        // Class should have matched. If so, build the info if needed, and check whether errors or warnings were given.
+        if (!$this->hasMatched()) {
+            return false;
+
+        } elseif (empty($this->info)) {
+            $this->buildInfo();
+        }
+
+        return (empty($this->info['errors']) && empty($this->info['warnings']));
+    }
+
+
+
+
+
     public function setCorrectedValue ($sValue, $nConfidence = 1)
     {
         // Conveniently sets the corrected value for us.
