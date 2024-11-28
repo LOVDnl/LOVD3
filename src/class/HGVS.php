@@ -1574,6 +1574,17 @@ class HGVS_VCFAlts extends HGVS_DNAAlts
 
 
 
+class HGVS_VCFBody extends HGVS
+{
+    public array $patterns = [
+        [ 'HGVS_VCFPosition', 'HGVS_VCFSeparator', 'HGVS_VCFRefs', 'HGVS_VCFSeparator', 'HGVS_VCFAlts', [] ],
+    ];
+}
+
+
+
+
+
 class HGVS_VCFPosition extends HGVS_DNAPositions
 {
     // We use VCFPosition to enforce a single position
