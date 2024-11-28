@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-11-27
+ * Modified    : 2024-11-28
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -40,11 +40,15 @@ if (!defined('ROOT_PATH')) {
 #[AllowDynamicProperties]
 class HGVS
 {
+    // NOTE: Regular expressions should only be used as a single value on a row. When used as part of a row,
+    //        you should create an object. The reason for this is that we can't deduce from a regular expression what it
+    //        matched. An object holds its value, a string has a fixed value by itself, but a regex can't store a value.
     public array $patterns = [
         'full_variant' => [ 'HGVS_ReferenceSequence', ':', 'HGVS_Variant', [] ],
     ];
     public array $corrected_values = [];
     public array $data = [];
+    public array $info = [];
     public array $messages = [];
     public array $properties = [];
     public array $regex = [];
@@ -291,6 +295,39 @@ class HGVS
 
 
 
+    public function buildInfo ()
+    {
+        // Builds the info array.
+        $this->info = array_merge(
+            $this->data,
+            [
+                'messages' => [],
+                'warnings' => [],
+                'errors' => [],
+            ]
+        );
+        foreach ($this->messages as $sCode => $sMessage) {
+            switch (substr($sCode, 0, 1)) {
+                case 'E':
+                    $this->info['errors'][$sCode] = $sMessage;
+                    break;
+                case 'W':
+                    $this->info['warnings'][$sCode] = $sMessage;
+                    break;
+                case 'I':
+                default:
+                    $this->info['messages'][$sCode] = $sMessage;
+                    break;
+            }
+        }
+
+        return $this->info;
+    }
+
+
+
+
+
     public function getCorrectedValue ($nKey = 0)
     {
         // This function gets the first corrected value and returns the string.
@@ -343,6 +380,15 @@ class HGVS
     public function getData ()
     {
         return ($this->data ?? []);
+    }
+
+
+
+
+
+    public function getInfo ()
+    {
+        return ($this->info ?: $this->buildInfo());
     }
 
 
