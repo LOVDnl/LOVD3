@@ -1641,6 +1641,42 @@ class HGVS_VCFBody extends HGVS
             ($aPositionsToAdjust[0] == $aPositionsToAdjust[1]? '' : '_' . $aPositionsToAdjust[1][0] .
                 (!$aPositionsToAdjust[1][1]? '' : ($aPositionsToAdjust[1][1] < 0? '' : '+') . $aPositionsToAdjust[1][1])));
     }
+
+
+
+
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+
+        // Loop through the REF and ALT to isolate where they are different.
+        // Recognize deletions, insertions, duplications, and more.
+        // (ANNOVAR does something else than most other VCF generators)
+        // Either way, VCF doesn't actually allow empty REFs or ALTs, so this will result in a warning.
+        $sPosition = $this->VCFPosition->DNAPosition->position;
+        $nIntronOffset = $this->VCFPosition->DNAPosition->offset;
+        $sREF = rtrim($this->VCFRefs->getCorrectedValue(), '.'); // Change . into an empty string.
+        $sALT = rtrim($this->VCFAlts->getCorrectedValue(), '.'); // Change . into an empty string.
+        // Save original values before we edit them.
+        $sOriREF = $sREF;
+        $sOriALT = $sALT;
+        $nOffset = 0;
+
+        // Shift variant if REF and ALT are similar.
+        // 'Eat' letters from either end - first left, then right - to isolate the difference.
+        while (strlen($sREF) > 0 && strlen($sALT) > 0 && $sREF[0] == $sALT[0]) {
+            $sREF = substr($sREF, 1);
+            $sALT = substr($sALT, 1);
+            $nOffset ++;
+        }
+        while (strlen($sREF) > 0 && strlen($sALT) > 0 && substr($sREF, -1) == substr($sALT, -1)) {
+            $sREF = substr($sREF, 0, -1);
+            $sALT = substr($sALT, 0, -1);
+        }
+        $nREF = strlen($sREF);
+        $nALT = strlen($sALT);
+    }
 }
 
 
