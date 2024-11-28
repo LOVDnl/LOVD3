@@ -1579,6 +1579,68 @@ class HGVS_VCFBody extends HGVS
     public array $patterns = [
         [ 'HGVS_VCFPosition', 'HGVS_VCFSeparator', 'HGVS_VCFRefs', 'HGVS_VCFSeparator', 'HGVS_VCFAlts', [] ],
     ];
+
+    function getPositionString ($sPosition, $nIntronOffset, $nOffset, $nLength = 1)
+    {
+        // Takes the start position from the $sPosition and $nIntronOffset inputs (g. based or c. based),
+        //  shifts it using the given $nOffset, adds the given length,
+        //  and returns the new position string.
+        // NOTE: This function does not detect moving from the CDS into the 3' UTR.
+
+        // Check all input. $nOffset can be negative, sometimes we need to move one base backward.
+        if (!preg_match('/^[-*]?[0-9]+$/', $sPosition)
+            || (!is_int($nIntronOffset) && !ctype_digit($nIntronOffset))
+            || (!is_int($nOffset) && !ctype_digit($nOffset))
+            || (!is_int($nLength) && !ctype_digit($nLength))
+            || $nLength < 1) {
+            return false;
+        }
+
+        $aPositionsToAdjust = [
+            [(string) $sPosition, $nIntronOffset, $nOffset],
+            [(string) $sPosition, $nIntronOffset, $nOffset + ($nLength - 1)],
+        ];
+        foreach ($aPositionsToAdjust as $nKey => list($sPosition, $nIntronOffset, $nOffset)) {
+            // If we're in the UTRs, mark this and remove the * for now, we're making calculations.
+            $b3UTR = $b5UTR = false;
+            if ($sPosition[0] == '*') {
+                $b3UTR = true;
+                $nPosition = (int) substr($sPosition, 1);
+            } else {
+                $nPosition = (int) $sPosition;
+                if ($nPosition < 0) {
+                    $b5UTR = true;
+                }
+            }
+
+            if ($nIntronOffset) {
+                $nPositionIntron = $nIntronOffset + $nOffset;
+                // Compensate for the possibility that we just left the intron.
+                if (($nIntronOffset > 0 && $nPositionIntron < 0)
+                    || ($nIntronOffset < 0 && $nPositionIntron > 0)) {
+                    $nPosition += $nPositionIntron;
+                    $nPositionIntron = 0;
+                }
+                $nIntronOffset = $nPositionIntron;
+            } else {
+                $nPosition += $nOffset;
+            }
+
+            // Compensate for the possibility that we just entered or left the 5' UTR.
+            if (!$b5UTR && $nPosition <= 0) {
+                $nPosition --;
+            } elseif ($b5UTR && $nPosition >= 0) {
+                $nPosition ++;
+            }
+            $aPositionsToAdjust[$nKey] = [(!$b3UTR? '' : '*') . $nPosition, $nIntronOffset];
+        }
+
+        return (
+            $aPositionsToAdjust[0][0] .
+            (!$aPositionsToAdjust[0][1]? '' : ($aPositionsToAdjust[0][1] < 0? '' : '+') . $aPositionsToAdjust[0][1]) .
+            ($aPositionsToAdjust[0] == $aPositionsToAdjust[1]? '' : '_' . $aPositionsToAdjust[1][0] .
+                (!$aPositionsToAdjust[1][1]? '' : ($aPositionsToAdjust[1][1] < 0? '' : '+') . $aPositionsToAdjust[1][1])));
+    }
 }
 
 
