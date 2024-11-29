@@ -811,10 +811,35 @@ class HGVS_DNAInsSuffix extends HGVS
 
 class HGVS_DNAInsSuffixComplex extends HGVS
 {
+    public array $components = [];
     public array $patterns = [
         'multiple' => [ 'HGVS_DNAInsSuffixComplexComponent', ';', 'HGVS_DNAInsSuffixComplex', [] ],
         'single'   => [ 'HGVS_DNAInsSuffixComplexComponent', [] ],
     ];
+
+    public function getComponents ()
+    {
+        // This function collects all components stored in this class and puts them in an array.
+        if (count($this->components) > 0) {
+            return $this->components;
+        }
+
+        foreach ($this->patterns[$this->matched_pattern] as $Pattern) {
+            if (is_object($Pattern)) {
+                if (get_class($Pattern) == 'HGVS_DNAInsSuffixComplexComponent') {
+                    $this->components[] = $Pattern;
+                } else {
+                    // Another complex with one or more components.
+                    $this->components = array_merge(
+                        $this->components,
+                        $Pattern->getComponents()
+                    );
+                }
+            }
+        }
+
+        return $this->components;
+    }
 }
 
 
