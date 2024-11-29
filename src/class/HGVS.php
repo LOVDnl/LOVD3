@@ -718,6 +718,7 @@ class HGVS_DNAInsSuffix extends HGVS
 {
     use HGVS_DNASequence; // Gets us getSequence() and getLengths().
     public array $patterns = [
+        [ '[', 'HGVS_DNAInsSuffixComplex', ']', [] ],
         [ 'HGVS_DNAPositions', [] ],
         [ '[', 'HGVS_Length', ']', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
         [ 'HGVS_DNAAlts', 'HGVS_Length', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
@@ -802,6 +803,18 @@ class HGVS_DNAInsSuffix extends HGVS
             );
         }
     }
+}
+
+
+
+
+
+class HGVS_DNAInsSuffixComplex extends HGVS
+{
+    public array $patterns = [
+        'multiple' => [ 'HGVS_DNAInsSuffixComplexComponent', ';', 'HGVS_DNAInsSuffixComplex', [] ],
+        'single'   => [ 'HGVS_DNAInsSuffixComplexComponent', [] ],
+    ];
 }
 
 
