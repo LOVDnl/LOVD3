@@ -756,7 +756,21 @@ class HGVS_DNAInsSuffix extends HGVS
 
         // Store the corrected value.
         if (isset($this->DNAPositions)) {
-            $this->corrected_values = $this->DNAPositions->getCorrectedValues();
+            // However, some additional checks are needed.
+            // Unknown single positions aren't allowed.
+            if ($this->DNAPositions->unknown && !$this->DNAPositions->range) {
+                // E.g., ins? or ins(?).
+                $this->setCorrectedValue('N[?]', 0.8); // We're not really sure that was what's meant.
+                $this->messages['WSUFFIXFORMAT'] = 'The part after "' . $this->parent->getData()['type'] . '" does not follow HGVS guidelines.' .
+                    ' To report an insertion of an unknown number of nucleotides, use "' . $this->parent->getData()['type'] . $this->getCorrectedValue() . '".';
+                // Also remove the possible warning given by the Positions object. It doesn't like "(?)".
+                unset($this->messages['WPOSITIONFORMAT']);
+
+            } else {
+                // Anything else, we'll interpret as positions.
+                $this->corrected_values = $this->DNAPositions->getCorrectedValues();
+            }
+
         } elseif (isset($this->DNAAlts) && !isset($this->Length)) {
             $this->corrected_values = $this->DNAAlts->getCorrectedValues();
         } else {
