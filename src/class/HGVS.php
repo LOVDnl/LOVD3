@@ -838,6 +838,29 @@ class HGVS_DNAInsSuffixComplex extends HGVS
             }
         }
 
+        // Loop through it again, filtering out components that should have been one.
+        // Sequences should be merged if they follow each other.
+        $nComponents = count($this->components);
+        for ($nKey = 1; $nKey < $nComponents; $nKey ++) {
+            if ($this->components[$nKey - 1]->getProperties() == ['DNAAlts']
+                && $this->components[$nKey]->getProperties() == ['DNAAlts']) {
+                // Two sequential sequence components (simple or repeat syntax); merge them.
+                // The overhead is very small, so let's just build something new.
+                // To be consistent, we'll create a new ComplexComponent.
+                $sSequenceA = $this->components[$nKey - 1]->getCorrectedValue();
+                $sSequenceB = $this->components[$nKey]->getCorrectedValue();
+                array_splice(
+                    $this->components,
+                    ($nKey - 1),
+                    2,
+                    [new HGVS_DNAInsSuffixComplexComponent($sSequenceA . $sSequenceB)]
+                );
+                $this->messages['WSUFFIXFORMATCOMPLEXINS'] = 'The part after "ins" does not follow HGVS guidelines. Inserted sequences "' . $sSequenceA . '" and "' . $sSequenceB . '" should be merged.';
+                $nComponents --;
+                $nKey --;
+            }
+        }
+
         return $this->components;
     }
 }
