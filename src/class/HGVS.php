@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-11-28
+ * Modified    : 2024-11-29
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -718,7 +718,7 @@ class HGVS_DNAInsSuffix extends HGVS
 {
     use HGVS_DNASequence; // Gets us getSequence() and getLengths().
     public array $patterns = [
-        [ 'HGVS_Length', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
+        [ 'HGVS_DNAPositions', [] ],
         [ '[', 'HGVS_Length', ']', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
         [ 'HGVS_DNAAlts', 'HGVS_Length', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
         [ 'HGVS_DNAAlts', '[', 'HGVS_Length', ']', [] ],
@@ -755,7 +755,9 @@ class HGVS_DNAInsSuffix extends HGVS
         }
 
         // Store the corrected value.
-        if (isset($this->DNAAlts) && !isset($this->Length)) {
+        if (isset($this->DNAPositions)) {
+            $this->corrected_values = $this->DNAPositions->getCorrectedValues();
+        } elseif (isset($this->DNAAlts) && !isset($this->Length)) {
             $this->corrected_values = $this->DNAAlts->getCorrectedValues();
         } else {
             $this->corrected_values = $this->buildCorrectedValues(
