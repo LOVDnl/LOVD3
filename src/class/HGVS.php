@@ -863,6 +863,42 @@ class HGVS_DNAInsSuffixComplex extends HGVS
 
         return $this->components;
     }
+
+
+
+
+
+    public function getCorrectedValues ()
+    {
+        // This function returns the corrected values, possibly building them first.
+        // This function had to be overloaded because I may have modified the components and I can't use the patterns.
+        if ($this->corrected_values) {
+            return $this->corrected_values;
+        }
+
+        $aCorrectedValues = [];
+        foreach ($this->getComponents() as $nKey => $Component) {
+            if ($nKey) {
+                $aCorrectedValues[] = ';'; // To separate the components.
+            }
+            $aCorrectedValues[] = $Component->getCorrectedValues();
+        }
+
+        // Now, build the whole array.
+        $this->corrected_values = $this->buildCorrectedValues(...$aCorrectedValues);
+        return $this->corrected_values;
+    }
+
+
+
+
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        // This triggers additional validations, so run it here.
+        $this->corrected_values = $this->getCorrectedValues();
+    }
 }
 
 
