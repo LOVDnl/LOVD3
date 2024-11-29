@@ -808,6 +808,21 @@ class HGVS_DNAInsSuffix extends HGVS
 
 
 
+class HGVS_DNAInsSuffixComplexComponent extends HGVS
+{
+    public array $patterns = [
+        'positions_with_refseq_inv' => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', '.', 'HGVS_DNAPositions', 'inv', [] ],
+        'positions_with_refseq'     => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', '.', 'HGVS_DNAPositions', [] ],
+        'sequence_with_length'      => [ 'HGVS_DNAAlts', '[', 'HGVS_Length', ']', [] ],
+        'sequence'                  => [ 'HGVS_DNAAlts', [] ],
+        'positions'                 => [ 'HGVS_DNAPositions', [] ],
+    ];
+}
+
+
+
+
+
 class HGVS_DNAPosition extends HGVS
 {
     public array $patterns = [
