@@ -795,12 +795,30 @@ class HGVS_DNAInsSuffix extends HGVS
 
         } elseif (isset($this->DNAAlts) && !isset($this->Length)) {
             $this->corrected_values = $this->DNAAlts->getCorrectedValues();
-        } else {
+
+        } elseif (isset($this->Length)) {
             $this->corrected_values = $this->buildCorrectedValues(
                 (isset($this->DNAAlts)? $this->DNAAlts->getCorrectedValues() : 'N'),
                 (!$this->Length->getCorrectedValues()? '' :
                     $this->buildCorrectedValues('[', $this->Length->getCorrectedValues(), ']'))
             );
+        } else {
+            // Complex insertions. The DNAInsSuffixComplex object should have filtered the components already.
+            // The square brackets should go when there is only one child and there are no reference sequences involved.
+            $aComponents = $this->DNAInsSuffixComplex->getComponents();
+            $nComponents = count($aComponents);
+            if ($this->matched_pattern == 'complex_in_brackets'
+                && $nComponents == 1
+                && !$aComponents[0]->hasProperty('ReferenceSequence')) {
+                // The brackets should go.
+                $this->messages['WSUFFIXFORMATNOTCOMPLEX'] = 'The part after "ins" does not follow HGVS guidelines. Only use square brackets for complex insertions.';
+                $this->corrected_values = $this->DNAInsSuffixComplex->getCorrectedValues();
+
+            } else {
+                $this->corrected_values = $this->buildCorrectedValues(
+                    '[', $this->DNAInsSuffixComplex->getCorrectedValues(), ']'
+                );
+            }
         }
     }
 }
