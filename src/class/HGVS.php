@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-11-29
+ * Modified    : 2024-12-02
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -718,18 +718,18 @@ class HGVS_DNAInsSuffix extends HGVS
 {
     use HGVS_DNASequence; // Gets us getSequence() and getLengths().
     public array $patterns = [
-        [ '[', 'HGVS_DNAInsSuffixComplex', ']', [] ],
-        [ 'HGVS_DNAPositions', [] ],
-        [ '[', 'HGVS_Length', ']', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
-        [ 'HGVS_DNAAlts', 'HGVS_Length', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
-        [ 'HGVS_DNAAlts', '[', 'HGVS_Length', ']', [] ],
-        [ 'HGVS_DNAAlts', [] ],
-        [ '(', 'HGVS_DNAAlts', ')', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
-        [ '(', 'HGVS_DNAAlts', 'HGVS_Length', ')', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
-        [ '(', 'HGVS_DNAAlts', '[', 'HGVS_Length', '])', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
-        [ '[', 'HGVS_DNAAlts', ']', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
-        [ '[', 'HGVS_DNAAlts', 'HGVS_Length', ']', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
-        [ '[', 'HGVS_DNAAlts', '[', 'HGVS_Length', ']]', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
+        'complex_in_brackets'              => [ '[', 'HGVS_DNAInsSuffixComplex', ']', [] ],
+        'positions'                        => [ 'HGVS_DNAPositions', [] ],
+        'length_in_brackets'               => [ '[', 'HGVS_Length', ']', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
+        'sequence_with_number'             => [ 'HGVS_DNAAlts', 'HGVS_Length', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
+        'sequence_with_length'             => [ 'HGVS_DNAAlts', '[', 'HGVS_Length', ']', [] ],
+        'sequence'                         => [ 'HGVS_DNAAlts', [] ],
+        'sequence_in_parens'               => [ '(', 'HGVS_DNAAlts', ')', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
+        'sequence_with_number_in_parens'   => [ '(', 'HGVS_DNAAlts', 'HGVS_Length', ')', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
+        'sequence_with_length_in_parens'   => [ '(', 'HGVS_DNAAlts', '[', 'HGVS_Length', '])', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
+        'sequence_in_brackets'             => [ '[', 'HGVS_DNAAlts', ']', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
+        'sequence_with_number_in_brackets' => [ '[', 'HGVS_DNAAlts', 'HGVS_Length', ']', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
+        'sequence_with_length_in_brackets' => [ '[', 'HGVS_DNAAlts', '[', 'HGVS_Length', ']]', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
     ];
 
     public function validate ()
