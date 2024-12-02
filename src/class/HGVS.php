@@ -426,6 +426,15 @@ class HGVS
 
 
 
+    public function getProperties ()
+    {
+        return ($this->properties ?? []);
+    }
+
+
+
+
+
     public function getSuffix ()
     {
         return ($this->suffix ?? '');
@@ -447,6 +456,17 @@ class HGVS
     public function hasMatched ()
     {
         return ($this->matched ?? false);
+    }
+
+
+
+
+
+    public function hasProperty ($sClassName)
+    {
+        // This function checks if this class has a property called $sClassName.
+        // A property is a matched object, stored in the $this->properties array.
+        return ($this->properties && is_array($this->properties) && in_array($sClassName, $this->properties));
     }
 
 
