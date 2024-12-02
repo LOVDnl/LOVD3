@@ -977,7 +977,7 @@ class HGVS_DNAPosition extends HGVS
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->unknown = ($this->matched_pattern == 'unknown');
         $this->unknown_offset = ($this->matched_pattern == 'unknown_intronic');
-        $sVariantPrefix = $this->getParent('HGVS_Variant')->DNAPrefix->getValue();
+        $sVariantPrefix = ($this->getParent('HGVS_Variant')? $this->getParent('HGVS_Variant')->DNAPrefix->getValue() : 'g'); // VCFs usually don't have a prefix.
         $this->position_limits = $this->position_limits[$sVariantPrefix];
         $nCorrectionConfidence = 1;
 
@@ -1437,7 +1437,12 @@ class HGVS_DNAPositions extends HGVS
             || ($this->matched_pattern == 'range'
                 && ($this->DNAPositionStart->uncertain || $this->DNAPositionEnd->uncertain))
         );
-        $VariantPrefix = $this->getParent('HGVS_Variant')->DNAPrefix;
+        if ($this->getParent('HGVS_Variant')) {
+            $VariantPrefix = $this->getParent('HGVS_Variant')->DNAPrefix;
+        } else {
+            // VCFs don't always have a prefix.
+            $VariantPrefix = new HGVS_DNAPrefix('g');
+        }
         $nCorrectionConfidence = (current($this->corrected_values) ?: 1); // Fetch current one, because this object can be revalidated.
 
         if (!$this->range) {
