@@ -1548,8 +1548,9 @@ class HGVS_DNAPositions extends HGVS
 
         // Store the positions in the data array.
         $aPositions = ($this->range? [$this->DNAPositionStart, $this->DNAPositionEnd] : [$this->DNAPosition, $this->DNAPosition]);
-        $this->data['position_start'] = $aPositions[0]->position_sortable;
-        $this->data['position_end'] = $aPositions[1]->position_sortable;
+        // Unknown positions have no sortable position and store their extremes.
+        $this->data['position_start'] = ($aPositions[0]->position_sortable ?? $aPositions[0]->position_limits[0]);
+        $this->data['position_end'] = ($aPositions[1]->position_sortable ?? $aPositions[1]->position_limits[1]);
         if ($VariantPrefix && $VariantPrefix->molecule_type == 'transcript') {
             $this->data['position_start_intron'] = $aPositions[0]->offset;
             $this->data['position_end_intron'] = $aPositions[1]->offset;
