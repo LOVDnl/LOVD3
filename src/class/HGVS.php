@@ -1613,19 +1613,25 @@ class HGVS_DNARefs extends HGVS
 
         // Check for invalid nucleotides.
         if ($this->matched_pattern == 'invalid') {
-            // This is a special case. We need to prevent that we're matching "ins".
+            // This is a special case. We need to prevent that we're matching HGVS reserved terms, like "ins".
             // If we do, we need to pretend that we never matched at all.
-            $nINS = strpos($this->getCorrectedValue(), 'INS');
-            if ($nINS !== false) {
+            $nReservedWord = false;
+            foreach (['del', 'dup', 'ins', 'inv'] as $sKeyword) {
+                $n = strpos($this->getCorrectedValue(), strtoupper($sKeyword));
+                if ($n !== false && ($nReservedWord === false || $n < $nReservedWord)) {
+                    $nReservedWord = $n;
+                }
+            }
+            if ($nReservedWord !== false) {
                 // OK, we can't match this part. We can match anything that came before, though.
-                if (!$nINS) {
-                    // The string starts with "ins". Pretend that didn't match anything.
+                if (!$nReservedWord) {
+                    // The string starts with a reserved keyword. Pretend that didn't match anything.
                     $this->matched = false;
                     return;
                 } else {
-                    // Register that we matched up to 'ins'.
-                    $this->suffix = substr($this->value, $nINS) . $this->suffix;
-                    $this->value = substr($this->value, 0, $nINS);
+                    // Register that we matched up to the reserved keyword.
+                    $this->suffix = substr($this->value, $nReservedWord) . $this->suffix;
+                    $this->value = substr($this->value, 0, $nReservedWord);
                     $this->setCorrectedValue(strtoupper($this->value));
                 }
             }
