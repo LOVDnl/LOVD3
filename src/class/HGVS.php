@@ -1229,7 +1229,7 @@ class HGVS_DNAPositions extends HGVS
     public array $patterns = [
         'range'            => [ 'HGVS_DNAPositionStart', '_', 'HGVS_DNAPositionEnd', [] ],
         'uncertain_range'  => [ '(', 'HGVS_DNAPositionStart', '_', 'HGVS_DNAPositionEnd', ')', [] ],
-        'uncertain_single' => [ '(', 'HGVS_DNAPosition', ')', [ 'WPOSITIONFORMAT' => "The variant's position contains redundant parentheses." ] ],
+        'uncertain_single' => [ '(', 'HGVS_DNAPosition', ')', [ 'WPOSITIONFORMAT' => "This variant description contains a position with redundant parentheses." ] ],
         'single'           => [ 'HGVS_DNAPosition', [] ],
     ];
     public array $lengths = [];
@@ -1504,7 +1504,7 @@ class HGVS_DNAPositions extends HGVS
                 $PositionD = $this->DNAPositionEnd; // Will anyway be C if D == ?.
 
                 if (!$this->arePositionsSorted($PositionA, $PositionD)) {
-                    $this->messages['WPOSITIONFORMAT'] = "The variant's positions are not given in the correct order.";
+                    $this->messages['WPOSITIONFORMAT'] = "This variant description contains positions not given in the correct order.";
                     // Due to excessive complexity with ranges and possible solutions and assumptions,
                     //  we'll only swap positions when neither Start nor End is a range.
                     if (!$this->DNAPositionStart->range && !$this->DNAPositionEnd->range) {
@@ -1515,7 +1515,7 @@ class HGVS_DNAPositions extends HGVS
 
                 } elseif (!$this->arePositionsSorted($PositionB, $PositionC)) {
                     // We can't fix that, so throw an error, not a warning.
-                    $this->messages['EPOSITIONFORMAT'] = "The variant's positions overlap but are not the same.";
+                    $this->messages['EPOSITIONFORMAT'] = "This variant description contains positions that overlap but that are not the same.";
                 }
 
                 // I earlier removed internal uncertainty, e.g., g.(100_?)_(?_200) to g.(100_200).
