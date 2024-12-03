@@ -622,6 +622,7 @@ class HGVS_DNADelSuffix extends HGVS
 
             // Simplest situation first: certain everything, length matches.
             if ($bPositionLengthIsCertain && $bSuffixLengthIsCertain && $nMinLengthVariant == $nMinLengthSuffix) {
+                // Throwing this warning will delete the suffix as well.
                 $this->messages['WSUFFIXGIVEN'] = "The deleted sequence is redundant and should be removed.";
 
             } elseif ($bPositionLengthIsCertain && !$bSuffixLengthIsCertain && $nMaxLengthSuffix <= $nMaxLengthVariant) {
@@ -634,6 +635,7 @@ class HGVS_DNADelSuffix extends HGVS
             } elseif (!$bPositionLengthIsCertain && $bSuffixLengthIsCertain && $nMaxLengthSuffix == $nMaxLengthVariant) {
                 // A special case: When the positions are uncertain but the deletion is certain and fits
                 //  the maximum length precisely, this is a special class of warning.
+                // Throwing this warning will delete the suffix as well.
                 $this->messages['WPOSITIONSUNCERTAIN'] =
                     "The variant's positions indicate an uncertain sequence, but the deletion itself indicates a deleted sequence that fits the given positions precisely." .
                     " This is a conflict; when the deleted sequence is certain, make the variant's positions certain by removing the parentheses.";
@@ -657,7 +659,7 @@ class HGVS_DNADelSuffix extends HGVS
         }
 
         // Store the corrected value.
-        if (isset($this->messages['WSUFFIXGIVEN'])) {
+        if (isset($this->messages['WSUFFIXGIVEN']) || isset($this->messages['WPOSITIONSUNCERTAIN'])) {
             // The suffix should be removed.
             // NOTE: This is not true for delAinsG, but we don't know that here yet.
             $this->setCorrectedValue('');
