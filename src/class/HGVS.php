@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-12-02
+ * Modified    : 2024-12-03
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -70,6 +70,10 @@ class HGVS
             $aMessages = array_pop($aPattern);
             $sInputToParse = $sValue;
             $bMatching = true;
+
+            // Make sure we don't keep anything from any last runs.
+            $this->data = [];
+            $this->messages = [];
 
             foreach ($aPattern as $i => $sPattern) {
                 // Quick check: do we still have something left?
