@@ -1524,6 +1524,20 @@ class HGVS_DNAPositions extends HGVS
                 } elseif (!$this->arePositionsSorted($PositionB, $PositionC)) {
                     // We can't fix that, so throw an error, not a warning.
                     $this->messages['EPOSITIONFORMAT'] = "This variant description contains positions that overlap but that are not the same.";
+
+                } elseif ($this->DNAPositionStart->range && $this->DNAPositionStart->unknown
+                    && !$this->DNAPositionEnd->range && $this->DNAPositionEnd->unknown) {
+                    // g.(?_A)_?del. Should be g.(?_A)_(A_?)del.
+                    $this->messages['WPOSITIONFORMAT'] = "This variant description contains uncertain positions described using an incorrect format.";
+                    // It's easier to just rebuild the whole thing.
+                    $this->DNAPositionEnd = new HGVS_DNAPositionEnd('(' . $this->DNAPositionStart->DNAPosition[1]->getCorrectedValue() . '_?)', $this);
+
+                } elseif (!$this->DNAPositionStart->range && $this->DNAPositionStart->unknown
+                    && $this->DNAPositionEnd->range && $this->DNAPositionEnd->unknown) {
+                    // g.?_(A_?)del. Should be g.(?_A)_(A_?)del.
+                    $this->messages['WPOSITIONFORMAT'] = "This variant description contains uncertain positions described using an incorrect format.";
+                    // It's easier to just rebuild the whole thing.
+                    $this->DNAPositionStart = new HGVS_DNAPositionStart('(?_' . $this->DNAPositionEnd->DNAPosition[0]->getCorrectedValue() . ')', $this);
                 }
 
                 // I earlier removed internal uncertainty, e.g., g.(100_?)_(?_200) to g.(100_200).
