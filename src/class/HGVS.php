@@ -719,7 +719,7 @@ class HGVS_DNAIns extends HGVS
             } elseif (!$Positions->uncertain && $Positions->getLengths() != [2,2]) {
                 // An insertion must always get two positions which are next to each other,
                 //  since the inserted nucleotides will be placed in the middle of those.
-                $this->messages['WPOSITIONFORMAT'] =
+                $this->messages['WPOSITIONSNOTFORINS'] =
                     'An insertion must have taken place between two neighboring positions.' .
                     ' If the exact location is unknown, please indicate this by placing parentheses around the positions.';
                 $Positions->makeUncertain();
@@ -729,7 +729,7 @@ class HGVS_DNAIns extends HGVS
                 //  by placing the positions in the range-format, e.g. c.(1_10)insA. In this
                 //  case, the two positions should not be neighbours, since that would imply that
                 //  the position is certain.
-                $this->messages['WPOSITIONFORMAT'] =
+                $this->messages['WPOSITIONSNOTFORINS'] =
                     'The two positions do not indicate a range longer than two bases.' .
                     ' Please remove the parentheses if the positions are certain.';
                 $Positions->makeCertain();
@@ -795,14 +795,14 @@ class HGVS_DNAInsSuffix extends HGVS
                 $this->messages['WSUFFIXFORMAT'] = 'The part after "' . $this->parent->getData()['type'] . '" does not follow HGVS guidelines.' .
                     ' To report an insertion of an unknown number of nucleotides, use "' . $this->parent->getData()['type'] . $this->getCorrectedValue() . '".';
                 // Also remove the possible warning given by the Positions object. It doesn't like "(?)".
-                unset($this->messages['WPOSITIONFORMAT']);
+                unset($this->messages['WTOOMANYPARENS']);
 
             } elseif (!$this->DNAPositions->intronic && !$this->DNAPositions->UTR && !$this->DNAPositions->range) {
                 // E.g., ins10 or ins(10). We will only interpret this as a length.
                 $this->setCorrectedValue('N[' . $this->DNAPositions->getCorrectedValue() . ']');
                 $this->messages['WSUFFIXFORMAT'] = 'The part after "' . $this->parent->getData()['type'] . '" does not follow HGVS guidelines.';
                 // Also remove the possible warning given by the Positions object. It doesn't like "(10)".
-                unset($this->messages['WPOSITIONFORMAT']);
+                unset($this->messages['WTOOMANYPARENS']);
 
             } elseif ($this->DNAPositions->uncertain && !$this->DNAPositions->intronic && !$this->DNAPositions->UTR
                 && !$this->DNAPositions->DNAPositionStart->range && !$this->DNAPositions->DNAPositionEnd->range) {
@@ -814,7 +814,7 @@ class HGVS_DNAInsSuffix extends HGVS
                 $this->addCorrectedValue($this->DNAPositions->getCorrectedValue(), 0.4);
                 $this->messages['WSUFFIXFORMAT'] .= ' To refer to the inserted sequence using an uncertain range of positions, use "' . $this->parent->getData()['type'] . array_keys($this->getCorrectedValues())[1] . '".';
                 // Also remove the possible warning given by the Positions object. It doesn't like "((10)_(20))".
-                unset($this->messages['WPOSITIONFORMAT']);
+                unset($this->messages['WTOOMANYPARENS']);
 
             } else {
                 // Anything else, we'll interpret as positions.
@@ -1029,13 +1029,13 @@ class HGVS_DNAPosition extends HGVS
             if (!$this->position || $this->position == '*0') {
                 $this->messages['EPOSITIONFORMAT'] = 'This variant description contains an invalid position: "' . $this->value . '".';
             } elseif ((string) $this->position !== $this->regex[1]) {
-                $this->messages['WPOSITIONFORMAT'] = 'Variant positions should not be prefixed by a 0.';
+                $this->messages['WPOSITIONWITHZERO'] = 'Variant positions should not be prefixed by a 0.';
                 $nCorrectionConfidence *= 0.9;
             } elseif ($this->intronic && !$this->unknown_offset) {
                 if (!$this->offset) {
                     $this->messages['EPOSITIONFORMAT'] = 'This variant description contains an invalid intronic position: "' . $this->value . '".';
                 } elseif ((string) abs($this->offset) != $this->regex[4]) {
-                    $this->messages['WPOSITIONFORMAT'] = 'Intronic positions should not be prefixed by a 0.';
+                    $this->messages['WPOSITIONWITHZERO'] = 'Intronic positions should not be prefixed by a 0.';
                     $nCorrectionConfidence *= 0.9;
                 }
             }
@@ -1089,7 +1089,7 @@ class HGVS_DNAPositionStart extends HGVS
 {
     public array $patterns = [
         'uncertain_range'  => [ '(', 'HGVS_DNAPosition', '_', 'HGVS_DNAPosition', ')', [] ],
-        'uncertain_single' => [ '(', 'HGVS_DNAPosition', ')', [ 'WPOSITIONFORMAT' => "The variant's positions contain redundant parentheses." ] ],
+        'uncertain_single' => [ '(', 'HGVS_DNAPosition', ')', [ 'WTOOMANYPARENS' => "The variant's positions contain redundant parentheses." ] ],
         'single'           => [ 'HGVS_DNAPosition', [] ],
     ];
 
@@ -1130,7 +1130,7 @@ class HGVS_DNAPositionStart extends HGVS
             // If the positions are the same, warn and remove one.
             if ($this->DNAPosition[0]->position == $this->DNAPosition[1]->position) {
                 if ($this->DNAPosition[0]->getCorrectedValue() == $this->DNAPosition[1]->getCorrectedValue()) {
-                    $this->messages['WPOSITIONFORMAT'] = 'This variant description contains two positions that are the same.';
+                    $this->messages['WSAMEPOSITIONS'] = 'This variant description contains two positions that are the same.';
                     $nCorrectionConfidence *= 0.9;
                     // Discard the other object.
                     $this->DNAPosition = $this->DNAPosition[0];
@@ -1172,7 +1172,7 @@ class HGVS_DNAPositionStart extends HGVS
             } else {
                 // OK, we're still a range. Check the variant's order.
                 if (!$this->arePositionsSorted($this->DNAPosition[0], $this->DNAPosition[1])) {
-                    $this->messages['WPOSITIONFORMAT'] = "The variant's positions are not given in the correct order.";
+                    $this->messages['WPOSITIONORDER'] = "The variant's positions are not given in the correct order.";
                     $nCorrectionConfidence *= 0.9;
                     // Swap the positions.
                     $this->DNAPosition = [$this->DNAPosition[1], $this->DNAPosition[0]];
@@ -1237,7 +1237,7 @@ class HGVS_DNAPositions extends HGVS
     public array $patterns = [
         'range'            => [ 'HGVS_DNAPositionStart', '_', 'HGVS_DNAPositionEnd', [] ],
         'uncertain_range'  => [ '(', 'HGVS_DNAPositionStart', '_', 'HGVS_DNAPositionEnd', ')', [] ],
-        'uncertain_single' => [ '(', 'HGVS_DNAPosition', ')', [ 'WPOSITIONFORMAT' => "This variant description contains a position with redundant parentheses." ] ],
+        'uncertain_single' => [ '(', 'HGVS_DNAPosition', ')', [ 'WTOOMANYPARENS' => "This variant description contains a position with redundant parentheses." ] ],
         'single'           => [ 'HGVS_DNAPosition', [] ],
     ];
     public array $lengths = [];
@@ -1484,7 +1484,7 @@ class HGVS_DNAPositions extends HGVS
             if ($this->DNAPositionStart->getCorrectedValue() == $this->DNAPositionEnd->getCorrectedValue()
                 && !$this->DNAPositionStart->unknown) {
                 // Exception: Start and End _can_ be both unknown, e.g., g.?_?ins[...].
-                $this->messages['WPOSITIONFORMAT'] = 'This variant description contains two positions that are the same.';
+                $this->messages['WSAMEPOSITIONS'] = 'This variant description contains two positions that are the same.';
                 $nCorrectionConfidence *= 0.9;
                 // Discard the other object.
                 $this->DNAPosition = $this->DNAPositionStart;
@@ -1512,7 +1512,7 @@ class HGVS_DNAPositions extends HGVS
                 $PositionD = $this->DNAPositionEnd; // Will anyway be C if D == ?.
 
                 if (!$this->arePositionsSorted($PositionA, $PositionD)) {
-                    $this->messages['WPOSITIONFORMAT'] = "This variant description contains positions not given in the correct order.";
+                    $this->messages['WPOSITIONORDER'] = "This variant description contains positions not given in the correct order.";
                     // Due to excessive complexity with ranges and possible solutions and assumptions,
                     //  we'll only swap positions when neither Start nor End is a range.
                     if (!$this->DNAPositionStart->range && !$this->DNAPositionEnd->range) {
