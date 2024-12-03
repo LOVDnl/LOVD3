@@ -650,7 +650,7 @@ class HGVS_DNADelSuffix extends HGVS
                         "The variant's positions indicate a sequence that's longer than the given deleted sequence." .
                         " Please adjust either the variant's positions or the given deleted sequence.";
                 }
-                if ($nMaxLengthSuffix > $nMaxLengthVariant) {
+                if ($nMaxLengthVariant && $nMaxLengthSuffix > $nMaxLengthVariant) {
                     $this->messages['ESUFFIXTOOLONG'] =
                         "The variant's positions indicate a sequence that's shorter than the given deleted sequence." .
                         " Please adjust either the variant's positions or the given deleted sequence.";
