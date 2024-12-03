@@ -1073,7 +1073,7 @@ class HGVS_DNAPosition extends HGVS
             $this->corrected_values = $this->buildCorrectedValues(
                 ['' => $nCorrectionConfidence],
                 $this->position .
-                ($this->offset? ($this->offset > 0? '+' : '-') . ($this->unknown_offset? '?' : $this->offset) : '')
+                ($this->offset? ($this->offset > 0? '+' : '-') . ($this->unknown_offset? '?' : abs($this->offset)) : '')
             );
         }
     }
