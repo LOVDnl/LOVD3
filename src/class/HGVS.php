@@ -1566,7 +1566,8 @@ class HGVS_DNAPositions extends HGVS
         }
 
         // Now, store the corrected value.
-        if ($this->matched_pattern == 'uncertain_range') {
+        if ($this->range && $this->uncertain
+            && !$this->DNAPositionStart->range && !$this->DNAPositionEnd->range) {
             $this->corrected_values = $this->buildCorrectedValues(
                 ['' => $nCorrectionConfidence],
                 '(', $this->DNAPositionStart->getCorrectedValues(), '_', $this->DNAPositionEnd->getCorrectedValues(), ')'
