@@ -1057,15 +1057,27 @@ class HGVS_DNAPosition extends HGVS
                 }
             }
 
-            // Adjust minimum and maximum values, to be used in further processing.
-            $this->position_limits[0] = $this->position_sortable;
-            $this->position_limits[1] = $this->position_sortable;
+            // Adjust minimum and maximum values, to be used in further processing, but keep within limits.
+            if ($this->position_sortable < $this->position_limits[0]) {
+                $this->position_limits[1] = $this->position_limits[0];
+            } elseif ($this->position_sortable > $this->position_limits[1]) {
+                $this->position_limits[0] = $this->position_limits[1];
+            } else {
+                $this->position_limits[0] = $this->position_sortable;
+                $this->position_limits[1] = $this->position_sortable;
+            }
             if (!$this->intronic) {
                 $this->position_limits[2] = 0;
                 $this->position_limits[3] = 0;
             } elseif ($this->matched_pattern != 'unknown_intronic') {
-                $this->position_limits[2] = $this->offset;
-                $this->position_limits[3] = $this->offset;
+                if ($this->offset < $this->position_limits[2]) {
+                    $this->position_limits[3] = $this->position_limits[2];
+                } elseif ($this->offset > $this->position_limits[3]) {
+                    $this->position_limits[2] = $this->position_limits[3];
+                } else {
+                    $this->position_limits[2] = $this->offset;
+                    $this->position_limits[3] = $this->offset;
+                }
             } elseif ($this->offset > 0) {
                 // +?, minimum is 1.
                 $this->position_limits[2] = $this->offset;
