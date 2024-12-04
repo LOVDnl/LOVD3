@@ -2168,6 +2168,7 @@ trait HGVS_DNASequence
             return $this->sequences;
         }
 
+        // Create arrays with chunks of the sequence. I need chunks because lengths should modify ONE sequence chunk.
         $aSequencesMin = [];
         $aSequencesMax = [];
 
@@ -2187,7 +2188,7 @@ trait HGVS_DNASequence
                     }
 
                     $aSequencesMin[$nLastKey] = str_repeat($aSequencesMin[$nLastKey], $aLengths[0]);
-                    $aSequencesMin[$nLastKey] = str_repeat($aSequencesMax[$nLastKey], $aLengths[1]);
+                    $aSequencesMax[$nLastKey] = str_repeat($aSequencesMax[$nLastKey], $aLengths[1]);
                 }
             }
             // Other patterns are ignored (strings and the message array).
