@@ -1587,11 +1587,37 @@ class HGVS_DNAPositions extends HGVS
         if (get_class($this->parent) == 'HGVS_DNAVariantBody') {
             $aPositions = ($this->range? [$this->DNAPositionStart, $this->DNAPositionEnd] : [$this->DNAPosition, $this->DNAPosition]);
             // Unknown positions have no sortable position and store their extremes.
-            $this->data['position_start'] = ($aPositions[0]->position_sortable ?? $aPositions[0]->position_limits[0]);
-            $this->data['position_end'] = ($aPositions[1]->position_sortable ?? $aPositions[1]->position_limits[1]);
+            if (!isset($aPositions[0]->position_sortable)
+                || $aPositions[0]->position_sortable < $aPositions[0]->position_limits[0]) {
+                $this->data['position_start'] = $aPositions[0]->position_limits[0];
+            } elseif ($aPositions[0]->position_sortable > $aPositions[0]->position_limits[1]) {
+                $this->data['position_start'] = $aPositions[0]->position_limits[1];
+            } else {
+                $this->data['position_start'] = $aPositions[0]->position_sortable;
+            }
+            if (!isset($aPositions[1]->position_sortable)
+                || $aPositions[1]->position_sortable > $aPositions[1]->position_limits[1]) {
+                $this->data['position_end'] = $aPositions[1]->position_limits[1];
+            } elseif ($aPositions[1]->position_sortable < $aPositions[1]->position_limits[0]) {
+                $this->data['position_end'] = $aPositions[1]->position_limits[0];
+            } else {
+                $this->data['position_end'] = $aPositions[1]->position_sortable;
+            }
             if ($VariantPrefix && $VariantPrefix->molecule_type == 'transcript') {
-                $this->data['position_start_intron'] = $aPositions[0]->offset;
-                $this->data['position_end_intron'] = $aPositions[1]->offset;
+                if ($aPositions[0]->offset < $aPositions[0]->position_limits[2]) {
+                    $this->data['position_start_intron'] = $aPositions[0]->position_limits[2];
+                } elseif ($aPositions[0]->offset > $aPositions[0]->position_limits[3]) {
+                    $this->data['position_start_intron'] = $aPositions[0]->position_limits[3];
+                } else {
+                    $this->data['position_start_intron'] = $aPositions[0]->offset;
+                }
+                if ($aPositions[1]->offset > $aPositions[1]->position_limits[3]) {
+                    $this->data['position_end_intron'] = $aPositions[1]->position_limits[3];
+                } elseif ($aPositions[1]->offset < $aPositions[1]->position_limits[2]) {
+                    $this->data['position_end_intron'] = $aPositions[1]->position_limits[2];
+                } else {
+                    $this->data['position_end_intron'] = $aPositions[1]->offset;
+                }
             }
             $this->data['range'] = $this->range;
         }
