@@ -1534,6 +1534,15 @@ class HGVS_DNAPositions extends HGVS
                         // Resort the positions.
                         list($this->DNAPositionStart, $this->DNAPositionEnd) = [$this->DNAPositionEnd, $this->DNAPositionStart];
                         $nCorrectionConfidence *= 0.9;
+
+                    } elseif (!$this->DNAPositionStart->unknown && !$this->DNAPositionEnd->unknown) {
+                        // OK, actually, we can also swap the positions when they are ranges but there are no unknowns.
+                        // We do need to do this differently, though. Swapping the variables like above will have side
+                        //  effects since DNAPositionStart and DNAPositionEnd handle positions slightly differently.
+                        $DNAPositionStart = new HGVS_DNAPositionStart($this->DNAPositionEnd->getCorrectedValue(), $this);
+                        $DNAPositionEnd = new HGVS_DNAPositionEnd($this->DNAPositionStart->getCorrectedValue(), $this);
+                        list($this->DNAPositionStart, $this->DNAPositionEnd) = [$DNAPositionStart, $DNAPositionEnd];
+                        $nCorrectionConfidence *= 0.8;
                     }
 
                 } elseif (!$this->arePositionsSorted($PositionB, $PositionC)) {
