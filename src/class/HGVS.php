@@ -1035,6 +1035,8 @@ class HGVS_DNAPosition extends HGVS
             if ($this->intronic && !$this->unknown_offset) {
                 if (!$this->offset) {
                     $this->messages['EPOSITIONFORMAT'] = 'This variant description contains an invalid intronic position: "' . $this->value . '".';
+                    // Automatically, the corrected value will simply drop the intronic offset. That's a very inconfident change.
+                    $nCorrectionConfidence *= 0.5;
                 } elseif ((string) abs($this->offset) !== $this->regex[4]) {
                     $this->messages['WINTRONICPOSITIONWITHZERO'] = 'Intronic positions should not be prefixed by a 0.';
                     $nCorrectionConfidence *= 0.9;
