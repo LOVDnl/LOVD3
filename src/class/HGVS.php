@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-12-03
+ * Modified    : 2024-12-04
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -638,7 +638,7 @@ class HGVS_DNADelSuffix extends HGVS
                 // Throwing this warning will delete the suffix as well.
                 $this->messages['WPOSITIONSUNCERTAIN'] =
                     "The variant's positions indicate an uncertain sequence, but the deletion itself indicates a deleted sequence that fits the given positions precisely." .
-                    " This is a conflict; when the deleted sequence is certain, make the variant's positions certain by removing the parentheses.";
+                    " This is a conflict; when the deleted sequence is certain, make the variant's positions certain by removing the parentheses and remove the deleted sequence from the variant description.";
                 $Positions->makeCertain();
 
             } else {
