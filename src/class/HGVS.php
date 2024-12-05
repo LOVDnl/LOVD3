@@ -986,7 +986,7 @@ class HGVS_DNAPosition extends HGVS
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->unknown = ($this->matched_pattern == 'unknown');
         $this->unknown_offset = ($this->matched_pattern == 'unknown_intronic');
-        $sVariantPrefix = ($this->getParent('HGVS_Variant')? $this->getParent('HGVS_Variant')->DNAPrefix->getValue() : 'g'); // VCFs usually don't have a prefix.
+        $sVariantPrefix = ($this->getParent('HGVS_Variant')? $this->getParent('HGVS_Variant')->DNAPrefix->getCorrectedValue() : 'g'); // VCFs usually don't have a prefix.
         $this->position_limits = $this->position_limits[$sVariantPrefix];
         $nCorrectionConfidence = 1;
 
@@ -1130,7 +1130,7 @@ class HGVS_DNAPositionStart extends HGVS
 
             // Before we add more errors or warnings, check if we have multiple errors that are the same.
             // We currently don't handle arrays as error messages.
-            $sVariantPrefix = $this->getParent('HGVS_Variant')->DNAPrefix->getValue();
+            $sVariantPrefix = $this->getParent('HGVS_Variant')->DNAPrefix->getCorrectedValue();
             // Get new messages for errors that occurred twice.
             $aDoubleMessages = array_intersect_key(
                 [
@@ -1483,7 +1483,7 @@ class HGVS_DNAPositions extends HGVS
 
             // Before we add more errors or warnings, check if we have multiple errors that are the same.
             // We currently don't handle arrays as error messages.
-            $sVariantPrefix = $VariantPrefix->getValue();
+            $sVariantPrefix = $VariantPrefix->getCorrectedValue();
             // Get new messages for errors that occurred twice.
             $aDoubleMessages = array_intersect_key(
                 [
