@@ -1900,6 +1900,8 @@ class HGVS_ReferenceSequence extends HGVS
         'refseq_genomic_coding'       => [ '/(N[CG])([_-])?([0-9]+)(\.[0-9]+)?\(([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?\)/', [] ],
         'refseq_genomic_non-coding'   => [ '/(N[CG])([_-])?([0-9]+)(\.[0-9]+)?\(([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?\)/', [] ],
         'refseq_genomic'              => [ '/(N[CG])([_-])?([0-9]+)(\.[0-9]+)?/', [] ],
+        'refseq_coding'               => [ '/([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
+        'refseq_non-coding'           => [ '/([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
     ];
 
     public function validate ()
@@ -1968,6 +1970,36 @@ class HGVS_ReferenceSequence extends HGVS
                     $this->messages['EREFERENCEFORMAT'] =
                         'The reference sequence ID is missing the required version number.' .
                         ' NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.';
+                }
+                break;
+
+            case 'refseq_coding':
+            case 'refseq_non-coding':
+                $this->molecule_type = 'transcript';
+                $this->setCorrectedValue(
+                    strtoupper($this->regex[1]) .
+                    '_' .
+                    str_pad((int) $this->regex[3], (strlen((int) $this->regex[3]) > 6? 9 : 6), '0', STR_PAD_LEFT) .
+                    (!isset($this->regex[4])? '' : '.' . (int) substr($this->regex[4], 1))
+                );
+                $this->caseOK = ($this->regex[1] == strtoupper($this->regex[1]));
+
+                if (($this->regex[2] ?? '') != '_') {
+                    $this->messages['WREFERENCEFORMAT'] =
+                        'NCBI reference sequence IDs require an underscore between the prefix and the numeric ID.';
+                } elseif (strlen((int) $this->regex[3]) > 9) {
+                    $this->messages['EREFERENCEFORMAT'] =
+                        'NCBI transcript reference sequence IDs consist of six or nine digits.';
+                } elseif (!in_array(strlen($this->regex[3]), [6, 9])) {
+                    $this->messages['WREFERENCEFORMAT'] =
+                        'NCBI transcript reference sequence IDs consist of six or nine digits.';
+                } elseif (empty($this->regex[4])) {
+                    $this->messages['EREFERENCEFORMAT'] =
+                        'The reference sequence ID is missing the required version number.' .
+                        ' NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.';
+                } elseif (!in_array($this->matched_pattern, ['refseq_coding', 'refseq_non-coding'])) {
+                    $this->messages['WREFERENCEFORMAT'] =
+                        'The reference sequence ID should not include a gene symbol.';
                 }
                 break;
         }
