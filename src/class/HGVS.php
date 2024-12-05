@@ -1906,6 +1906,8 @@ class HGVS_ReferenceSequence extends HGVS
         'refseq_non-coding'           => [ '/([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
         'refseq_gene_with_coding'     => [ '/(?:[A-Z][A-Za-z0-9#@-]*)\(([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?\)/', [] ],
         'refseq_gene_with_non-coding' => [ '/(?:[A-Z][A-Za-z0-9#@-]*)\(([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?\)/', [] ],
+        'ensembl_genomic'             => [ '/(ENSG)([_-])?([0-9]+)(\.[0-9]+)?/', [] ],
+        'ensembl_transcript'          => [ '/(ENST)([_-])?([0-9]+)(\.[0-9]+)?/', [] ],
     ];
 
     public function validate ()
@@ -2008,6 +2010,32 @@ class HGVS_ReferenceSequence extends HGVS
                 } elseif (!in_array($this->matched_pattern, ['refseq_coding', 'refseq_non-coding'])) {
                     $this->messages['WREFERENCEFORMAT'] =
                         'The reference sequence ID should not include a gene symbol.';
+                }
+                break;
+
+            case 'ensembl_genomic':
+            case 'ensembl_transcript':
+                $this->molecule_type = ($this->matched_pattern == 'ensembl_genomic'? 'genome' : 'transcript');
+                $this->setCorrectedValue(
+                    strtoupper($this->regex[1]) .
+                    str_pad((int) $this->regex[3], 11, '0', STR_PAD_LEFT) .
+                    (!isset($this->regex[4])? '' : '.' . (int) substr($this->regex[4], 1))
+                );
+                $this->caseOK = ($this->value == strtoupper($this->value));
+
+                if (!empty($this->regex[2])) {
+                    $this->messages['WREFERENCEFORMAT'] =
+                        'Ensembl reference sequence IDs don\'t allow a divider between the prefix and the numeric ID.';
+                } elseif (strlen((int) $this->regex[3]) > 11) {
+                    $this->messages['EREFERENCEFORMAT'] =
+                        'Ensembl reference sequence IDs require 11 digits.';
+                } elseif (strlen($this->regex[3]) != 11) {
+                    $this->messages['WREFERENCEFORMAT'] =
+                        'Ensembl reference sequence IDs require 11 digits.';
+                } elseif (empty($this->regex[4])) {
+                    $this->messages['EREFERENCEFORMAT'] =
+                        'The reference sequence ID is missing the required version number.' .
+                        ' NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.';
                 }
                 break;
         }
