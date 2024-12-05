@@ -1900,8 +1900,12 @@ class HGVS_ReferenceSequence extends HGVS
         'refseq_genomic_coding'       => [ '/(N[CG])([_-])?([0-9]+)(\.[0-9]+)?\(([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?\)/', [] ],
         'refseq_genomic_non-coding'   => [ '/(N[CG])([_-])?([0-9]+)(\.[0-9]+)?\(([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?\)/', [] ],
         'refseq_genomic'              => [ '/(N[CG])([_-])?([0-9]+)(\.[0-9]+)?/', [] ],
+        'refseq_coding_with_gene'     => [ '/([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?\(([A-Z][A-Za-z0-9#@-]*(_v[0-9]+)?)\)/', [] ],
         'refseq_coding'               => [ '/([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
+        'refseq_non-coding_with_gene' => [ '/([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?\(([A-Z][A-Za-z0-9#@-]*(_v[0-9]+)?)\)/', [] ],
         'refseq_non-coding'           => [ '/([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
+        'refseq_gene_with_coding'     => [ '/(?:[A-Z][A-Za-z0-9#@-]*)\(([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?\)/', [] ],
+        'refseq_gene_with_non-coding' => [ '/(?:[A-Z][A-Za-z0-9#@-]*)\(([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?\)/', [] ],
     ];
 
     public function validate ()
@@ -1973,8 +1977,12 @@ class HGVS_ReferenceSequence extends HGVS
                 }
                 break;
 
+            case 'refseq_coding_with_gene':
             case 'refseq_coding':
+            case 'refseq_non-coding_with_gene':
             case 'refseq_non-coding':
+            case 'refseq_gene_with_coding':
+            case 'refseq_gene_with_non-coding':
                 $this->molecule_type = 'transcript';
                 $this->setCorrectedValue(
                     strtoupper($this->regex[1]) .
