@@ -1908,6 +1908,7 @@ class HGVS_ReferenceSequence extends HGVS
         'refseq_gene_with_non-coding' => [ '/(?:[A-Z][A-Za-z0-9#@-]*)\(([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?\)/', [] ],
         'ensembl_genomic'             => [ '/(ENSG)([_-])?([0-9]+)(\.[0-9]+)?/', [] ],
         'ensembl_transcript'          => [ '/(ENST)([_-])?([0-9]+)(\.[0-9]+)?/', [] ],
+        'LRG_transcript'              => [ '/(LRG)([_-]?)([0-9]+)(t)([0-9]+)/', [] ],
     ];
 
     public function validate ()
@@ -2036,6 +2037,24 @@ class HGVS_ReferenceSequence extends HGVS
                     $this->messages['EREFERENCEFORMAT'] =
                         'The reference sequence ID is missing the required version number.' .
                         ' NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.';
+                }
+                break;
+
+            case 'LRG_transcript':
+                $this->molecule_type = 'genome_transcript';
+                $this->setCorrectedValue(
+                    strtoupper($this->regex[1]) .
+                    '_' .
+                    (int) $this->regex[3] .
+                    strtolower($this->regex[4]) .
+                    (int) $this->regex[5]
+                );
+                $this->caseOK = ($this->regex[1] == strtoupper($this->regex[1])
+                    && $this->regex[4] == strtolower($this->regex[4]));
+
+                if (($this->regex[2] ?? '') != '_') {
+                    $this->messages['WREFERENCEFORMAT'] =
+                        'LRG reference sequence IDs require an underscore between the prefix and the numeric ID.';
                 }
                 break;
         }
