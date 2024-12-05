@@ -1897,14 +1897,39 @@ class HGVS_Length extends HGVS
 class HGVS_ReferenceSequence extends HGVS
 {
     public array $patterns = [
-        [ '/NC_[0-9]{6}\.[0-9]{1,2}/', [] ],
+        'refseq_genomic'              => [ '/(N[CG])([_-])?([0-9]+)(\.[0-9]+)?/', [] ],
     ];
 
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
-        $this->setCorrectedValue(strtoupper($this->value));
-        $this->caseOK = ($this->value == $this->getCorrectedValue());
+        switch ($this->matched_pattern) {
+            case 'refseq_genomic':
+                $this->molecule_type = 'genome';
+                $this->setCorrectedValue(
+                    strtoupper($this->regex[1]) .
+                    '_' .
+                    str_pad((int) $this->regex[3], 6, '0', STR_PAD_LEFT) .
+                    (!isset($this->regex[4])? '' : '.' . (int) substr($this->regex[4], 1))
+                );
+                $this->caseOK = ($this->value == strtoupper($this->value));
+
+                if (($this->regex[2] ?? '') != '_') {
+                    $this->messages['WREFERENCEFORMAT'] =
+                        'NCBI reference sequence IDs require an underscore between the prefix and the numeric ID.';
+                } elseif (strlen((int) $this->regex[3]) > 6) {
+                    $this->messages['EREFERENCEFORMAT'] =
+                        'NCBI genomic reference sequence IDs consist of six digits.';
+                } elseif (strlen($this->regex[3]) != 6) {
+                    $this->messages['WREFERENCEFORMAT'] =
+                        'NCBI genomic reference sequence IDs consist of six digits.';
+                } elseif (empty($this->regex[4])) {
+                    $this->messages['EREFERENCEFORMAT'] =
+                        'The reference sequence ID is missing the required version number.' .
+                        ' NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.';
+                }
+                break;
+        }
     }
 }
 
