@@ -1909,6 +1909,7 @@ class HGVS_ReferenceSequence extends HGVS
         'ensembl_genomic'             => [ '/(ENSG)([_-])?([0-9]+)(\.[0-9]+)?/', [] ],
         'ensembl_transcript'          => [ '/(ENST)([_-])?([0-9]+)(\.[0-9]+)?/', [] ],
         'LRG_transcript'              => [ '/(LRG)([_-]?)([0-9]+)(t)([0-9]+)/', [] ],
+        'LRG_genomic'                 => [ '/(LRG)([_-]?)([0-9]+)/', [] ],
     ];
 
     public function validate ()
@@ -2051,6 +2052,21 @@ class HGVS_ReferenceSequence extends HGVS
                 );
                 $this->caseOK = ($this->regex[1] == strtoupper($this->regex[1])
                     && $this->regex[4] == strtolower($this->regex[4]));
+
+                if (($this->regex[2] ?? '') != '_') {
+                    $this->messages['WREFERENCEFORMAT'] =
+                        'LRG reference sequence IDs require an underscore between the prefix and the numeric ID.';
+                }
+                break;
+
+            case 'LRG_genomic':
+                $this->molecule_type = 'genome';
+                $this->setCorrectedValue(
+                    strtoupper($this->regex[1]) .
+                    '_' .
+                    (int) $this->regex[3]
+                );
+                $this->caseOK = ($this->regex[1] == strtoupper($this->regex[1]));
 
                 if (($this->regex[2] ?? '') != '_') {
                     $this->messages['WREFERENCEFORMAT'] =
