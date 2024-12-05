@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-12-04
+ * Modified    : 2024-12-05
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -72,6 +72,7 @@ class HGVS
             $bMatching = true;
 
             // Make sure we don't keep anything from any last runs.
+            $this->caseOK = true;
             $this->data = [];
             $this->messages = [];
 
@@ -533,7 +534,7 @@ class HGVS
 class HGVS_DNADel extends HGVS
 {
     public array $patterns = [
-        [ 'del', [] ],
+        [ '/del/', [] ],
     ];
 
     public function validate ()
@@ -682,7 +683,7 @@ class HGVS_DNADelSuffix extends HGVS
 class HGVS_DNAIns extends HGVS
 {
     public array $patterns = [
-        [ 'ins', [] ],
+        [ '/ins/', [] ],
     ];
 
     public function validate ()
@@ -1659,11 +1660,11 @@ class HGVS_DNAPositions extends HGVS
 class HGVS_DNAPrefix extends HGVS
 {
     public array $patterns = [
-        'coding'     => [ 'c', [] ],
-        'genomic'    => [ 'g', [] ],
-        'mito'       => [ 'm', [] ],
-        'non-coding' => [ 'n', [] ],
-        'circular'   => [ 'o', [] ],
+        'coding'     => [ '/c/', [] ],
+        'genomic'    => [ '/g/', [] ],
+        'mito'       => [ '/m/', [] ],
+        'non-coding' => [ '/n/', [] ],
+        'circular'   => [ '/o/', [] ],
     ];
 
     public function validate ()
