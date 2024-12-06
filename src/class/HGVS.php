@@ -591,6 +591,8 @@ class HGVS_DNAAlts extends HGVS
 
 class HGVS_DNADelSuffix extends HGVS
 {
+    // NOTE: This class is used for deletion and duplication suffixes. By default, all messages speak of deletions.
+    //       When handling duplications, the code will fix the messages. This keeps the code very simple.
     use HGVS_DNASequence; // Gets us getSequence() and getLengths().
     public array $patterns = [
         // Since none of these match "ins", a "delAinsC" won't ever pass here.
@@ -683,6 +685,28 @@ class HGVS_DNADelSuffix extends HGVS
                 (!$this->Length->getCorrectedValues()? '' :
                     $this->buildCorrectedValues('[', $this->Length->getCorrectedValues(), ']'))
             );
+        }
+
+        // Now, handle the duplication suffixes.
+        // It's much more efficient to handle deletion suffixes and duplication suffixes in just one class.
+        // HGVS_DNADupSuffix extends this class, and, therefore, inherits all patterns, checks, and validations.
+        // However, all warnings and errors are now talking about deletions. Fix this by simply replacing the words.
+        if (get_class($this) == 'HGVS_DNADupSuffix') {
+            // We have to fix all messages now.
+            foreach ($this->messages as $sCode => $sMessage) {
+                $this->messages[$sCode] = str_replace(
+                    [
+                        '"del"',
+                        'deletion',
+                        'deleted',
+                    ], [
+                        '"dup"',
+                        'duplication',
+                        'duplicated',
+                    ],
+                    $sMessage
+                );
+            }
         }
     }
 }
