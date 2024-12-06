@@ -531,6 +531,25 @@ class HGVS
 
 
 
+class HGVS_DNACon extends HGVS
+{
+    public array $patterns = [
+        [ '/con/', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->setCorrectedValue('delins');
+        $this->data['type'] = $this->getCorrectedValue();
+        $this->messages['WWRONGTYPE'] = 'A conversion should be described as a deletion-insertion.';
+    }
+}
+
+
+
+
+
 class HGVS_DNADel extends HGVS
 {
     public array $patterns = [
@@ -1734,7 +1753,7 @@ class HGVS_DNARefs extends HGVS
             // This is a special case. We need to prevent that we're matching HGVS reserved terms, like "ins".
             // If we do, we need to pretend that we never matched at all.
             $nReservedWord = false;
-            foreach (['del', 'dup', 'ins', 'inv'] as $sKeyword) {
+            foreach (['con', 'del', 'dup', 'ins', 'inv'] as $sKeyword) {
                 $n = strpos($this->getCorrectedValue(), strtoupper($sKeyword));
                 if ($n !== false && ($nReservedWord === false || $n < $nReservedWord)) {
                     $nReservedWord = $n;
@@ -1799,6 +1818,8 @@ class HGVS_DNAVariantBody extends HGVS
         'ins'                 => [ 'HGVS_DNAPositions', 'HGVS_DNAIns', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for insertions.' ] ],
         'dup_with_suffix'     => [ 'HGVS_DNAPositions', 'HGVS_DNADup', 'HGVS_DNADupSuffix', [] ],
         'dup'                 => [ 'HGVS_DNAPositions', 'HGVS_DNADup', [] ],
+        'con_with_suffix'     => [ 'HGVS_DNAPositions', 'HGVS_DNACon', 'HGVS_DNAInsSuffix', [] ],
+        'con'                 => [ 'HGVS_DNAPositions', 'HGVS_DNACon', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
     ];
 
     public function validate ()
