@@ -1871,6 +1871,8 @@ class HGVS_DNAVariantBody extends HGVS
         'con_with_suffix'     => [ 'HGVS_DNAPositions', 'HGVS_DNACon', 'HGVS_DNAInsSuffix', [] ],
         'con'                 => [ 'HGVS_DNAPositions', 'HGVS_DNACon', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
         'unknown'             => [ 'HGVS_DNAUnknown', [] ],
+        'wildtype_with_pos'   => [ 'HGVS_DNAPositions', 'HGVS_DNAWildType', [] ],
+        'wildtype'            => [ 'HGVS_DNAWildType', [] ],
     ];
 
     public function validate ()
@@ -1909,6 +1911,23 @@ class HGVS_DNAVariantBody extends HGVS
                 unset($this->messages['WSUFFIXGIVEN']);
             }
         }
+    }
+}
+
+
+
+
+
+class HGVS_DNAWildType extends HGVS
+{
+    public array $patterns = [
+        [ '=', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->data['type'] = $this->getCorrectedValue();
     }
 }
 
