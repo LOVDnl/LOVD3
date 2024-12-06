@@ -1022,6 +1022,32 @@ class HGVS_DNAInsSuffixComplexComponent extends HGVS
 
 
 
+class HGVS_DNANull extends HGVS
+{
+    public array $patterns = [
+        'predicted' => [ '0?', [] ],
+        'observed'  => [ '0', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->data['type'] = substr($this->getCorrectedValue(), 0, 1);
+        $this->predicted = ($this->matched_pattern == 'predicted');
+
+        $sVariantPrefix = $this->getParent('HGVS_Variant')->DNAPrefix->getCorrectedValue();
+        $this->data['position_start'] = 0;
+        $this->data['position_end'] = 0;
+        $this->data['position_start_intron'] = 0;
+        $this->data['position_end_intron'] = 0;
+        $this->data['range'] = false;
+    }
+}
+
+
+
+
+
 class HGVS_DNAPosition extends HGVS
 {
     public array $patterns = [
@@ -1807,6 +1833,7 @@ class HGVS_DNASub extends HGVS
 class HGVS_DNAVariantBody extends HGVS
 {
     public array $patterns = [
+        'null'                => [ 'HGVS_DNANull', [] ],
         'substitution'        => [ 'HGVS_DNAPositions', 'HGVS_DNARefs', 'HGVS_DNASub', 'HGVS_DNAAlts', [] ],
         'delXins_with_suffix' => [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNADelSuffix', 'HGVS_DNAIns', 'HGVS_DNAInsSuffix', [] ],
         'delXins'             => [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNADelSuffix', 'HGVS_DNAIns', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
@@ -1825,6 +1852,12 @@ class HGVS_DNAVariantBody extends HGVS
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
+        if ($this->matched_pattern == 'null') {
+            $this->predicted = $this->DNANull->predicted;
+        } else {
+            $this->predicted = false;
+        }
+
 
         // Delins and substitution variants deserve some additional attention.
         // Based on the REF and ALT info, we may need to shift the variant or change it to a different type.
