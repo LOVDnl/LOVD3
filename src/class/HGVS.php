@@ -1836,6 +1836,23 @@ class HGVS_DNASub extends HGVS
 
 
 
+class HGVS_DNAUnknown extends HGVS
+{
+    public array $patterns = [
+        [ '?', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->data['type'] = $this->getCorrectedValue();
+    }
+}
+
+
+
+
+
 class HGVS_DNAVariantBody extends HGVS
 {
     public array $patterns = [
@@ -1853,6 +1870,7 @@ class HGVS_DNAVariantBody extends HGVS
         'dup'                 => [ 'HGVS_DNAPositions', 'HGVS_DNADup', [] ],
         'con_with_suffix'     => [ 'HGVS_DNAPositions', 'HGVS_DNACon', 'HGVS_DNAInsSuffix', [] ],
         'con'                 => [ 'HGVS_DNAPositions', 'HGVS_DNACon', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
+        'unknown'             => [ 'HGVS_DNAUnknown', [] ],
     ];
 
     public function validate ()
