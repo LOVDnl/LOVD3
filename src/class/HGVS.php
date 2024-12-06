@@ -1038,8 +1038,14 @@ class HGVS_DNANull extends HGVS
         $sVariantPrefix = $this->getParent('HGVS_Variant')->DNAPrefix->getCorrectedValue();
         $this->data['position_start'] = 0;
         $this->data['position_end'] = 0;
-        $this->data['position_start_intron'] = 0;
-        $this->data['position_end_intron'] = 0;
+        if (in_array($sVariantPrefix, ['g', 'm'])) {
+            // This is only allowed for transcript-based reference sequences, as it's a consequence of a genomic change
+            //  (a deletion or so). It indicates the lack of expression of the transcript.
+            $this->messages['EWRONGTYPE'] = 'The 0-allele is used to indicate there is no expression of a given transcript. This can not be used for genomic variants.';
+        } else {
+            $this->data['position_start_intron'] = 0;
+            $this->data['position_end_intron'] = 0;
+        }
         $this->data['range'] = false;
     }
 }
