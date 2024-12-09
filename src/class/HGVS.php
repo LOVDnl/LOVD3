@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-12-06
+ * Modified    : 2024-12-09
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1991,14 +1991,14 @@ class HGVS_Length extends HGVS
         if ($this->range) {
             if ($this->lengths[0] == $this->lengths[1]) {
                 // If the lengths are the same, warn and remove one.
-                $this->messages['WLENGTHFORMAT'] = 'This variant description contains two sequence lengths that are the same.';
+                $this->messages['WSAMELENGTHS'] = 'This variant description contains two sequence lengths that are the same.';
                 $nCorrectionConfidence *= 0.9;
                 // Discard the other object.
                 $this->range = false;
 
             } elseif ($this->lengths[0] > $this->lengths[1]) {
                 // Lengths aren't given in the right order.
-                $this->messages['WLENGTHFORMAT'] = 'This variant description contains two sequence lengths that are not given in the correct order.';
+                $this->messages['WLENGTHORDER'] = 'This variant description contains two sequence lengths that are not given in the correct order.';
                 $nCorrectionConfidence *= 0.9;
                 // Swap the lengths.
                 list($this->lengths[0], $this->lengths[1]) = [$this->lengths[1], $this->lengths[0]];
