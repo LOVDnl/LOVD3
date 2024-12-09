@@ -55,6 +55,7 @@ class HGVS
     public bool $caseOK = true;
     public bool $matched = false;
     public string $input;
+    public string $current_pattern;
     public string $matched_pattern;
     public string $suffix;
     public string $value;
@@ -67,6 +68,7 @@ class HGVS
 
         // Loop through all patterns and match them.
         foreach ($this->patterns as $sPatternName => $aPattern) {
+            $this->current_pattern = $sPatternName; // So that children can check what we're doing.
             $aMessages = array_pop($aPattern);
             $sInputToParse = $sValue;
             $bMatching = true;
@@ -1979,6 +1981,24 @@ class HGVS_DNAVariantBody extends HGVS
                     ['' => $nCorrectionConfidence],
                     $this->VCF->getCorrectedValues()
                 );
+                // Another check: for variants like c.(100)A>G, we're not sure whether we mean c.100A>G or perhaps c.(100A>G).
+                if (isset($this->messages['WTOOMANYPARENS']) && !$this->DNAPositions->range
+                    && (!isset($this->parent) || $this->parent->current_pattern != 'DNA_predicted')) {
+                    // Reduce the current prediction(s) with 50%.
+                    $this->corrected_values = $this->buildCorrectedValues(
+                        ['' => 0.5],
+                        $this->getCorrectedValues()
+                    );
+                    // Then add the c.(100A>G) suggestion. It's easier to build it manually.
+                    foreach ($this->buildCorrectedValues(
+                        ['' => $nCorrectionConfidence * 0.5],
+                        '(',
+                        $this->VCF->getCorrectedValues(),
+                        ')'
+                    ) as $sCorrectedValue => $nConfidence) {
+                        $this->addCorrectedValue($sCorrectedValue, $nConfidence);
+                    }
+                }
             }
         }
 
