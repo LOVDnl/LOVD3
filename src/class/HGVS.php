@@ -1858,6 +1858,7 @@ class HGVS_DNAVariantBody extends HGVS
     public array $patterns = [
         'null'                => [ 'HGVS_DNANull', [] ],
         'substitution'        => [ 'HGVS_DNAPositions', 'HGVS_DNARefs', 'HGVS_DNASub', 'HGVS_DNAAlts', [] ],
+        'substitution_VCF'    => [ 'HGVS_DNAPositions', 'HGVS_VCFRefs', 'HGVS_DNASub', 'HGVS_VCFAlts', [] ],
         'delXins_with_suffix' => [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNADelSuffix', 'HGVS_DNAIns', 'HGVS_DNAInsSuffix', [] ],
         'delXins'             => [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNADelSuffix', 'HGVS_DNAIns', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
         'delins_with_suffix'  => [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNAIns', 'HGVS_DNAInsSuffix', [] ],
@@ -1882,6 +1883,38 @@ class HGVS_DNAVariantBody extends HGVS
             $this->predicted = $this->DNANull->predicted;
         } else {
             $this->predicted = false;
+        }
+
+        // Substitutions deserve some additional attention.
+        // Since this is the only class where we'll have all the data, all substitution checks need to be done here.
+        if (in_array($this->matched_pattern, ['substitution', 'substitution_VCF'])) {
+            if ($this->matched_pattern == 'substitution') {
+                $sREF = $this->DNARefs->getCorrectedValue();
+                $sALT = $this->DNAAlts->getCorrectedValue();
+                if ($sREF == $sALT) {
+                    $this->messages['WWRONGTYPE'] =
+                        'A substitution should be a change of one base to one base. Did you mean to describe an unchanged ' .
+                        ($this->DNAPositions->range? 'range' : 'position') . '?';
+                } elseif (strlen($sREF) > 1 || strlen($sALT) > 1) {
+                    $this->messages['WWRONGTYPE'] =
+                        'A substitution should be a change of one base to one base. Did you mean to describe a deletion-insertion?';
+                }
+
+            } else {
+                // Either the REF or the ALT is a period.
+                $sREF = $this->VCFRefs->getCorrectedValue();
+                $sALT = $this->VCFAlts->getCorrectedValue();
+                if ($sREF == '.' && $sALT == '.') {
+                    $this->messages['EWRONGTYPE'] =
+                        'This substitution does not seem to contain any data. Please provide bases that were replaced.';
+                } elseif ($sREF == '.') {
+                    $this->messages['WWRONGTYPE'] =
+                        'A substitution should be a change of one base to one base. Did you mean to describe an insertion?';
+                } elseif ($sALT == '.') {
+                    $this->messages['WWRONGTYPE'] =
+                        'A substitution should be a change of one base to one base. Did you mean to describe a deletion?';
+                }
+            }
         }
 
 
