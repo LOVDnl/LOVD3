@@ -1914,6 +1914,7 @@ class HGVS_DNAVariantBody extends HGVS
                     $this->messages['WWRONGTYPE'] =
                         'A substitution should be a change of one base to one base. Did you mean to describe a deletion?';
                 }
+                // An else should not be possible.
             }
 
             // Positions for substitutions should, of course, normally just be single positions,
@@ -1953,6 +1954,24 @@ class HGVS_DNAVariantBody extends HGVS
                     $this->DNAPositions->makeCertain();
                 }
                 // In all other cases, we'll allow substitutions on uncertain ranges.
+            }
+
+            // Calculate the corrected value, based on a VCF parser.
+            // Based on the REF and ALT info, we may need to shift the variant or change it to a different type.
+            if (!$this->DNAPositions->unknown && !$this->DNAPositions->uncertain
+                && (isset($this->messages['WWRONGTYPE']) || isset($this->messages['WTOOMANYPOSITIONS']) || isset($this->messages['WTOOMANYPARENS']))
+                && !array_filter(
+                    array_keys($this->messages),
+                    function ($sKey)
+                    {
+                        return ($sKey[0] == 'E' && $sKey != 'EINVALIDNUCLEOTIDES');
+                    })) {
+                // Calculate the corrected value. Toss it all in a VCF parser.
+                $this->VCF = new HGVS_VCFBody(
+                    ($this->DNAPositions->DNAPosition ?? $this->DNAPositions->DNAPositionStart)->getCorrectedValue() .
+                    ':' . $sREF . ':' . $sALT,
+                    $this
+                );
             }
         }
 
