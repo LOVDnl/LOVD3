@@ -1915,6 +1915,45 @@ class HGVS_DNAVariantBody extends HGVS
                         'A substitution should be a change of one base to one base. Did you mean to describe a deletion?';
                 }
             }
+
+            // Positions for substitutions should, of course, normally just be single positions,
+            //  but uncertain ranges are also possible. Certain ranges are normally not allowed, but we'll throw a
+            //  warning only when the REF length matches the positions length.
+            // Don't check anything about the REF length when there are problems with the positions.
+            if (isset($this->messages['EPOSITIONFORMAT'])) {
+                $this->messages['ISUBNOTVALIDATED'] = "Due to the invalid variant position, the substitution syntax couldn't be fully validated.";
+
+            } elseif ($this->DNAPositions->range) {
+                // Check the position/REF lengths, but only if we have a range.
+                // When REF is as long as the position length, throw a WTOOMANYPOSITIONS.
+                // Then, also the positions should not be uncertain, if they are.
+                // Furthermore, the REF can never be shorter than the minimum length given by the positions,
+                //  and the REF can never be bigger than the maximum length given by the positions.
+                list($nMinLengthVariant, $nMaxLengthVariant) = $this->DNAPositions->getLengths();
+                $bPositionLengthIsCertain = ($nMinLengthVariant == $nMaxLengthVariant);
+                $nREFLength = strlen(trim($sREF, '.'));
+
+                // Simplest situation first: a certain range. The REF needs to match perfectly for a warning.
+                // Otherwise, throw an error.
+                if ($bPositionLengthIsCertain) {
+                    if ($nMinLengthVariant == $nREFLength) {
+                        $this->messages['WTOOMANYPOSITIONS'] =
+                            'Too many positions are given; a substitution is used to only indicate single-base changes and therefore should have only one position.';
+                    } else {
+                        // We can't fix this.
+                        $this->messages['ETOOMANYPOSITIONS'] =
+                            'Too many positions are given; a substitution is used to only indicate single-base changes and therefore should have only one position.';
+                    }
+
+                } elseif ($nREFLength == $nMaxLengthVariant) {
+                    // When the positions are uncertain but the REF length fits the maximum length precisely,
+                    //  we'll just throw a WTOOMANYPOSITIONS, and try to make the positions certain.
+                    $this->messages['WTOOMANYPOSITIONS'] =
+                        'Too many positions are given; a substitution is used to only indicate single-base changes and therefore should have only one position.';
+                    $this->DNAPositions->makeCertain();
+                }
+                // In all other cases, we'll allow substitutions on uncertain ranges.
+            }
         }
 
 
