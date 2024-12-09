@@ -1972,6 +1972,13 @@ class HGVS_DNAVariantBody extends HGVS
                     ':' . $sREF . ':' . $sALT,
                     $this
                 );
+                // Lower the confidence of our prediction when the position was single but the REF was not.
+                // (e.g., c.100AAA>G).
+                $nCorrectionConfidence = (!$this->DNAPositions->range && strlen($sREF) > 1? 0.6 : 1);
+                $this->corrected_values = $this->buildCorrectedValues(
+                    ['' => $nCorrectionConfidence],
+                    $this->VCF->getCorrectedValues()
+                );
             }
         }
 
