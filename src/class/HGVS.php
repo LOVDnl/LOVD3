@@ -740,7 +740,7 @@ class HGVS_DNADelSuffix extends HGVS
                 // Universal length checks. These messages are kept universal and slightly simplified.
                 // E.g., an ESUFFIXTOOLONG may mean that the deleted sequence CAN BE too long, but isn't always.
                 // (e.g., g.(100_200)del(100_300).
-                if ($nMinLengthSuffix < $nMinLengthVariant) {
+                if ($nMinLengthSuffix && $nMinLengthSuffix < $nMinLengthVariant) {
                     $this->messages['ESUFFIXTOOSHORT'] =
                         "The variant's positions indicate a sequence that's longer than the given deleted sequence." .
                         " Please adjust either the variant's positions or the given deleted sequence.";
