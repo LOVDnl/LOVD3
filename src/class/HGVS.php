@@ -698,7 +698,7 @@ class HGVS_DNADelSuffix extends HGVS
 
         // Remove any complaints that HGVS_Length may have had, when we already threw a WSUFFIXFORMAT.
         if (isset($this->messages['WSUFFIXFORMAT'])) {
-            unset($this->messages['WLENGTHFORMAT']);
+            unset($this->messages['WLENGTHFORMAT'], $this->messages['WLENGTHORDER'], $this->messages['WSAMELENGTHS']);
         }
 
         // Don't check anything about the suffix length when there are problems with the positions.
@@ -751,6 +751,11 @@ class HGVS_DNADelSuffix extends HGVS
                         " Please adjust either the variant's positions or the given deleted sequence.";
                 }
             }
+        }
+
+        // In case of any error, remove WSUFFIXFORMAT.
+        if (array_filter(array_keys($this->messages), function ($sKey) { return ($sKey[0] == 'E'); })) {
+            unset($this->messages['WSUFFIXFORMAT']);
         }
 
         // Store the corrected value.
@@ -883,7 +888,7 @@ class HGVS_DNAInsSuffix extends HGVS
         // Provide additional rules for validation, and stores values for the variant info if needed.
         // Remove any complaints that HGVS_Length may have had, when we already threw a WSUFFIXFORMAT.
         if (isset($this->messages['WSUFFIXFORMAT'])) {
-            unset($this->messages['WLENGTHFORMAT']);
+            unset($this->messages['WLENGTHFORMAT'], $this->messages['WLENGTHORDER'], $this->messages['WSAMELENGTHS']);
         }
 
         // A deletion-insertion of one base to one base, is a substitution.
@@ -965,6 +970,11 @@ class HGVS_DNAInsSuffix extends HGVS
                     '[', $this->DNAInsSuffixComplex->getCorrectedValues(), ']'
                 );
             }
+        }
+
+        // In case of any error, remove WSUFFIXFORMAT.
+        if (array_filter(array_keys($this->messages), function ($sKey) { return ($sKey[0] == 'E'); })) {
+            unset($this->messages['WSUFFIXFORMAT']);
         }
     }
 }
