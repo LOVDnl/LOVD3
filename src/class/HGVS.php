@@ -642,8 +642,8 @@ class HGVS_DNADup extends HGVS_DNADel
 class HGVS_DNAAlts extends HGVS
 {
     public array $patterns = [
-        'valid'   => [ '/[ACGTMRWSYKVHDBN]+/', [] ],
         'invalid' => [ '/[A-Z]+/', [] ],
+        'valid'   => [ '/[ACGTMRWSYKVHDBN]+/', [] ],
     ];
 
     public function validate ()
@@ -652,10 +652,13 @@ class HGVS_DNAAlts extends HGVS
         $this->setCorrectedValue(strtoupper($this->value));
         $this->caseOK = ($this->value == $this->getCorrectedValue());
 
+        // If we had checked the 'valid' rule first, we would not support recognizing invalid nucleotides after valid
+        //  nucleotides. The valid ones would match, and we would return the invalid nucleotides as a suffix. That's a
+        //  problem, so we're first just matching everything.
+
         // Check for invalid nucleotides.
-        if ($this->matched_pattern == 'invalid') {
-            // List the invalid nucleotides.
-            $sUnknownBases = preg_replace($this->patterns['valid'][0], '', $this->getCorrectedValue());
+        $sUnknownBases = preg_replace($this->patterns['valid'][0], '', $this->getCorrectedValue());
+        if ($sUnknownBases) {
             $this->messages['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
             // Then, replace the 'U's with 'T's.
             $this->setCorrectedValue(str_replace('U', 'T', $this->getCorrectedValue()));
@@ -1829,8 +1832,8 @@ class HGVS_DNAPrefix extends HGVS
 class HGVS_DNARefs extends HGVS
 {
     public array $patterns = [
-        'valid'   => [ '/[ACGTN]+/', [] ],
         'invalid' => [ '/[A-Z]+/', [] ],
+        'valid'   => [ '/[ACGTN]+/', [] ],
     ];
 
     public function validate ()
@@ -1839,33 +1842,37 @@ class HGVS_DNARefs extends HGVS
         $this->setCorrectedValue(strtoupper($this->value));
         $this->caseOK = ($this->value == $this->getCorrectedValue());
 
-        // Check for invalid nucleotides.
-        if ($this->matched_pattern == 'invalid') {
-            // This is a special case. We need to prevent that we're matching HGVS reserved terms, like "ins".
-            // If we do, we need to pretend that we never matched at all.
-            $nReservedWord = false;
-            foreach (['con', 'del', 'dup', 'ins', 'inv'] as $sKeyword) {
-                $n = strpos($this->getCorrectedValue(), strtoupper($sKeyword));
-                if ($n !== false && ($nReservedWord === false || $n < $nReservedWord)) {
-                    $nReservedWord = $n;
-                }
-            }
-            if ($nReservedWord !== false) {
-                // OK, we can't match this part. We can match anything that came before, though.
-                if (!$nReservedWord) {
-                    // The string starts with a reserved keyword. Pretend that didn't match anything.
-                    $this->matched = false;
-                    return;
-                } else {
-                    // Register that we matched up to the reserved keyword.
-                    $this->suffix = substr($this->value, $nReservedWord) . $this->suffix;
-                    $this->value = substr($this->value, 0, $nReservedWord);
-                    $this->setCorrectedValue(strtoupper($this->value));
-                }
-            }
+        // If we had checked the 'valid' rule first, we would not support recognizing invalid nucleotides after valid
+        //  nucleotides. The valid ones would match, and we would return the invalid nucleotides as a suffix. That's a
+        //  problem, so we're first just matching everything.
 
-            // List the invalid nucleotides.
-            $sUnknownBases = preg_replace($this->patterns['valid'][0], '', $this->getCorrectedValue());
+        // First, we need to prevent that we're matching HGVS reserved terms, like "ins".
+        // If we do, we need to pretend that we never matched that part and what follows.
+        $nReservedWord = false;
+        foreach (['con', 'del', 'dup', 'ins', 'inv'] as $sKeyword) {
+            $n = strpos($this->getCorrectedValue(), strtoupper($sKeyword));
+            if ($n !== false && ($nReservedWord === false || $n < $nReservedWord)) {
+                $nReservedWord = $n;
+            }
+        }
+        if ($nReservedWord !== false) {
+            // OK, we can't match this part. We can match anything that came before, though.
+            if (!$nReservedWord) {
+                // The string starts with a reserved keyword. Pretend that didn't match anything.
+                $this->matched = false;
+                return;
+            } else {
+                // Register that we matched up to the reserved keyword.
+                $this->suffix = substr($this->value, $nReservedWord) . $this->suffix;
+                $this->value = substr($this->value, 0, $nReservedWord);
+                $this->setCorrectedValue(strtoupper($this->value));
+                $this->caseOK = ($this->value == $this->getCorrectedValue());
+            }
+        }
+
+        // OK, with that out of the way, we can check for invalid nucleotides.
+        $sUnknownBases = preg_replace($this->patterns['valid'][0], '', $this->getCorrectedValue());
+        if ($sUnknownBases) {
             $this->messages['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
             // Then, replace the 'U's with 'T's.
             $this->setCorrectedValue(str_replace('U', 'T', $this->getCorrectedValue()));
@@ -2434,8 +2441,8 @@ class HGVS_Variant extends HGVS
 class HGVS_VCFAlts extends HGVS_DNAAlts
 {
     public array $patterns = [
-        'valid'   => [ '/(\.|[ACGTMRWSYKVHDBN]+)/', [] ],
         'invalid' => [ '/[A-Z]+/', [] ],
+        'valid'   => [ '/(\.|[ACGTMRWSYKVHDBN]+)/', [] ],
     ];
 }
 
@@ -2613,8 +2620,8 @@ class HGVS_VCFPosition extends HGVS_DNAPositions
 class HGVS_VCFRefs extends HGVS_DNARefs
 {
     public array $patterns = [
-        'valid'   => [ '/(\.|[ACGTN]+)/', [] ],
         'invalid' => [ '/[A-Z]+/', [] ],
+        'valid'   => [ '/(\.|[ACGTN]+)/', [] ],
     ];
 }
 
