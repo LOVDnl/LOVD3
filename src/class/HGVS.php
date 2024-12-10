@@ -702,7 +702,7 @@ class HGVS_DNADelSuffix extends HGVS
         }
 
         // Don't check anything about the suffix length when there are problems with the positions.
-        if (isset($aMessages['EPOSITIONFORMAT'])) {
+        if (isset($aMessages['EPOSITIONFORMAT']) || isset($aMessages['EPOSITIONLIMIT'])) {
             $this->messages['ISUFFIXNOTVALIDATED'] = "Due to the invalid variant position, the variant's suffix couldn't be fully validated.";
         } else {
             // Check all length requirements.
