@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-12-09
+ * Modified    : 2024-12-10
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -527,6 +527,19 @@ class HGVS
             }
         }
     }
+}
+
+
+
+
+
+class HGVS_DNAAllele extends HGVS
+{
+    public array $components = [];
+    public array $patterns = [
+        'multiple_cis'     => [ 'HGVS_DNAVariantBody', ';', 'HGVS_DNAAllele', [] ],
+        'multiple_unknown' => [ 'HGVS_DNAVariantBody', '(;)', 'HGVS_DNAAllele', [] ],
+    ];
 }
 
 
@@ -1859,6 +1872,8 @@ class HGVS_DNAVariantBody extends HGVS
 {
     public array $patterns = [
         'null'                => [ 'HGVS_DNANull', [] ],
+        'allele_trans'        => [ '[', 'HGVS_DNAAllele', '];[', 'HGVS_DNAAllele', ']', [] ],
+        'allele_cis'          => [ '[', 'HGVS_DNAAllele', ']', [] ],
         'substitution'        => [ 'HGVS_DNAPositions', 'HGVS_DNARefs', 'HGVS_DNASub', 'HGVS_DNAAlts', [] ],
         'substitution_VCF'    => [ 'HGVS_DNAPositions', 'HGVS_VCFRefs', 'HGVS_DNASub', 'HGVS_VCFAlts', [] ],
         'delXins_with_suffix' => [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNADelSuffix', 'HGVS_DNAIns', 'HGVS_DNAInsSuffix', [] ],
