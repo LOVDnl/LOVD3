@@ -539,6 +539,7 @@ class HGVS_DNAAllele extends HGVS
     public array $patterns = [
         'multiple_cis'     => [ 'HGVS_DNAVariantBody', ';', 'HGVS_DNAAllele', [] ],
         'multiple_unknown' => [ 'HGVS_DNAVariantBody', '(;)', 'HGVS_DNAAllele', [] ],
+        'multiple_comma'   => [ 'HGVS_DNAVariantBody', ',', 'HGVS_DNAAllele', [ 'WALLELEFORMAT' => 'The allele syntax uses semicolons (;) to separate variants, not commas.' ] ],
         'single'           => [ 'HGVS_DNAVariantBody', [] ],
     ];
 
@@ -564,6 +565,24 @@ class HGVS_DNAAllele extends HGVS
         }
 
         return $this->components;
+    }
+
+
+
+
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        if ($this->matched_pattern == 'multiple_comma') {
+            // Fix the separator. Set a slightly lower confidence, because we don't know if this is cis or unknown.
+            $this->corrected_values = $this->buildCorrectedValues(
+                ['' => 0.9],
+                $this->DNAVariantBody->getCorrectedValues(),
+                ';',
+                $this->DNAAllele->getCorrectedValues()
+            );
+        }
     }
 }
 
