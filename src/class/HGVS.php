@@ -1902,6 +1902,25 @@ class HGVS_DNAVariantBody extends HGVS
             $this->predicted = false;
         }
 
+        // We need to handle alleles a bit differently to make sure we have the data set correctly.
+        if ($this->matched_pattern == 'allele_trans') {
+            // Overwrite the data fields with the data from the first component.
+            $this->data = array_merge(
+                $this->data,
+                $this->DNAAllele[0]->DNAVariantBody->getData()
+            );
+            // But, always set the type to that of the allele syntax.
+            $this->data['type'] = ';';
+
+        } elseif ($this->matched_pattern == 'allele_cis') {
+            // Overwrite the data fields with the data from the first component.
+            $this->data = array_merge(
+                $this->data,
+                $this->DNAAllele->DNAVariantBody->getData()
+            );
+            $this->data['type'] = ';';
+        }
+
         // Substitutions deserve some additional attention.
         // Since this is the only class where we'll have all the data, all substitution checks need to be done here.
         if (in_array($this->matched_pattern, ['substitution', 'substitution_VCF'])) {
