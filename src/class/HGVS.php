@@ -539,7 +539,32 @@ class HGVS_DNAAllele extends HGVS
     public array $patterns = [
         'multiple_cis'     => [ 'HGVS_DNAVariantBody', ';', 'HGVS_DNAAllele', [] ],
         'multiple_unknown' => [ 'HGVS_DNAVariantBody', '(;)', 'HGVS_DNAAllele', [] ],
+        'single'           => [ 'HGVS_DNAVariantBody', [] ],
     ];
+
+    public function getComponents ()
+    {
+        // This function collects all components stored in this class and puts them in an array.
+        if (count($this->components) > 0) {
+            return $this->components;
+        }
+
+        foreach ($this->patterns[$this->matched_pattern] as $Pattern) {
+            if (is_object($Pattern)) {
+                if (get_class($Pattern) == 'HGVS_DNAVariantBody') {
+                    $this->components[] = $Pattern;
+                } else {
+                    // Another complex with one or more components.
+                    $this->components = array_merge(
+                        $this->components,
+                        $Pattern->getComponents()
+                    );
+                }
+            }
+        }
+
+        return $this->components;
+    }
 }
 
 
@@ -1918,7 +1943,15 @@ class HGVS_DNAVariantBody extends HGVS
                 $this->data,
                 $this->DNAAllele->DNAVariantBody->getData()
             );
-            $this->data['type'] = ';';
+
+            // This syntax should have more than one child.
+            if (count($this->DNAAllele->getComponents()) == 1) {
+                $this->messages['WWRONGTYPE'] = 'The allele syntax with square brackets is meant for multiple variants.';
+                $this->corrected_values = $this->DNAAllele->getCorrectedValues();
+            } else {
+                // OK, set the type to that of the allele syntax.
+                $this->data['type'] = ';';
+            }
         }
 
         // Substitutions deserve some additional attention.
