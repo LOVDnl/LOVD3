@@ -607,6 +607,24 @@ class HGVS_DNAAllele extends HGVS
 
 
 
+class HGVS_Chr extends HGVS
+{
+    public array $patterns = [
+        [ '/chr/', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->setCorrectedValue(strtolower($this->value));
+        $this->caseOK = ($this->value == $this->getCorrectedValue());
+    }
+}
+
+
+
+
+
 class HGVS_DNACon extends HGVS
 {
     public array $patterns = [
