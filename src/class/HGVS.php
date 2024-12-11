@@ -2467,6 +2467,23 @@ class HGVS_Variant extends HGVS
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->predicted = (substr($this->matched_pattern, -9) == 'predicted'
             || !empty($this->DNAVariantBody->predicted)); // NOTE: This is due to c.0? being predicted.
+
+        // Some variant types aren't supported for validation and mapping.
+        // But I want the message to say whether it was a valid HGVS description,
+        //  so I need to do that here, once I know whether it was correct or not.
+        if ($this->predicted
+            || (isset($this->DNAVariantBody->DNAPositions)
+                && ($this->DNAVariantBody->DNAPositions->uncertain || $this->DNAVariantBody->DNAPositions->unknown))
+            || in_array($this->data['type'] ?? '', ['0', '?', ';'])) {
+            if (empty($this->messages) && $this->caseOK) {
+                $this->messages['WNOTSUPPORTED'] = 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.';
+            } else {
+                $this->messages['WNOTSUPPORTED'] = 'This syntax is currently not supported for mapping and validation.';
+            }
+            if (($this->data['type'] ?? '') == ';') {
+                $this->messages['WNOTSUPPORTED'] .= ' Please submit your variants separately.';
+            }
+        }
     }
 }
 
