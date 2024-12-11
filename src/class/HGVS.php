@@ -2219,6 +2219,33 @@ class HGVS_DNAWildType extends HGVS
 
 
 
+class HGVS_Genome extends HGVS
+{
+    public array $patterns = [
+        'ucsc' => [ '/hg(18|19|38)/', [] ],
+        'ncbi' => [ '/GRCh3(6|7|8)/', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        if ($this->matched_pattern == 'ucsc') {
+            $this->setCorrectedValue(strtolower($this->value));
+        } else {
+            $sUCSC = [
+                'grch36' => 'hg18',
+                'grch37' => 'hg19',
+                'grch38' => 'hg38',
+            ][strtolower($this->value)];
+            $this->setCorrectedValue($sUCSC);
+        }
+    }
+}
+
+
+
+
+
 class HGVS_Length extends HGVS
 {
     public array $patterns = [
