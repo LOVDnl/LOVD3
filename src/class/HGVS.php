@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-12-10
+ * Modified    : 2024-12-11
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -360,6 +360,14 @@ class HGVS
         //  a high-level class that doesn't do any fixes, or the value is always fine.
         // Let's check.
         $aCorrectedValues = ['' => 1]; // Initialize the array.
+
+        // However, in the presence of errors, lower the confidence.
+        // We check for the parent to make sure the confidence isn't lowered too much by stacking.
+        if (empty($this->parent)
+            && array_filter(array_keys($this->messages), function ($sKey) { return ($sKey[0] == 'E' && $sKey != 'EREFSEQMISSING'); })) {
+            $aCorrectedValues = ['' => 0.10];
+        }
+
         foreach (array_slice($this->patterns[$this->matched_pattern], 0, -1) as $Part) {
             if (is_object($Part)) {
                 $aCorrectedValues = $this->buildCorrectedValues($aCorrectedValues, $Part->getCorrectedValues());
@@ -1195,8 +1203,9 @@ class HGVS_DNAPosition extends HGVS
             if ($this->intronic && !$this->unknown_offset) {
                 if (!$this->offset) {
                     $this->messages['EPOSITIONFORMAT'] = 'This variant description contains an invalid intronic position: "' . $this->value . '".';
-                    // Automatically, the corrected value will simply drop the intronic offset. That's a very inconfident change.
-                    $nCorrectionConfidence *= 0.5;
+                    // Automatically, the corrected value will simply drop the intronic offset.
+                    // That's a very inconfident change, but throwing an error already reduces the confidence immensely.
+                    $nCorrectionConfidence *= 0.75;
                 } elseif ((string) abs($this->offset) !== $this->regex[4]) {
                     $this->messages['WINTRONICPOSITIONWITHZERO'] = 'Intronic positions should not be prefixed by a 0.';
                     $nCorrectionConfidence *= 0.9;
