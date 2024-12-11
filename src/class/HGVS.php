@@ -625,6 +625,33 @@ class HGVS_Chr extends HGVS
 
 
 
+class HGVS_ChromosomeNumber extends HGVS
+{
+    public array $patterns = [
+        'number' => [ '/[0-9]{1,2}/', [] ],
+        'X'      => [ '/X/', [] ],
+        'Y'      => [ '/Y/', [] ],
+        'M'      => [ '/M/', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->setCorrectedValue(strtoupper($this->value));
+        // Assuming use for humans.
+        if ($this->matched_pattern == 'number') {
+            $this->setCorrectedValue((int) $this->value);
+            if ($this->getCorrectedValue() > 22) {
+                $this->messages['EINVALIDCHROMOSOME'] = 'This variant description contains an invalid chromosome number: "' . $this->value . '".';
+            }
+        }
+    }
+}
+
+
+
+
+
 class HGVS_DNACon extends HGVS
 {
     public array $patterns = [
