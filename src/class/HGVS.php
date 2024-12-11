@@ -410,6 +410,15 @@ class HGVS
 
 
 
+    public function getInput ()
+    {
+        return ($this->input ?? '');
+    }
+
+
+
+
+
     public function getMessages ()
     {
         return ($this->messages ?? []);
