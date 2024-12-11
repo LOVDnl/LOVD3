@@ -173,7 +173,7 @@ class HGVS
                 $this->suffix = $sInputToParse;
                 if (!isset($this->parent)) {
                     // This is the main HGVS class. The variant has a suffix that we didn't identify.
-                    $this->messages['WSUFFIXGIVEN'] = 'Nothing should follow "' . $this->value . '".';
+                    $this->messages['WINPUTLEFT'] = 'We stopped reading past "' . $this->value . '".';
                 }
 
             } else {
