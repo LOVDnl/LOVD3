@@ -2458,8 +2458,16 @@ class HGVS_ReferenceSequence extends HGVS
 class HGVS_Variant extends HGVS
 {
     public array $patterns = [
-        'DNA' => [ 'HGVS_DNAPrefix', '.', 'HGVS_DNAVariantBody', [] ],
+        'DNA_predicted' => [ 'HGVS_DNAPrefix', '.(', 'HGVS_DNAVariantBody', ')', [] ],
+        'DNA'           => [ 'HGVS_DNAPrefix', '.', 'HGVS_DNAVariantBody', [] ],
     ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->predicted = (substr($this->matched_pattern, -9) == 'predicted'
+            || !empty($this->DNAVariantBody->predicted)); // NOTE: This is due to c.0? being predicted.
+    }
 }
 
 
