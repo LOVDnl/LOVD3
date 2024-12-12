@@ -633,6 +633,89 @@ class HGVS_Chromosome extends HGVS
         'with_prefix'    => [ 'HGVS_Chr', 'HGVS_ChromosomeNumber', [] ],
         'without_prefix' => [ 'HGVS_ChromosomeNumber', [] ],
     ];
+    public array $refseqs = [
+        'hg18' => [
+            '1'  => 'NC_000001.9',
+            '2'  => 'NC_000002.10',
+            '3'  => 'NC_000003.10',
+            '4'  => 'NC_000004.10',
+            '5'  => 'NC_000005.8',
+            '6'  => 'NC_000006.10',
+            '7'  => 'NC_000007.12',
+            '8'  => 'NC_000008.9',
+            '9'  => 'NC_000009.10',
+            '10' => 'NC_000010.9',
+            '11' => 'NC_000011.8',
+            '12' => 'NC_000012.10',
+            '13' => 'NC_000013.9',
+            '14' => 'NC_000014.7',
+            '15' => 'NC_000015.8',
+            '16' => 'NC_000016.8',
+            '17' => 'NC_000017.9',
+            '18' => 'NC_000018.8',
+            '19' => 'NC_000019.8',
+            '20' => 'NC_000020.9',
+            '21' => 'NC_000021.7',
+            '22' => 'NC_000022.9',
+            'X'  => 'NC_000023.9',
+            'Y'  => 'NC_000024.8',
+            'M'  => 'NC_001807.4',
+        ],
+        'hg19' => [
+            '1'  => 'NC_000001.10',
+            '2'  => 'NC_000002.11',
+            '3'  => 'NC_000003.11',
+            '4'  => 'NC_000004.11',
+            '5'  => 'NC_000005.9',
+            '6'  => 'NC_000006.11',
+            '7'  => 'NC_000007.13',
+            '8'  => 'NC_000008.10',
+            '9'  => 'NC_000009.11',
+            '10' => 'NC_000010.10',
+            '11' => 'NC_000011.9',
+            '12' => 'NC_000012.11',
+            '13' => 'NC_000013.10',
+            '14' => 'NC_000014.8',
+            '15' => 'NC_000015.9',
+            '16' => 'NC_000016.9',
+            '17' => 'NC_000017.10',
+            '18' => 'NC_000018.9',
+            '19' => 'NC_000019.9',
+            '20' => 'NC_000020.10',
+            '21' => 'NC_000021.8',
+            '22' => 'NC_000022.10',
+            'X'  => 'NC_000023.10',
+            'Y'  => 'NC_000024.9',
+            'M'  => 'NC_012920.1', // GRCh37; Note that hg19 actually uses NC_001807.4!
+        ],
+        'hg38' => [
+            '1'  => 'NC_000001.11',
+            '2'  => 'NC_000002.12',
+            '3'  => 'NC_000003.12',
+            '4'  => 'NC_000004.12',
+            '5'  => 'NC_000005.10',
+            '6'  => 'NC_000006.12',
+            '7'  => 'NC_000007.14',
+            '8'  => 'NC_000008.11',
+            '9'  => 'NC_000009.12',
+            '10' => 'NC_000010.11',
+            '11' => 'NC_000011.10',
+            '12' => 'NC_000012.12',
+            '13' => 'NC_000013.11',
+            '14' => 'NC_000014.9',
+            '15' => 'NC_000015.10',
+            '16' => 'NC_000016.10',
+            '17' => 'NC_000017.11',
+            '18' => 'NC_000018.10',
+            '19' => 'NC_000019.10',
+            '20' => 'NC_000020.11',
+            '21' => 'NC_000021.9',
+            '22' => 'NC_000022.11',
+            'X'  => 'NC_000023.11',
+            'Y'  => 'NC_000024.10',
+            'M'  => 'NC_012920.1',
+        ],
+    ];
 
     public function validate ()
     {
@@ -640,7 +723,20 @@ class HGVS_Chromosome extends HGVS
         // Our corrected value is a genomic reference sequence.
         // If the parent has a build, use that. Otherwise, use all possible builds.
         $sChr = $this->ChromosomeNumber->getCorrectedValue();
-        $this->setCorrectedValue('chr' . $sChr);
+        if (!$this->ChromosomeNumber->isValid()) {
+            // We received an invalid chromosome number that we won't be able to handle.
+            $this->setCorrectedValue('chr' . $sChr);
+        } elseif ($this->getParent('HGVS_VCF') && $this->getParent('HGVS_VCF')->hasProperty('Genome')) {
+            // We received a genome build, choose the right NC.
+            $this->setCorrectedValue($this->refseqs[$this->getParent('HGVS_VCF')->Genome->getCorrectedValue()][$sChr]);
+        } else {
+            // We didn't receive a genome build. We'll suggest them all.
+            // Note that we don't have very reliable information about how much data each genome build has.
+            // The given confidence values are estimations.
+            $this->setCorrectedValue($this->refseqs['hg38'][$sChr], 0.5);
+            $this->addCorrectedValue($this->refseqs['hg19'][$sChr], 0.45);
+            $this->addCorrectedValue($this->refseqs['hg18'][$sChr], 0.05);
+        }
     }
 }
 
