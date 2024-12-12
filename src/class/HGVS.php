@@ -2689,6 +2689,21 @@ class HGVS_VCF extends HGVS
         'with_chr'   => [ 'HGVS_Chromosome', 'HGVS_VCFSeparator', 'HGVS_VCFBody', ['WREFSEQMISSING' => 'This VCF variant is missing a genome build, which is required to determine the reference sequence used.'] ],
         'basic'      => [ 'HGVS_VCFBody', ['EREFSEQMISSING' => 'This VCF variant is missing a genome build and chromosome, which is required to determine the reference sequence used.'] ],
     ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        if ($this->matched_pattern == 'basic') {
+            $this->corrected_values = $this->buildCorrectedValues('g.', $this->VCFBody->getCorrectedValues());
+        } else {
+            // The build is not needed; the Chromosome object has used it already.
+            $this->corrected_values = $this->buildCorrectedValues(
+                $this->Chromosome->getCorrectedValues(),
+                ':g.',
+                $this->VCFBody->getCorrectedValues()
+            );
+        }
+    }
 }
 
 
