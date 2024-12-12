@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-12-11
+ * Modified    : 2024-12-12
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -618,6 +618,27 @@ class HGVS_Chr extends HGVS
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->setCorrectedValue(strtolower($this->value));
         $this->caseOK = ($this->value == $this->getCorrectedValue());
+    }
+}
+
+
+
+
+
+class HGVS_Chromosome extends HGVS
+{
+    public array $patterns = [
+        'with_prefix'    => [ 'HGVS_Chr', 'HGVS_ChromosomeNumber', [] ],
+        'without_prefix' => [ 'HGVS_ChromosomeNumber', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        // Our corrected value is a genomic reference sequence.
+        // If the parent has a build, use that. Otherwise, use all possible builds.
+        $sChr = $this->ChromosomeNumber->getCorrectedValue();
+        $this->setCorrectedValue('chr' . $sChr);
     }
 }
 
