@@ -2665,7 +2665,8 @@ class HGVS_Variant extends HGVS
         if ($this->predicted
             || (isset($this->DNAVariantBody->DNAPositions)
                 && ($this->DNAVariantBody->DNAPositions->uncertain || $this->DNAVariantBody->DNAPositions->unknown))
-            || in_array($this->data['type'] ?? '', ['0', '?', ';'])) {
+            || in_array($this->data['type'] ?? '', ['0', '?', ';'])
+            || $this->DNAVariantBody->getCorrectedValue() == '=') {
             if (empty($this->messages) && $this->caseOK) {
                 $this->messages['WNOTSUPPORTED'] = 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.';
             } else {
