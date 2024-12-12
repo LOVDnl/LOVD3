@@ -2703,6 +2703,11 @@ class HGVS_VCF extends HGVS
                 $this->VCFBody->getCorrectedValues()
             );
         }
+
+        // We also need to store the data fields. Yes, this is duplicated work.
+        // However, it's much simpler to do it here; everything the VCFBody does is string-based.
+        $HGVSVariant = new HGVS_Variant('g.' . $this->VCFBody->getCorrectedValue());
+        $this->data = $HGVSVariant->getInfo();
     }
 }
 
