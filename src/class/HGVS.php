@@ -45,6 +45,8 @@ class HGVS
     //        matched. An object holds its value, a string has a fixed value by itself, but a regex can't store a value.
     public array $patterns = [
         'full_variant' => [ 'HGVS_ReferenceSequence', ':', 'HGVS_Variant', [] ],
+        'variant'      => [ 'HGVS_Variant', ['EREFSEQMISSING' => 'This variant is missing a reference sequence.'] ],
+        'VCF'          => [ 'HGVS_VCF', ['WVCF' => 'Recognized a VCF-like format; converting this format to HGVS nomenclature.'] ],
     ];
     public array $corrected_values = [];
     public array $data = [];
@@ -2578,6 +2580,19 @@ class HGVS_Variant extends HGVS
             }
         }
     }
+}
+
+
+
+
+
+class HGVS_VCF extends HGVS
+{
+    public array $patterns = [
+        'with_build' => [ 'HGVS_Genome', 'HGVS_VCFSeparator', 'HGVS_Chromosome', 'HGVS_VCFSeparator', 'HGVS_VCFBody', [] ],
+        'with_chr'   => [ 'HGVS_Chromosome', 'HGVS_VCFSeparator', 'HGVS_VCFBody', ['WREFSEQMISSING' => 'This VCF variant is missing a genome build, which is required to determine the reference sequence used.'] ],
+        'basic'      => [ 'HGVS_VCFBody', ['EREFSEQMISSING' => 'This VCF variant is missing a genome build and chromosome, which is required to determine the reference sequence used.'] ],
+    ];
 }
 
 
