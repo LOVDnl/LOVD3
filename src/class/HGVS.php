@@ -2473,6 +2473,7 @@ class HGVS_ReferenceSequence extends HGVS
         'refseq_non-coding'           => [ '/([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
         'refseq_gene_with_coding'     => [ '/(?:[A-Z][A-Za-z0-9#@-]*)\(([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?\)/', [] ],
         'refseq_gene_with_non-coding' => [ '/(?:[A-Z][A-Za-z0-9#@-]*)\(([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?\)/', [] ],
+        'refseq_protein'              => [ '/([NX]P)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
         'ensembl_genomic'             => [ '/(ENSG)([_-])?([0-9]+)(\.[0-9]+)?/', [] ],
         'ensembl_transcript'          => [ '/(ENST)([_-])?([0-9]+)(\.[0-9]+)?/', [] ],
         'LRG_transcript'              => [ '/(LRG)([_-]?)([0-9]+)(t)([0-9]+)/', [] ],
@@ -2574,7 +2575,8 @@ class HGVS_ReferenceSequence extends HGVS
             case 'refseq_non-coding':
             case 'refseq_gene_with_coding':
             case 'refseq_gene_with_non-coding':
-                $this->molecule_type = 'transcript';
+            case 'refseq_protein':
+                $this->molecule_type = ($this->matched_pattern == 'refseq_protein'? 'protein' : 'transcript');
                 $this->setCorrectedValue(
                     strtoupper($this->regex[1]) .
                     '_' .
@@ -2588,15 +2590,15 @@ class HGVS_ReferenceSequence extends HGVS
                         'NCBI reference sequence IDs require an underscore between the prefix and the numeric ID.';
                 } elseif (strlen((int) $this->regex[3]) > 9) {
                     $this->messages['EREFERENCEFORMAT'] =
-                        'NCBI transcript reference sequence IDs consist of six or nine digits.';
+                        'NCBI ' . $this->molecule_type . ' reference sequence IDs consist of six or nine digits.';
                 } elseif (!in_array(strlen($this->regex[3]), [6, 9])) {
                     $this->messages['WREFERENCEFORMAT'] =
-                        'NCBI transcript reference sequence IDs consist of six or nine digits.';
+                        'NCBI ' . $this->molecule_type . ' reference sequence IDs consist of six or nine digits.';
                 } elseif (empty($this->regex[4])) {
                     $this->messages['EREFERENCEFORMAT'] =
                         'The reference sequence ID is missing the required version number.' .
                         ' NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.';
-                } elseif (!in_array($this->matched_pattern, ['refseq_coding', 'refseq_non-coding'])) {
+                } elseif (!in_array($this->matched_pattern, ['refseq_coding', 'refseq_non-coding', 'refseq_protein'])) {
                     $this->messages['WREFERENCEFORMAT'] =
                         'The reference sequence ID should not include a gene symbol.';
                 }
