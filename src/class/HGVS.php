@@ -2023,11 +2023,11 @@ class HGVS_DNAPositions extends HGVS
 class HGVS_DNAPrefix extends HGVS
 {
     public array $patterns = [
-        'coding'     => [ '/c/', [] ],
-        'genomic'    => [ '/g/', [] ],
-        'mito'       => [ '/m/', [] ],
-        'non-coding' => [ '/n/', [] ],
-        'circular'   => [ '/o/', [] ],
+        'coding'        => [ '/c/', [] ],
+        'genomic'       => [ '/g/', [] ],
+        'mitochondrial' => [ '/m/', [] ],
+        'non-coding'    => [ '/n/', [] ],
+        'circular'      => [ '/o/', [] ],
     ];
 
     public function validate ()
@@ -2036,6 +2036,16 @@ class HGVS_DNAPrefix extends HGVS
         $this->molecule_type = (in_array($this->matched_pattern, ['coding', 'non-coding'])? 'transcript' : 'genome');
         $this->setCorrectedValue(strtolower($this->value));
         $this->caseOK = ($this->value == $this->getCorrectedValue());
+
+        // If we have seen a reference sequence, check if we match that.
+        $RefSeq = $this->getParentProperty('ReferenceSequence');
+        if ($RefSeq && !empty($RefSeq->allowed_prefixes) && !in_array($this->getCorrectedValue(), $RefSeq->allowed_prefixes)) {
+            $this->messages['EWRONGREFERENCE'] =
+                'The given reference sequence (' . $RefSeq->getCorrectedValue() . ') does not match the DNA type (' . $this->getCorrectedValue() . ').' .
+                ' For variants on ' . $RefSeq->getCorrectedValue() . ', please use the ' . implode('. or ', $RefSeq->allowed_prefixes) . '. prefix.' .
+                ' For ' . $this->getCorrectedValue() . '. variants, please use a ' . $this->matched_pattern .
+                ($this->matched_pattern == 'genomic'? '' : ' ' . $this->molecule_type) . ' reference sequence.';
+        }
     }
 }
 
