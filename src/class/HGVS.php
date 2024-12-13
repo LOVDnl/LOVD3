@@ -452,6 +452,28 @@ class HGVS
 
 
 
+    public function getParentProperty ($sPropertyName)
+    {
+        // Finds a certain property in the first parent that it finds that has this property.
+        // Useful especially in nested variants; for complex insertions,
+        //  our reference sequence may be in the insertion or all the way up to the HGVS object.
+        if (!$this->parent) {
+            return false;
+        } else {
+            $o = $this->parent;
+            // Let's keep the code simple by using recursion.
+            if ($o->hasProperty($sPropertyName)) {
+                return $o->$sPropertyName;
+            } else {
+                return $o->getParentProperty($sPropertyName);
+            }
+        }
+    }
+
+
+
+
+
     public function getProperties ()
     {
         return ($this->properties ?? []);
