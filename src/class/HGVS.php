@@ -1421,6 +1421,15 @@ class HGVS_DNAPosition extends HGVS
                 }
             }
 
+            // Intronic positions require a "genome_transcript" type of reference sequence.
+            if ($this->intronic) {
+                $RefSeq = $this->getParentProperty('ReferenceSequence');
+                if ($RefSeq && $RefSeq->molecule_type != 'genome_transcript') {
+                    $this->messages['EWRONGREFERENCE'] =
+                        'A genomic transcript reference sequence is required to verify intronic positions.';
+                }
+            }
+
             // Adjust minimum and maximum values, to be used in further processing, but keep within limits.
             if ($this->position_sortable < $this->position_limits[0]) {
                 $this->position_limits[1] = $this->position_limits[0];
