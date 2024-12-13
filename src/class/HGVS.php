@@ -2474,6 +2474,7 @@ class HGVS_ReferenceSequence extends HGVS
         'refseq_gene_with_coding'     => [ '/(?:[A-Z][A-Za-z0-9#@-]*)\(([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?\)/', [] ],
         'refseq_gene_with_non-coding' => [ '/(?:[A-Z][A-Za-z0-9#@-]*)\(([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?\)/', [] ],
         'refseq_protein'              => [ '/([NX]P)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
+        'refseq_other'                => [ '/^(N[TW]_([0-9]{6})|[A-Z][0-9]{5}|[A-Z]{2}[0-9]{6})(\.[0-9]+)/', [] ],
         'ensembl_genomic'             => [ '/(ENSG)([_-])?([0-9]+)(\.[0-9]+)?/', [] ],
         'ensembl_transcript'          => [ '/(ENST)([_-])?([0-9]+)(\.[0-9]+)?/', [] ],
         'LRG_transcript'              => [ '/(LRG)([_-]?)([0-9]+)(t)([0-9]+)/', [] ],
@@ -2602,6 +2603,20 @@ class HGVS_ReferenceSequence extends HGVS
                     $this->messages['WREFERENCEFORMAT'] =
                         'The reference sequence ID should not include a gene symbol.';
                 }
+                break;
+
+            case 'refseq_other':
+                $this->molecule_type = 'genome';
+                // We won't attempt to fix things. We don't actually know if anything like this is valid.
+                $this->setCorrectedValue(strtoupper($this->regex[0]));
+                $this->caseOK = ($this->regex[1] == strtoupper($this->regex[1]));
+
+                // This isn't really a warning, as in, we can't fix it.
+                // But I don't want to throw an error, either. It could still be valid HGVS nomenclature.
+                $this->messages['WREFERENCENOTSUPPORTED'] =
+                    'Currently, variant descriptions using "' . $this->value . '" are not yet supported.' .
+                    ' This does not necessarily mean the description is not valid HGVS.' .
+                    ' Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.';
                 break;
 
             case 'ensembl_genomic':
