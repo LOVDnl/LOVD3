@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-12-12
+ * Modified    : 2024-12-13
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2465,8 +2465,10 @@ class HGVS_ReferenceSequence extends HGVS
         'refseq_genomic_coding'       => [ '/(N[CG])([_-])?([0-9]+)(\.[0-9]+)?\(([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?\)/', [] ],
         'refseq_genomic_non-coding'   => [ '/(N[CG])([_-])?([0-9]+)(\.[0-9]+)?\(([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?\)/', [] ],
         'refseq_genomic'              => [ '/(N[CG])([_-])?([0-9]+)(\.[0-9]+)?/', [] ],
+        'refseq_coding_genomic'       => [ '/([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?\((N[CG])([_-])?([0-9]+)(\.[0-9]+)?\)/', [] ],
         'refseq_coding_with_gene'     => [ '/([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?\(([A-Z][A-Za-z0-9#@-]*(_v[0-9]+)?)\)/', [] ],
         'refseq_coding'               => [ '/([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
+        'refseq_non-coding_genomic'   => [ '/([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?\((N[CG])([_-])?([0-9]+)(\.[0-9]+)?\)/', [] ],
         'refseq_non-coding_with_gene' => [ '/([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?\(([A-Z][A-Za-z0-9#@-]*(_v[0-9]+)?)\)/', [] ],
         'refseq_non-coding'           => [ '/([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
         'refseq_gene_with_coding'     => [ '/(?:[A-Z][A-Za-z0-9#@-]*)\(([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?\)/', [] ],
@@ -2483,7 +2485,27 @@ class HGVS_ReferenceSequence extends HGVS
         switch ($this->matched_pattern) {
             case 'refseq_genomic_coding':
             case 'refseq_genomic_non-coding':
+            case 'refseq_coding_genomic':
+            case 'refseq_non-coding_genomic':
                 $this->molecule_type = 'genome_transcript';
+                // If the transcript and the genomic refseq are switched, fix all of that and log it.
+                if (substr($this->matched_pattern, -7) == 'genomic') {
+                    $this->messages['WREFERENCEFORMAT'] =
+                        'The genomic and transcript reference sequence IDs have been swapped.';
+                    // Now, swap the regexes so the reconstruction will work well.
+                    $this->regex = [
+                        $this->regex[0],
+                        $this->regex[5],
+                        $this->regex[6],
+                        $this->regex[7],
+                        ($this->regex[8] ?? NULL),
+                        $this->regex[1],
+                        $this->regex[2],
+                        $this->regex[3],
+                        ($this->regex[4] ?? NULL),
+                    ];
+                }
+
                 $this->setCorrectedValue(
                     strtoupper($this->regex[1]) .
                     '_' .
