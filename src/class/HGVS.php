@@ -2492,6 +2492,7 @@ class HGVS_ReferenceSequence extends HGVS
             case 'refseq_coding_genomic':
             case 'refseq_non-coding_genomic':
                 $this->molecule_type = 'genome_transcript';
+                $this->allowed_prefixes = [(strpos($this->matched_pattern, 'non-coding') !== false? 'n' : 'c')];
                 // If the transcript and the genomic refseq are switched, fix all of that and log it.
                 if (substr($this->matched_pattern, -7) == 'genomic') {
                     $this->messages['WREFERENCEFORMAT'] =
@@ -2548,6 +2549,7 @@ class HGVS_ReferenceSequence extends HGVS
 
             case 'refseq_genomic':
                 $this->molecule_type = 'genome';
+                $this->allowed_prefixes = [(strtoupper($this->regex[1]) == 'NC' && in_array((int) $this->regex[3], ['1807', '12920'])? 'm' : 'g')];
                 $this->setCorrectedValue(
                     strtoupper($this->regex[1]) .
                     '_' .
@@ -2580,6 +2582,7 @@ class HGVS_ReferenceSequence extends HGVS
             case 'refseq_gene_with_non-coding':
             case 'refseq_protein':
                 $this->molecule_type = ($this->matched_pattern == 'refseq_protein'? 'protein' : 'transcript');
+                $this->allowed_prefixes = [(strpos($this->matched_pattern, 'non-coding') !== false? 'n' : ($this->matched_pattern == 'refseq_protein'? 'p' : 'c'))];
                 $this->setCorrectedValue(
                     strtoupper($this->regex[1]) .
                     '_' .
@@ -2609,6 +2612,7 @@ class HGVS_ReferenceSequence extends HGVS
 
             case 'refseq_other':
                 $this->molecule_type = 'genome';
+                $this->allowed_prefixes = ['g', 'o'];
                 // We won't attempt to fix things. We don't actually know if anything like this is valid.
                 $this->setCorrectedValue(strtoupper($this->regex[0]));
                 $this->caseOK = ($this->regex[1] == strtoupper($this->regex[1]));
@@ -2623,7 +2627,13 @@ class HGVS_ReferenceSequence extends HGVS
 
             case 'ensembl_genomic':
             case 'ensembl_transcript':
-                $this->molecule_type = ($this->matched_pattern == 'ensembl_genomic'? 'genome' : 'transcript');
+                if ($this->matched_pattern == 'ensembl_genomic') {
+                    $this->molecule_type = 'genome';
+                    $this->allowed_prefixes = ['g', 'm', 'o'];
+                } else {
+                    $this->molecule_type = 'transcript';
+                    $this->allowed_prefixes = ['c', 'n'];
+                }
                 $this->setCorrectedValue(
                     strtoupper($this->regex[1]) .
                     str_pad((int) $this->regex[3], 11, '0', STR_PAD_LEFT) .
@@ -2649,6 +2659,7 @@ class HGVS_ReferenceSequence extends HGVS
 
             case 'LRG_transcript':
                 $this->molecule_type = 'genome_transcript';
+                $this->allowed_prefixes = ['c', 'n'];
                 $this->setCorrectedValue(
                     strtoupper($this->regex[1]) .
                     '_' .
@@ -2667,6 +2678,7 @@ class HGVS_ReferenceSequence extends HGVS
 
             case 'LRG_genomic':
                 $this->molecule_type = 'genome';
+                $this->allowed_prefixes = ['g'];
                 $this->setCorrectedValue(
                     strtoupper($this->regex[1]) .
                     '_' .
