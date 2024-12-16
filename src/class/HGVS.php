@@ -56,6 +56,7 @@ class HGVS
     public array $regex = [];
     public bool $caseOK = true;
     public bool $matched = false;
+    public bool $possibly_incomplete = false;
     public int $patterns_matched = 0;
     public string $input;
     public string $current_pattern;
@@ -85,6 +86,8 @@ class HGVS
                 // Quick check: do we still have something left?
                 if ($sInputToParse === '') {
                     $bMatching = false;
+                    // This can be a sign that a variant wasn't submitted completely, and we should try to get more input.
+                    $this->possibly_incomplete = true;
                     break;
                 }
 
@@ -127,6 +130,7 @@ class HGVS
                         $bMatching = false;
                         // We still need to store whether any patterns were matched.
                         $this->patterns_matched += $aPattern[$i]->getPatternsMatched();
+                        $this->possibly_incomplete = ($this->possibly_incomplete || $aPattern[$i]->isPossiblyIncomplete());
                         break;
                     }
 
@@ -541,6 +545,15 @@ class HGVS
     public function isTheCaseOK ()
     {
         return $this->caseOK;
+    }
+
+
+
+
+
+    public function isPossiblyIncomplete ()
+    {
+        return $this->possibly_incomplete;
     }
 
 
