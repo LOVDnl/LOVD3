@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-12-13
+ * Modified    : 2024-12-16
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -782,7 +782,7 @@ class HGVS_ChromosomeNumber extends HGVS
         // Assuming use for humans.
         if ($this->matched_pattern == 'number') {
             $this->setCorrectedValue((int) $this->value);
-            if ($this->getCorrectedValue() > 22) {
+            if (!$this->getCorrectedValue() || $this->getCorrectedValue() > 22) {
                 $this->messages['EINVALIDCHROMOSOME'] = 'This variant description contains an invalid chromosome number: "' . $this->value . '".';
             }
         }
