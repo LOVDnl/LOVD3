@@ -56,6 +56,7 @@ class HGVS
     public array $regex = [];
     public bool $caseOK = true;
     public bool $matched = false;
+    public int $patterns_matched = 0;
     public string $input;
     public string $current_pattern;
     public string $matched_pattern;
@@ -94,6 +95,7 @@ class HGVS
                         // This pattern matched. Store what is left, if anything is left.
                         $sInputToParse = $aPattern[$i]->getSuffix();
                         // Merge their data and messages with ours.
+                        $this->patterns_matched += $aPattern[$i]->getPatternsMatched();
                         $this->data = array_merge(
                             $this->data,
                             $aPattern[$i]->getData()
@@ -123,6 +125,8 @@ class HGVS
                     } else {
                         // Didn't match.
                         $bMatching = false;
+                        // We still need to store whether any patterns were matched.
+                        $this->patterns_matched += $aPattern[$i]->getPatternsMatched();
                         break;
                     }
 
@@ -130,7 +134,9 @@ class HGVS
                     // Regex. Make sure it matches the start of the string. Make sure it's case-insensitive.
                     $sPattern = '/^' . substr($sPattern, 1) . 'i';
                     if (preg_match($sPattern, $sInputToParse, $aRegs)) {
-                        // This pattern matched. Store what is left, if anything is left.
+                        // This pattern matched.
+                        $this->patterns_matched ++;
+                        // Store what is left, if anything is left.
                         // Note that regexes should not be part of a pattern array, but only get their own pattern line. E.g., this object is all about this regex, or we messed up.
                         $sInputToParse = substr($sInputToParse, strlen($aRegs[0]));
                         // Store the regex values for further processing, if needed.
@@ -144,7 +150,9 @@ class HGVS
                 } else {
                     // Assume a simple string match.
                     if (strlen($sInputToParse) >= strlen($sPattern) && substr($sInputToParse, 0, strlen($sPattern)) == $sPattern) {
-                        // This pattern matched. Store what is left, if anything is left.
+                        // This pattern matched.
+                        $this->patterns_matched ++;
+                        // Store what is left, if anything is left.
                         $sInputToParse = substr($sInputToParse, strlen($sPattern));
                     } else {
                         // Didn't match.
@@ -208,7 +216,7 @@ class HGVS
 
     public function __debugInfo ()
     {
-        // This functions is called whenever a var_dump() is called on the object.
+        // This function is called whenever a var_dump() is called on the object.
         // Because we want to limit the space taken up in the var_dump() output, we'll limit it here.
 
         $aReturn = [
@@ -468,6 +476,15 @@ class HGVS
                 return $o->getParentProperty($sPropertyName);
             }
         }
+    }
+
+
+
+
+
+    public function getPatternsMatched ()
+    {
+        return $this->patterns_matched;
     }
 
 
