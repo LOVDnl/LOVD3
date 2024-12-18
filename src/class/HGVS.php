@@ -2768,6 +2768,13 @@ class HGVS_ReferenceSequence extends HGVS
             case 'other':
                 $this->molecule_type = 'unknown';
                 $this->allowed_prefixes = [];
+
+                // Some black listing is needed, though.
+                if (in_array(strtolower($this->value), ['http', 'https'])) {
+                    $this->matched = false;
+                    return;
+                }
+
                 break;
         }
     }
