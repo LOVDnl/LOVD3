@@ -136,7 +136,7 @@ class HGVS
                         break;
                     }
 
-                } elseif (strlen($sPattern) >= 3 && substr($sPattern, 0, 1) == '/' && substr($sPattern, -1) == '/') {
+                } elseif (strlen($sPattern) >= 3 && substr($sPattern, 0, 1) == '/') {
                     // Regex. Make sure it matches the start of the string. Make sure it's case-insensitive.
                     $sPattern = '/^' . substr($sPattern, 1) . 'i';
                     if (preg_match($sPattern, $sInputToParse, $aRegs)) {
@@ -1365,8 +1365,8 @@ class HGVS_DNAPosition extends HGVS
 {
     public array $patterns = [
         'unknown'          => [ '?', [] ],
-        'unknown_intronic' => [ '/([-*]?([0-9]+))([+-]\?)/', [] ],
-        'known'            => [ '/([-*]?([0-9]+))([+-]([0-9]+))?/', [] ], // Note: We're using these sub patterns in the validation.
+        'unknown_intronic' => [ '/([-‐*]?([0-9]+))([+‐-]\?)/u', [] ],
+        'known'            => [ '/([-‐*]?([0-9]+))([+‐-]([0-9]+))?/u', [] ], // Note: We're using these sub patterns in the validation.
     ];
     public array $position_limits = [
         'g' => [1, 4294967295, 0, 0], // position min, position max, offset min, offset max.
@@ -1395,6 +1395,15 @@ class HGVS_DNAPosition extends HGVS
             $this->position_limits[3] = 0;
 
         } else {
+            // We've seen input from papers that don't use a hyphen-minus (-) but a non-breaking hyphen (‐).
+            // Since the user can't really see the difference, it's not really an error, but we do need to fix it.
+            if (strpos($this->value, '‐') !== false) {
+                array_walk($this->regex, function (&$sValue) {
+                    $sValue = str_replace('‐', '-', $sValue);
+                });
+                $this->messages['WPOSITIONFORMAT'] = 'Invalid character "‐" found in variant position; only regular hyphens are allowed to be used in the HGVS nomenclature.';
+            }
+
             $this->UTR = !ctype_digit($this->value[0]);
             $this->intronic = isset($this->regex[3]);
 
