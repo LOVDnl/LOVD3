@@ -823,6 +823,37 @@ class HGVS_ChromosomeNumber extends HGVS
 
 
 
+class HGVS_DNAAlts extends HGVS
+{
+    public array $patterns = [
+        'invalid' => [ '/[A-Z]+/', [] ],
+        'valid'   => [ '/[ACGTMRWSYKVHDBN]+/', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->setCorrectedValue(strtoupper($this->value));
+        $this->caseOK = ($this->value == $this->getCorrectedValue());
+
+        // If we had checked the 'valid' rule first, we would not support recognizing invalid nucleotides after valid
+        //  nucleotides. The valid ones would match, and we would return the invalid nucleotides as a suffix. That's a
+        //  problem, so we're first just matching everything.
+
+        // Check for invalid nucleotides.
+        $sUnknownBases = preg_replace($this->patterns['valid'][0], '', $this->getCorrectedValue());
+        if ($sUnknownBases) {
+            $this->messages['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
+            // Then, replace the 'U's with 'T's.
+            $this->setCorrectedValue(str_replace('U', 'T', $this->getCorrectedValue()));
+        }
+    }
+}
+
+
+
+
+
 class HGVS_DNACon extends HGVS
 {
     public array $patterns = [
@@ -854,37 +885,6 @@ class HGVS_DNADel extends HGVS
         $this->setCorrectedValue(strtolower($this->value));
         $this->data['type'] = $this->getCorrectedValue();
         $this->caseOK = ($this->value == $this->getCorrectedValue());
-    }
-}
-
-
-
-
-
-class HGVS_DNAAlts extends HGVS
-{
-    public array $patterns = [
-        'invalid' => [ '/[A-Z]+/', [] ],
-        'valid'   => [ '/[ACGTMRWSYKVHDBN]+/', [] ],
-    ];
-
-    public function validate ()
-    {
-        // Provide additional rules for validation, and stores values for the variant info if needed.
-        $this->setCorrectedValue(strtoupper($this->value));
-        $this->caseOK = ($this->value == $this->getCorrectedValue());
-
-        // If we had checked the 'valid' rule first, we would not support recognizing invalid nucleotides after valid
-        //  nucleotides. The valid ones would match, and we would return the invalid nucleotides as a suffix. That's a
-        //  problem, so we're first just matching everything.
-
-        // Check for invalid nucleotides.
-        $sUnknownBases = preg_replace($this->patterns['valid'][0], '', $this->getCorrectedValue());
-        if ($sUnknownBases) {
-            $this->messages['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
-            // Then, replace the 'U's with 'T's.
-            $this->setCorrectedValue(str_replace('U', 'T', $this->getCorrectedValue()));
-        }
     }
 }
 
