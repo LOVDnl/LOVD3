@@ -351,6 +351,24 @@ class HGVS
 
 
 
+    public function discardSuffix ()
+    {
+        // This function discards the suffix. This is used in text parsing, when
+        //  suffixes are very common (periods, commas, closing parentheses).
+
+        $this->input = substr($this->input, 0, -strlen($this->suffix));
+        $this->suffix = '';
+        unset($this->messages['WINPUTLEFT']);
+        // Also reset the info variable, so that we'll have to rebuild it.
+        $this->info = [];
+
+        return true;
+    }
+
+
+
+
+
     public function getCorrectedValue ($nKey = 0)
     {
         // This function gets the first corrected value and returns the string.
