@@ -453,6 +453,24 @@ class HGVS
 
 
 
+    public function getMatchedPattern ()
+    {
+        return ($this->matched_pattern ?? false);
+    }
+
+
+
+
+
+    public function getMatchedPatternFormatted ()
+    {
+        return str_replace('_', ' ', ($this->matched_pattern ?? ''));
+    }
+
+
+
+
+
     public function getMessages ()
     {
         return ($this->messages ?? []);
