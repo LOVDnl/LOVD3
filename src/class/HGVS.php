@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-12-16
+ * Modified    : 2024-12-18
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -861,17 +861,6 @@ class HGVS_DNADel extends HGVS
 
 
 
-class HGVS_DNADup extends HGVS_DNADel
-{
-    public array $patterns = [
-        [ '/dup/', [] ],
-    ];
-}
-
-
-
-
-
 class HGVS_DNAAlts extends HGVS
 {
     public array $patterns = [
@@ -1028,6 +1017,17 @@ class HGVS_DNADelSuffix extends HGVS
             }
         }
     }
+}
+
+
+
+
+
+class HGVS_DNADup extends HGVS_DNADel
+{
+    public array $patterns = [
+        [ '/dup/', [] ],
+    ];
 }
 class HGVS_DNADupSuffix extends HGVS_DNADelSuffix {}
 
