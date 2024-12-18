@@ -44,9 +44,11 @@ class HGVS
     //        you should create an object. The reason for this is that we can't deduce from a regular expression what it
     //        matched. An object holds its value, a string has a fixed value by itself, but a regex can't store a value.
     public array $patterns = [
-        'full_variant' => [ 'HGVS_ReferenceSequence', ':', 'HGVS_Variant', [] ],
-        'variant'      => [ 'HGVS_Variant', ['EREFSEQMISSING' => 'This variant is missing a reference sequence.'] ],
-        'VCF'          => [ 'HGVS_VCF', ['WVCF' => 'Recognized a VCF-like format; converting this format to HGVS nomenclature.'] ],
+        'full_variant'       => [ 'HGVS_ReferenceSequence', ':', 'HGVS_Variant', [] ],
+        'variant'            => [ 'HGVS_Variant', ['EREFSEQMISSING' => 'This variant is missing a reference sequence.'] ],
+        'VCF'                => [ 'HGVS_VCF', ['WVCF' => 'Recognized a VCF-like format; converting this format to HGVS nomenclature.'] ],
+        'reference_sequence' => [ 'HGVS_ReferenceSequence', [] ],
+        'genome_build'       => [ 'HGVS_Genome', [] ],
     ];
     public array $corrected_values = [];
     public array $data = [];
