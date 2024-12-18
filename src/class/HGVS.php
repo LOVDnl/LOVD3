@@ -1032,28 +1032,6 @@ class HGVS_DNADelSuffix extends HGVS
                     $this->buildCorrectedValues('[', $this->Length->getCorrectedValues(), ']'))
             );
         }
-
-        // Now, handle the duplication suffixes.
-        // It's much more efficient to handle deletion suffixes and duplication suffixes in just one class.
-        // HGVS_DNADupSuffix extends this class, and, therefore, inherits all patterns, checks, and validations.
-        // However, all warnings and errors are now talking about deletions. Fix this by simply replacing the words.
-        if (get_class($this) == 'HGVS_DNADupSuffix') {
-            // We have to fix all messages now.
-            foreach ($this->messages as $sCode => $sMessage) {
-                $this->messages[$sCode] = str_replace(
-                    [
-                        '"del"',
-                        'deletion',
-                        'deleted',
-                    ], [
-                        '"dup"',
-                        'duplication',
-                        'duplicated',
-                    ],
-                    $sMessage
-                );
-            }
-        }
     }
 }
 
@@ -1067,7 +1045,37 @@ class HGVS_DNADup extends HGVS_DNADel
         [ '/dup/', [] ],
     ];
 }
-class HGVS_DNADupSuffix extends HGVS_DNADelSuffix {}
+
+
+
+
+
+class HGVS_DNADupSuffix extends HGVS_DNADelSuffix
+{
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        parent::validate();
+
+        // It's much more efficient to handle deletion suffixes and duplication suffixes in just one class.
+        // Therefore, we extend the HGVS_DNADelSuffix class, and inherit all patterns, checks, and validations.
+        // However, all warnings and errors are now talking about deletions. Fix this by simply replacing the words.
+        foreach ($this->messages as $sCode => $sMessage) {
+            $this->messages[$sCode] = str_replace(
+                [
+                    '"del"',
+                    'deletion',
+                    'deleted',
+                ], [
+                    '"dup"',
+                    'duplication',
+                    'duplicated',
+                ],
+                $sMessage
+            );
+        }
+    }
+}
 
 
 
