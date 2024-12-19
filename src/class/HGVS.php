@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-12-18
+ * Modified    : 2024-12-19
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1361,12 +1361,30 @@ class HGVS_DNAInsSuffixComplex extends HGVS
 class HGVS_DNAInsSuffixComplexComponent extends HGVS
 {
     public array $patterns = [
-        'positions_with_refseq_inv' => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', '.', 'HGVS_DNAPositions', 'inv', [] ],
+        'positions_with_refseq_inv' => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', '.', 'HGVS_DNAPositions', 'HGVS_DNAInv', [] ],
         'positions_with_refseq'     => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', '.', 'HGVS_DNAPositions', [] ],
         'sequence_with_length'      => [ 'HGVS_DNAAlts', '[', 'HGVS_Length', ']', [] ],
         'sequence'                  => [ 'HGVS_DNAAlts', [] ],
         'positions'                 => [ 'HGVS_DNAPositions', [] ],
     ];
+}
+
+
+
+
+
+class HGVS_DNAInv extends HGVS
+{
+    public array $patterns = [
+        [ '/inv/', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->setCorrectedValue(strtolower($this->value));
+        $this->caseOK = ($this->value == $this->getCorrectedValue());
+    }
 }
 
 
