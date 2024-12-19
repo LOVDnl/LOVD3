@@ -246,6 +246,20 @@ class HGVS
     {
         // Conveniently adds the corrected value for us.
         $this->corrected_values[$sValue] = $nConfidence;
+
+        return true;
+    }
+
+
+
+
+
+    public function appendCorrectedValue ($sValue, $nConfidence = 1)
+    {
+        // Append to any existing corrected value(s), using the given confidence.
+        $this->corrected_values = $this->buildCorrectedValues($this->corrected_values, [$sValue => $nConfidence]);
+
+        return true;
     }
 
 
@@ -1960,7 +1974,7 @@ class HGVS_DNAPositions extends HGVS
             // This may cause issues with errors that don't reflect the user's input.
             $this->validate();
             // We're not super confident about this.
-            $this->corrected_values[$this->getCorrectedValue()] *= 0.75;
+            $this->appendCorrectedValue('', 0.75);
             return true;
         }
 
@@ -1985,7 +1999,7 @@ class HGVS_DNAPositions extends HGVS
             // This may cause issues with errors that don't reflect the user's input.
             $this->validate();
             // We're not super confident about this.
-            $this->corrected_values[$this->getCorrectedValue()] *= 0.75;
+            $this->appendCorrectedValue('', 0.75);
             return true;
         }
 
