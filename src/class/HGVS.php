@@ -1389,6 +1389,10 @@ class HGVS_DNAInv extends HGVS
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->setCorrectedValue(strtolower($this->value));
+        if (!$this->getParent('HGVS_DNAInsSuffix')) {
+            // We are *not* in an insertion, set the variant type.
+            $this->data['type'] = $this->getCorrectedValue();
+        }
         $this->caseOK = ($this->value == $this->getCorrectedValue());
 
         // Inversions have some specific needs.
@@ -2308,6 +2312,7 @@ class HGVS_DNAVariantBody extends HGVS
         'ins'                 => [ 'HGVS_DNAPositions', 'HGVS_DNAIns', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for insertions.' ] ],
         'dup_with_suffix'     => [ 'HGVS_DNAPositions', 'HGVS_DNADup', 'HGVS_DNADupSuffix', [] ],
         'dup'                 => [ 'HGVS_DNAPositions', 'HGVS_DNADup', [] ],
+        'inv'                 => [ 'HGVS_DNAPositions', 'HGVS_DNAInv', [] ],
         'con_with_suffix'     => [ 'HGVS_DNAPositions', 'HGVS_DNACon', 'HGVS_DNAInsSuffix', [] ],
         'con'                 => [ 'HGVS_DNAPositions', 'HGVS_DNACon', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
         'unknown'             => [ 'HGVS_DNAUnknown', [] ],
