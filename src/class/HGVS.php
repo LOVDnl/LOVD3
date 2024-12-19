@@ -1149,6 +1149,7 @@ class HGVS_DNAInsSuffix extends HGVS
     use HGVS_DNASequence; // Gets us getSequence() and getLengths().
     public array $patterns = [
         'complex_in_brackets'              => [ '[', 'HGVS_DNAInsSuffixComplex', ']', [] ],
+        'positions_inverted'               => [ 'HGVS_DNAPositions', 'HGVS_DNAInv', [] ],
         'positions'                        => [ 'HGVS_DNAPositions', [] ],
         'length_in_brackets'               => [ '[', 'HGVS_Length', ']', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
         'sequence_with_number'             => [ 'HGVS_DNAAlts', 'HGVS_Length', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
@@ -1221,6 +1222,10 @@ class HGVS_DNAInsSuffix extends HGVS
             } else {
                 // Anything else, we'll interpret as positions.
                 $this->corrected_values = $this->DNAPositions->getCorrectedValues();
+            }
+
+            if ($this->matched_pattern == 'positions_inverted') {
+                $this->appendCorrectedValue($this->DNAInv->getCorrectedValue());
             }
 
         } elseif (isset($this->DNAAlts) && !isset($this->Length)) {
@@ -1365,6 +1370,7 @@ class HGVS_DNAInsSuffixComplexComponent extends HGVS
         'positions_with_refseq'     => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', '.', 'HGVS_DNAPositions', [] ],
         'sequence_with_length'      => [ 'HGVS_DNAAlts', '[', 'HGVS_Length', ']', [] ],
         'sequence'                  => [ 'HGVS_DNAAlts', [] ],
+        'positions_inverted'        => [ 'HGVS_DNAPositions', 'HGVS_DNAInv', [] ],
         'positions'                 => [ 'HGVS_DNAPositions', [] ],
     ];
 }
