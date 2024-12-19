@@ -182,7 +182,7 @@ class HGVS
                 $this->patterns[$sPatternName] = array_merge($aPattern, [$aMessages]);
             }
 
-            if ($sInputToParse) {
+            if ($sInputToParse !== '') {
                 // We matched everything, but there is a suffix, something left that didn't match.
                 // In the main HGVS object, this is a problem. Otherwise, this is what we have to return to the parent.
                 $this->value = substr($sValue, 0, -strlen($sInputToParse));
