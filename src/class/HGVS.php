@@ -1430,6 +1430,37 @@ class HGVS_DNAInv extends HGVS
 
 
 
+class HGVS_DNAInvSuffix extends HGVS_DNADelSuffix
+{
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        parent::validate();
+
+        // It's much more efficient to handle deletion suffixes and inversion suffixes in just one class.
+        // Therefore, we extend the HGVS_DNADelSuffix class, and inherit all patterns, checks, and validations.
+        // However, all warnings and errors are now talking about deletions. Fix this by simply replacing the words.
+        foreach ($this->messages as $sCode => $sMessage) {
+            $this->messages[$sCode] = str_replace(
+                [
+                    '"del"',
+                    'deletion',
+                    'deleted',
+                ], [
+                    '"inv"',
+                    'inversion',
+                    'inverted',
+                ],
+                $sMessage
+            );
+        }
+    }
+}
+
+
+
+
+
 class HGVS_DNANull extends HGVS
 {
     public array $patterns = [
@@ -2312,6 +2343,7 @@ class HGVS_DNAVariantBody extends HGVS
         'ins'                 => [ 'HGVS_DNAPositions', 'HGVS_DNAIns', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for insertions.' ] ],
         'dup_with_suffix'     => [ 'HGVS_DNAPositions', 'HGVS_DNADup', 'HGVS_DNADupSuffix', [] ],
         'dup'                 => [ 'HGVS_DNAPositions', 'HGVS_DNADup', [] ],
+        'inv_with_suffix'     => [ 'HGVS_DNAPositions', 'HGVS_DNAInv', 'HGVS_DNAInvSuffix', [] ],
         'inv'                 => [ 'HGVS_DNAPositions', 'HGVS_DNAInv', [] ],
         'con_with_suffix'     => [ 'HGVS_DNAPositions', 'HGVS_DNACon', 'HGVS_DNAInsSuffix', [] ],
         'con'                 => [ 'HGVS_DNAPositions', 'HGVS_DNACon', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
