@@ -1390,6 +1390,35 @@ class HGVS_DNAInv extends HGVS
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->setCorrectedValue(strtolower($this->value));
         $this->caseOK = ($this->value == $this->getCorrectedValue());
+
+        // Inversions have some specific needs.
+        $Positions = $this->getParentProperty('DNAPositions');
+        // If one position is given, this is a problem. Only if it's a question mark, can we fix it.
+        if (!$Positions->range) {
+            if ($Positions->unknown) {
+                // We can correct this. In this case, I think it's better to correct the Positions object than
+                //  to just fix the corrected_value. It's also kinda hard to change the corrected value of some
+                //  other object than our current one. If other changes are needed for whatever reason,
+                //  our sent corrected value may disappear. However, this has a side effect.
+                //  It'll change the variant's getInfo() output.
+                $Positions->addPosition('?');
+                $sCode = 'WPOSITIONMISSING';
+            } else {
+                $sCode = 'EPOSITIONMISSING';
+            }
+            $this->messages[$sCode] =
+                'Inversions require a length of at least two bases.';
+
+        } elseif ($Positions->uncertain && $Positions->getLengths() == [1,2]) {
+            // If the exact location of an inversion is unknown, this can be indicated
+            //  by placing the positions in the range-format, e.g. c.(1_10)inv. In this
+            //  case, the two positions should not be neighbours, since that would imply that
+            //  the position is certain.
+            $this->messages['WPOSITIONSNOTFORINV'] =
+                'The two positions do not indicate a range longer than two bases.' .
+                ' Please remove the parentheses if the positions are certain.';
+            $Positions->makeCertain();
+        }
     }
 }
 
