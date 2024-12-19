@@ -1014,7 +1014,7 @@ class HGVS_DNADelSuffix extends HGVS
         }
 
         // In case of any error, remove WSUFFIXFORMAT.
-        if (array_filter(array_keys($this->messages), function ($sKey) { return ($sKey[0] == 'E'); })) {
+        if (isset($this->messages['ELENGTHFORMAT'])) {
             unset($this->messages['WSUFFIXFORMAT']);
         }
 
