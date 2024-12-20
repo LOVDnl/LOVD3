@@ -1380,8 +1380,8 @@ class HGVS_DNAInsSuffixComplex extends HGVS
 class HGVS_DNAInsSuffixComplexComponent extends HGVS
 {
     public array $patterns = [
-        'positions_with_refseq_inv' => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', '.', 'HGVS_DNAPositions', 'HGVS_DNAInv', [] ],
-        'positions_with_refseq'     => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', '.', 'HGVS_DNAPositions', [] ],
+        'positions_with_refseq_inv' => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAPositions', 'HGVS_DNAInv', [] ],
+        'positions_with_refseq'     => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAPositions', [] ],
         'sequence_with_length'      => [ 'HGVS_DNAAlts', '[', 'HGVS_Length', ']', [] ],
         'sequence'                  => [ 'HGVS_DNAAlts', [] ],
         'positions_inverted'        => [ 'HGVS_DNAPositions', 'HGVS_DNAInv', [] ],
@@ -2624,6 +2624,17 @@ class HGVS_DNAWildType extends HGVS
 
 
 
+class HGVS_Dot extends HGVS
+{
+    public array $patterns = [
+        [ '.', [] ],
+    ];
+}
+
+
+
+
+
 class HGVS_Genome extends HGVS
 {
     public array $patterns = [
@@ -3000,8 +3011,8 @@ class HGVS_ReferenceSequence extends HGVS
 class HGVS_Variant extends HGVS
 {
     public array $patterns = [
-        'DNA_predicted' => [ 'HGVS_DNAPrefix', '.(', 'HGVS_DNAVariantBody', ')', [] ],
-        'DNA'           => [ 'HGVS_DNAPrefix', '.', 'HGVS_DNAVariantBody', [] ],
+        'DNA_predicted' => [ 'HGVS_DNAPrefix', 'HGVS_Dot', '(', 'HGVS_DNAVariantBody', ')', [] ],
+        'DNA'           => [ 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAVariantBody', [] ],
     ];
 
     public function validate ()
