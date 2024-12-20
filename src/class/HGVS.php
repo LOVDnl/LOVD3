@@ -85,6 +85,13 @@ class HGVS
             $this->messages = [];
 
             foreach ($aPattern as $i => $sPattern) {
+                // Check for whitespace. This way, we'll nicely handle whitespace between elements,
+                //  but not within elements. That is fine; we haven't seen spaces within elements yet.
+                if (preg_match('/^\s/', $sInputToParse)) {
+                    $sInputToParse = ltrim($sInputToParse);
+                    $this->messages['WWHITESPACE'] = 'This variant description contains one or more whitespace characters (spaces, tabs, etc).';
+                }
+
                 // Quick check: do we still have something left?
                 if ($sInputToParse === '') {
                     $bMatching = false;
@@ -189,7 +196,12 @@ class HGVS
                 $this->suffix = $sInputToParse;
                 if (!isset($this->parent)) {
                     // This is the main HGVS class. The variant has a suffix that we didn't identify.
-                    $this->messages['WINPUTLEFT'] = 'We stopped reading past "' . $this->value . '".';
+                    // If this is just whitespace, this is acceptable, we'll just throw a WWHITESPACE.
+                    if (trim($sInputToParse) === '') {
+                        $this->messages['WWHITESPACE'] = 'This variant description contains one or more whitespace characters (spaces, tabs, etc).';
+                    } else {
+                        $this->messages['WINPUTLEFT'] = 'We stopped reading past "' . $this->value . '".';
+                    }
                 }
 
             } else {
@@ -3083,6 +3095,9 @@ class HGVS_VCF extends HGVS
         // However, it's much simpler to do it here; everything the VCFBody does is string-based.
         $HGVSVariant = new HGVS_Variant('g.' . $this->VCFBody->getCorrectedValue());
         $this->data = $HGVSVariant->getInfo();
+
+        // We could have triggered a whitespace warning, but that's normal for us.
+        unset($this->messages['WWHITESPACE']);
     }
 }
 
@@ -3284,7 +3299,7 @@ class HGVS_VCFRefs extends HGVS_DNARefs
 class HGVS_VCFSeparator extends HGVS
 {
     public array $patterns = [
-        [ '/[: -]/', [] ],
+        [ '/[: -]?/', [] ],
     ];
 }
 
