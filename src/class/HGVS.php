@@ -1510,7 +1510,7 @@ class HGVS_DNANull extends HGVS
 class HGVS_DNAPipe extends HGVS
 {
     public array $patterns = [
-        [ '|', [] ],
+        [ '/\|+/', [] ],
     ];
 
     public function validate ()
@@ -1518,6 +1518,9 @@ class HGVS_DNAPipe extends HGVS
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->setCorrectedValue('|');
         $this->data['type'] = 'met'; // Generalized to methylation-related variants.
+        if ($this->value != $this->getCorrectedValue()) {
+            $this->messages['WTOOMANYPIPES'] = 'One single pipe character is used to indicate a methylation-related variant.';
+        }
     }
 }
 
@@ -1542,6 +1545,14 @@ class HGVS_DNAPipeSuffix extends HGVS
         if ($this->matched_pattern == 'met') {
             $this->appendCorrectedValue('=');
             $this->messages['WMETFORMAT'] = 'To report normal methylation, use "met=".';
+        }
+
+        // Let's handle the pipe-check here since we also need to provide the corrected value.
+        if (!$this->getParentProperty('DNAPipe')) {
+            // We didn't have a pipe in front of us.
+            $this->data['type'] = 'met'; // Set the type that we're missing as well.
+            $this->corrected_values = $this->buildCorrectedValues('|', $this->getCorrectedValues());
+            $this->messages['WPIPEMISSING'] = 'Please place a "|" between the positions and the variant type.';
         }
     }
 }
@@ -2405,6 +2416,7 @@ class HGVS_DNAVariantBody extends HGVS
         'con_with_suffix'     => [ 'HGVS_DNAPositions', 'HGVS_DNACon', 'HGVS_DNAInsSuffix', [] ],
         'con'                 => [ 'HGVS_DNAPositions', 'HGVS_DNACon', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
         'pipe'                => [ 'HGVS_DNAPositions', 'HGVS_DNAPipe', 'HGVS_DNAPipeSuffix', [] ],
+        'pipe_without_pipe'   => [ 'HGVS_DNAPositions', 'HGVS_DNAPipeSuffix', [] ],
         'unknown'             => [ 'HGVS_DNAUnknown', [] ],
         'wildtype_with_pos'   => [ 'HGVS_DNAPositions', 'HGVS_DNAWildType', [] ],
         'wildtype'            => [ 'HGVS_DNAWildType', [] ],
