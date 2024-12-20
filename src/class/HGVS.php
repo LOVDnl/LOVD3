@@ -2627,8 +2627,20 @@ class HGVS_DNAWildType extends HGVS
 class HGVS_Dot extends HGVS
 {
     public array $patterns = [
-        [ '.', [] ],
+        'something' => [ '/[:.,]+/', [] ],
+        'nothing'   => [ '/(?=[(0-9*-])/', [] ],
     ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->setCorrectedValue('.');
+        if ($this->value != $this->getCorrectedValue()) {
+            $Prefix = ($this->getParentProperty('DNAPrefix') ?: ($this->getParentProperty('RNAPrefix') ?: $this->getParentProperty('ProteinPrefix')));
+            $sPrefix = ($Prefix? $Prefix->getCorrectedValue() : 'g');
+            $this->messages['WPREFIXFORMAT'] = 'Molecule types in variant descriptions should be followed by a period (e.g., "' . $sPrefix . '.").';
+        }
+    }
 }
 
 
