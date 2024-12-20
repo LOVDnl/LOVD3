@@ -1529,6 +1529,7 @@ class HGVS_DNAPipeSuffix extends HGVS
 {
     public array $patterns = [
         'met=' => [ '/met=/', [] ],
+        'met'  => [ '/met/', [] ],
         'gom'  => [ '/gom/', [] ],
         'lom'  => [ '/lom/', [] ],
     ];
@@ -1538,6 +1539,10 @@ class HGVS_DNAPipeSuffix extends HGVS
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->setCorrectedValue(strtolower($this->value));
         $this->caseOK = ($this->value == $this->getCorrectedValue());
+        if ($this->matched_pattern == 'met') {
+            $this->appendCorrectedValue('=');
+            $this->messages['WMETFORMAT'] = 'To report normal methylation, use "met=".';
+        }
     }
 }
 
