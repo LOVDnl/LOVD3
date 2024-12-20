@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-12-19
+ * Modified    : 2024-12-20
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1507,6 +1507,44 @@ class HGVS_DNANull extends HGVS
 
 
 
+class HGVS_DNAPipe extends HGVS
+{
+    public array $patterns = [
+        [ '|', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->setCorrectedValue('|');
+        $this->data['type'] = 'met'; // Generalized to methylation-related variants.
+    }
+}
+
+
+
+
+
+class HGVS_DNAPipeSuffix extends HGVS
+{
+    public array $patterns = [
+        'met=' => [ '/met=/', [] ],
+        'gom'  => [ '/gom/', [] ],
+        'lom'  => [ '/lom/', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->setCorrectedValue(strtolower($this->value));
+        $this->caseOK = ($this->value == $this->getCorrectedValue());
+    }
+}
+
+
+
+
+
 class HGVS_DNAPosition extends HGVS
 {
     public array $patterns = [
@@ -2361,6 +2399,7 @@ class HGVS_DNAVariantBody extends HGVS
         'inv'                 => [ 'HGVS_DNAPositions', 'HGVS_DNAInv', [] ],
         'con_with_suffix'     => [ 'HGVS_DNAPositions', 'HGVS_DNACon', 'HGVS_DNAInsSuffix', [] ],
         'con'                 => [ 'HGVS_DNAPositions', 'HGVS_DNACon', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
+        'pipe'                => [ 'HGVS_DNAPositions', 'HGVS_DNAPipe', 'HGVS_DNAPipeSuffix', [] ],
         'unknown'             => [ 'HGVS_DNAUnknown', [] ],
         'wildtype_with_pos'   => [ 'HGVS_DNAPositions', 'HGVS_DNAWildType', [] ],
         'wildtype'            => [ 'HGVS_DNAWildType', [] ],
