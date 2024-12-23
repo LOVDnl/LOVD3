@@ -2370,6 +2370,43 @@ class HGVS_DNARefs extends HGVS
 
 
 
+class HGVS_DNASomatic extends HGVS
+{
+    public array $patterns = [
+        [ '/\/+/', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->setCorrectedValue(substr($this->value, 0, 2)); // Maximum number of slashes: 2.
+        $nLength = strlen($this->value);
+        if ($nLength == 1) {
+            $this->data['type'] = 'mosaic';
+        } elseif ($nLength == 2) {
+            $this->data['type'] = 'chimeric';
+        } else {
+            $this->data['type'] = 'chimeric';
+            $this->messages['WSOMATICFORMAT'] = 'Somatic variants are reported using one or two slashes; one slash for mosaicism, two for chimerism.';
+        }
+    }
+}
+
+
+
+
+
+class HGVS_DNASomaticVariant extends HGVS
+{
+    public array $patterns = [
+        [ 'HGVS_DNASomatic', 'HGVS_DNAVariantType', [] ],
+    ];
+}
+
+
+
+
+
 class HGVS_DNASub extends HGVS
 {
     public array $patterns = [
@@ -2411,6 +2448,7 @@ class HGVS_DNAVariantBody extends HGVS
         'null'                => [ 'HGVS_DNANull', [] ],
         'allele_trans'        => [ '[', 'HGVS_DNAAllele', '];[', 'HGVS_DNAAllele', ']', [] ],
         'allele_cis'          => [ '[', 'HGVS_DNAAllele', ']', [] ],
+        'somatic'             => [ 'HGVS_DNAPositions', 'HGVS_DNAVariantType', 'HGVS_DNASomaticVariant', [] ],
         'delXins_with_suffix' => [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNADelSuffix', 'HGVS_DNAIns', 'HGVS_DNAInsSuffix', [] ],
         'delXins'             => [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNADelSuffix', 'HGVS_DNAIns', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
         'delins_with_suffix'  => [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNAIns', 'HGVS_DNAInsSuffix', [] ],
