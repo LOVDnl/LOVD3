@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-12-20
+ * Modified    : 2024-12-23
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2610,6 +2610,139 @@ class HGVS_DNAVariantBody extends HGVS
                 && isset($this->DNADelSuffix)) {
                 // Remove the warning that complained about the base after the del.
                 unset($this->messages['WSUFFIXGIVEN']);
+            }
+        }
+    }
+}
+
+
+
+
+
+class HGVS_DNAVariantType extends HGVS
+{
+    public array $patterns = [
+        'substitution'        => [ 'HGVS_DNARefs', 'HGVS_DNASub', 'HGVS_DNAAlts', [] ],
+        'substitution_VCF'    => [ 'HGVS_VCFRefs', 'HGVS_DNASub', 'HGVS_VCFAlts', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $Positions = $this->getParentProperty('DNAPositions');
+
+        // Substitutions deserve some additional attention.
+        // Since this is the only class where we'll have all the data, all substitution checks need to be done here.
+        if (in_array($this->matched_pattern, ['substitution', 'substitution_VCF'])) {
+            if ($this->matched_pattern == 'substitution') {
+                $sREF = $this->DNARefs->getCorrectedValue();
+                $sALT = $this->DNAAlts->getCorrectedValue();
+                if ($sREF == $sALT) {
+                    $this->messages['WWRONGTYPE'] =
+                        'A substitution should be a change of one base to one base. Did you mean to describe an unchanged ' .
+                        ($Positions->range? 'range' : 'position') . '?';
+                } elseif (strlen($sREF) > 1 || strlen($sALT) > 1) {
+                    $this->messages['WWRONGTYPE'] =
+                        'A substitution should be a change of one base to one base. Did you mean to describe a deletion-insertion?';
+                }
+
+            } else {
+                // Either the REF or the ALT is a period.
+                $sREF = $this->VCFRefs->getCorrectedValue();
+                $sALT = $this->VCFAlts->getCorrectedValue();
+                if ($sREF == '.' && $sALT == '.') {
+                    $this->messages['EWRONGTYPE'] =
+                        'This substitution does not seem to contain any data. Please provide bases that were replaced.';
+                } elseif ($sREF == '.') {
+                    $this->messages['WWRONGTYPE'] =
+                        'A substitution should be a change of one base to one base. Did you mean to describe an insertion?';
+                } elseif ($sALT == '.') {
+                    $this->messages['WWRONGTYPE'] =
+                        'A substitution should be a change of one base to one base. Did you mean to describe a deletion?';
+                }
+                // An else should not be possible.
+            }
+
+            // Positions for substitutions should, of course, normally just be single positions,
+            //  but uncertain ranges are also possible. Certain ranges are normally not allowed, but we'll throw a
+            //  warning only when the REF length matches the positions length.
+            // Don't check anything about the REF length when there are problems with the positions.
+            if (isset($this->messages['EPOSITIONFORMAT'])) {
+                $this->messages['ISUBNOTVALIDATED'] = "Due to the invalid variant position, the substitution syntax couldn't be fully validated.";
+
+            } elseif ($Positions->range) {
+                // Check the position/REF lengths, but only if we have a range.
+                // When REF is as long as the position length, throw a WTOOMANYPOSITIONS.
+                // Then, also the positions should not be uncertain, if they are.
+                // Furthermore, the REF can never be shorter than the minimum length given by the positions,
+                //  and the REF can never be bigger than the maximum length given by the positions.
+                list($nMinLengthVariant, $nMaxLengthVariant) = $Positions->getLengths();
+                $bPositionLengthIsCertain = ($nMinLengthVariant == $nMaxLengthVariant);
+                $nREFLength = strlen(trim($sREF, '.'));
+
+                // Simplest situation first: a certain range. The REF needs to match perfectly for a warning.
+                // Otherwise, throw an error.
+                if ($bPositionLengthIsCertain) {
+                    if ($nMinLengthVariant == $nREFLength) {
+                        $this->messages['WTOOMANYPOSITIONS'] =
+                            'Too many positions are given; a substitution is used to only indicate single-base changes and therefore should have only one position.';
+                    } else {
+                        // We can't fix this.
+                        $this->messages['ETOOMANYPOSITIONS'] =
+                            'Too many positions are given; a substitution is used to only indicate single-base changes and therefore should have only one position.';
+                    }
+
+                } elseif ($nREFLength == $nMaxLengthVariant) {
+                    // When the positions are uncertain but the REF length fits the maximum length precisely,
+                    //  we'll just throw a WTOOMANYPOSITIONS, and try to make the positions certain.
+                    $this->messages['WTOOMANYPOSITIONS'] =
+                        'Too many positions are given; a substitution is used to only indicate single-base changes and therefore should have only one position.';
+                    $Positions->makeCertain();
+                }
+                // In all other cases, we'll allow substitutions on uncertain ranges.
+            }
+
+            // Calculate the corrected value, based on a VCF parser.
+            // Based on the REF and ALT info, we may need to shift the variant or change it to a different type.
+            if (!$Positions->unknown && !$Positions->uncertain
+                && (isset($this->messages['WWRONGTYPE']) || isset($this->messages['WTOOMANYPOSITIONS']) || isset($Positions->messages['WTOOMANYPARENS']))
+                && !array_filter(
+                    array_keys($this->messages),
+                    function ($sKey)
+                    {
+                        return ($sKey[0] == 'E' && $sKey != 'EINVALIDNUCLEOTIDES');
+                    })) {
+                // Calculate the corrected value. Toss it all in a VCF parser.
+                $this->VCF = new HGVS_VCFBody(
+                    ($Positions->DNAPosition ?? $Positions->DNAPositionStart)->getCorrectedValue() .
+                    ':' . $sREF . ':' . $sALT,
+                    $this
+                );
+                // Lower the confidence of our prediction when the position was single but the REF was not.
+                // (e.g., c.100AAA>G).
+                $nCorrectionConfidence = (!$Positions->range && strlen($sREF) > 1? 0.6 : 1);
+                $this->parent->corrected_values = $this->buildCorrectedValues(
+                    ['' => $nCorrectionConfidence],
+                    $this->VCF->getCorrectedValues()
+                );
+                // Another check: for variants like c.(100)A>G, we're not sure whether we mean c.100A>G or perhaps c.(100A>G).
+                if (isset($Positions->messages['WTOOMANYPARENS']) && !$Positions->range
+                    && (!$this->getParent('HGVS_Variant') || $this->getParent('HGVS_Variant')->current_pattern != 'DNA_predicted')) {
+                    // Reduce the current prediction(s) with 50%.
+                    $this->parent->corrected_values = $this->buildCorrectedValues(
+                        ['' => 0.5],
+                        $this->parent->getCorrectedValues()
+                    );
+                    // Then add the c.(100A>G) suggestion. It's easier to build it manually.
+                    foreach ($this->buildCorrectedValues(
+                        ['' => $nCorrectionConfidence * 0.5],
+                        '(',
+                        $this->VCF->getCorrectedValues(),
+                        ')'
+                    ) as $sCorrectedValue => $nConfidence) {
+                        $this->parent->addCorrectedValue($sCorrectedValue, $nConfidence);
+                    }
+                }
             }
         }
     }
