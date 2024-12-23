@@ -2564,6 +2564,12 @@ class HGVS_DNAVariantBody extends HGVS
                 unset($this->messages['WSUFFIXGIVEN']);
             }
         }
+
+        if ($this->matched_pattern == 'wildtype') {
+            $this->messages['IALLWILDTYPE'] =
+                'Using the "=" symbol without providing positions indicates that the entire reference sequence has been sequenced and found not to be changed.' .
+                ' If this is not what was intended, provide the positions that were found not to be changed.';
+        }
     }
 }
 
