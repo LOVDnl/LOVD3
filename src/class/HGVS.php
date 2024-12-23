@@ -1500,18 +1500,12 @@ class HGVS_DNANull extends HGVS
         $this->data['type'] = substr($this->getCorrectedValue(), 0, 1);
         $this->predicted = ($this->matched_pattern == 'predicted');
 
-        $sVariantPrefix = $this->getParent('HGVS_Variant')->DNAPrefix->getCorrectedValue();
-        $this->data['position_start'] = 0;
-        $this->data['position_end'] = 0;
-        if (in_array($sVariantPrefix, ['g', 'm'])) {
+        $Prefix = $this->getParentProperty('DNAPrefix');
+        if ($Prefix && in_array($Prefix->getCorrectedValue(), ['g', 'm'])) {
             // This is only allowed for transcript-based reference sequences, as it's a consequence of a genomic change
             //  (a deletion or so). It indicates the lack of expression of the transcript.
             $this->messages['EWRONGTYPE'] = 'The 0-allele is used to indicate there is no expression of a given transcript. This can not be used for genomic variants.';
-        } else {
-            $this->data['position_start_intron'] = 0;
-            $this->data['position_end_intron'] = 0;
         }
-        $this->data['range'] = false;
     }
 }
 
@@ -2504,6 +2498,17 @@ class HGVS_DNAVariantBody extends HGVS
                 // OK, set the type to that of the allele syntax.
                 $this->data['type'] = ';';
             }
+
+        } elseif (!$this->hasProperty('DNAPositions')) {
+            // No allele, but no positions, either. Store something anyway.
+            $Prefix = $this->getParentProperty('DNAPrefix');
+            $this->data['position_start'] = 0;
+            $this->data['position_end'] = 0;
+            if ($Prefix && in_array($Prefix->getCorrectedValue(), ['c', 'n'])) {
+                $this->data['position_start_intron'] = 0;
+                $this->data['position_end_intron'] = 0;
+            }
+            $this->data['range'] = false;
         }
 
         // Handle somatic variants here. It's way easier for us that way.
