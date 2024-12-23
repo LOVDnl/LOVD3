@@ -2508,13 +2508,28 @@ class HGVS_DNAVariantBody extends HGVS
 
         // Handle somatic variants here. It's way easier for us that way.
         if ($this->matched_pattern == 'somatic') {
-            // The second part should be something different.
+            // Firstly, the second part should be something different.
             $PartA = $this->DNAVariantType;
             $PartB = $this->DNASomaticVariant->DNAVariantType;
             if ($PartA->getCorrectedValue() == $PartB->getCorrectedValue()) {
                 // Throw a warning, and remove everything after the slash.
                 $this->messages['WSOMATICEQUAL'] = 'The somatic variant contains two equal variant descriptions.';
                 $this->DNASomaticVariant->setCorrectedValue('');
+
+            } else {
+                // If the second part is wild-type, it should have gone first.
+                if ($PartA->getInfo()['type'] != '=' && $PartB->getInfo()['type'] == '=') {
+                    // Swap out the two parts.
+                    // I could simply set the corrected values, but it's better to actually swap the objects themselves.
+                    $ThisPattern = &$this->patterns[$this->matched_pattern];
+                    // Swap the DNAVariantType objects.
+                    $ThisPattern[1] = $PartB;
+                    array_splice($ThisPattern, 2, 1, [$ThisPattern[2]->DNASomatic, $PartA]);
+                    // Then throw a warning.
+                    $this->messages['WSOMATICFORMAT'] = 'Somatic variants should first describe the normal sequence and then the changed sequence.';
+                }
+
+                $this->data['type'] = $this->DNASomaticVariant->DNASomatic->getInfo()['type'];
             }
         }
 
