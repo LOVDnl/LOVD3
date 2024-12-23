@@ -2411,8 +2411,6 @@ class HGVS_DNAVariantBody extends HGVS
         'null'                => [ 'HGVS_DNANull', [] ],
         'allele_trans'        => [ '[', 'HGVS_DNAAllele', '];[', 'HGVS_DNAAllele', ']', [] ],
         'allele_cis'          => [ '[', 'HGVS_DNAAllele', ']', [] ],
-        'substitution'        => [ 'HGVS_DNAPositions', 'HGVS_DNARefs', 'HGVS_DNASub', 'HGVS_DNAAlts', [] ],
-        'substitution_VCF'    => [ 'HGVS_DNAPositions', 'HGVS_VCFRefs', 'HGVS_DNASub', 'HGVS_VCFAlts', [] ],
         'delXins_with_suffix' => [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNADelSuffix', 'HGVS_DNAIns', 'HGVS_DNAInsSuffix', [] ],
         'delXins'             => [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNADelSuffix', 'HGVS_DNAIns', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
         'delins_with_suffix'  => [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNAIns', 'HGVS_DNAInsSuffix', [] ],
@@ -2432,6 +2430,7 @@ class HGVS_DNAVariantBody extends HGVS
         'unknown'             => [ 'HGVS_DNAUnknown', [] ],
         'wildtype_with_pos'   => [ 'HGVS_DNAPositions', 'HGVS_DNAWildType', [] ],
         'wildtype'            => [ 'HGVS_DNAWildType', [] ],
+        'other'               => [ 'HGVS_DNAPositions', 'HGVS_DNAVariantType', [] ],
     ];
 
     public function validate ()
@@ -2469,126 +2468,9 @@ class HGVS_DNAVariantBody extends HGVS
                 $this->data['type'] = ';';
             }
         }
-
-        // Substitutions deserve some additional attention.
-        // Since this is the only class where we'll have all the data, all substitution checks need to be done here.
-        if (in_array($this->matched_pattern, ['substitution', 'substitution_VCF'])) {
-            if ($this->matched_pattern == 'substitution') {
-                $sREF = $this->DNARefs->getCorrectedValue();
-                $sALT = $this->DNAAlts->getCorrectedValue();
-                if ($sREF == $sALT) {
-                    $this->messages['WWRONGTYPE'] =
-                        'A substitution should be a change of one base to one base. Did you mean to describe an unchanged ' .
-                        ($this->DNAPositions->range? 'range' : 'position') . '?';
-                } elseif (strlen($sREF) > 1 || strlen($sALT) > 1) {
-                    $this->messages['WWRONGTYPE'] =
-                        'A substitution should be a change of one base to one base. Did you mean to describe a deletion-insertion?';
-                }
-
-            } else {
-                // Either the REF or the ALT is a period.
-                $sREF = $this->VCFRefs->getCorrectedValue();
-                $sALT = $this->VCFAlts->getCorrectedValue();
-                if ($sREF == '.' && $sALT == '.') {
-                    $this->messages['EWRONGTYPE'] =
-                        'This substitution does not seem to contain any data. Please provide bases that were replaced.';
-                } elseif ($sREF == '.') {
-                    $this->messages['WWRONGTYPE'] =
-                        'A substitution should be a change of one base to one base. Did you mean to describe an insertion?';
-                } elseif ($sALT == '.') {
-                    $this->messages['WWRONGTYPE'] =
-                        'A substitution should be a change of one base to one base. Did you mean to describe a deletion?';
-                }
-                // An else should not be possible.
-            }
-
-            // Positions for substitutions should, of course, normally just be single positions,
-            //  but uncertain ranges are also possible. Certain ranges are normally not allowed, but we'll throw a
-            //  warning only when the REF length matches the positions length.
-            // Don't check anything about the REF length when there are problems with the positions.
-            if (isset($this->messages['EPOSITIONFORMAT'])) {
-                $this->messages['ISUBNOTVALIDATED'] = "Due to the invalid variant position, the substitution syntax couldn't be fully validated.";
-
-            } elseif ($this->DNAPositions->range) {
-                // Check the position/REF lengths, but only if we have a range.
-                // When REF is as long as the position length, throw a WTOOMANYPOSITIONS.
-                // Then, also the positions should not be uncertain, if they are.
-                // Furthermore, the REF can never be shorter than the minimum length given by the positions,
-                //  and the REF can never be bigger than the maximum length given by the positions.
-                list($nMinLengthVariant, $nMaxLengthVariant) = $this->DNAPositions->getLengths();
-                $bPositionLengthIsCertain = ($nMinLengthVariant == $nMaxLengthVariant);
-                $nREFLength = strlen(trim($sREF, '.'));
-
-                // Simplest situation first: a certain range. The REF needs to match perfectly for a warning.
-                // Otherwise, throw an error.
-                if ($bPositionLengthIsCertain) {
-                    if ($nMinLengthVariant == $nREFLength) {
-                        $this->messages['WTOOMANYPOSITIONS'] =
-                            'Too many positions are given; a substitution is used to only indicate single-base changes and therefore should have only one position.';
-                    } else {
-                        // We can't fix this.
-                        $this->messages['ETOOMANYPOSITIONS'] =
-                            'Too many positions are given; a substitution is used to only indicate single-base changes and therefore should have only one position.';
-                    }
-
-                } elseif ($nREFLength == $nMaxLengthVariant) {
-                    // When the positions are uncertain but the REF length fits the maximum length precisely,
-                    //  we'll just throw a WTOOMANYPOSITIONS, and try to make the positions certain.
-                    $this->messages['WTOOMANYPOSITIONS'] =
-                        'Too many positions are given; a substitution is used to only indicate single-base changes and therefore should have only one position.';
-                    $this->DNAPositions->makeCertain();
-                }
-                // In all other cases, we'll allow substitutions on uncertain ranges.
-            }
-
-            // Calculate the corrected value, based on a VCF parser.
-            // Based on the REF and ALT info, we may need to shift the variant or change it to a different type.
-            if (!$this->DNAPositions->unknown && !$this->DNAPositions->uncertain
-                && (isset($this->messages['WWRONGTYPE']) || isset($this->messages['WTOOMANYPOSITIONS']) || isset($this->messages['WTOOMANYPARENS']))
-                && !array_filter(
-                    array_keys($this->messages),
-                    function ($sKey)
-                    {
-                        return ($sKey[0] == 'E' && $sKey != 'EINVALIDNUCLEOTIDES');
-                    })) {
-                // Calculate the corrected value. Toss it all in a VCF parser.
-                $this->VCF = new HGVS_VCFBody(
-                    ($this->DNAPositions->DNAPosition ?? $this->DNAPositions->DNAPositionStart)->getCorrectedValue() .
-                    ':' . $sREF . ':' . $sALT,
-                    $this
-                );
-                // Lower the confidence of our prediction when the position was single but the REF was not.
-                // (e.g., c.100AAA>G).
-                $nCorrectionConfidence = (!$this->DNAPositions->range && strlen($sREF) > 1? 0.6 : 1);
-                $this->corrected_values = $this->buildCorrectedValues(
-                    ['' => $nCorrectionConfidence],
-                    $this->VCF->getCorrectedValues()
-                );
-                // Another check: for variants like c.(100)A>G, we're not sure whether we mean c.100A>G or perhaps c.(100A>G).
-                if (isset($this->messages['WTOOMANYPARENS']) && !$this->DNAPositions->range
-                    && (!isset($this->parent) || $this->parent->current_pattern != 'DNA_predicted')) {
-                    // Reduce the current prediction(s) with 50%.
-                    $this->corrected_values = $this->buildCorrectedValues(
-                        ['' => 0.5],
-                        $this->getCorrectedValues()
-                    );
-                    // Then add the c.(100A>G) suggestion. It's easier to build it manually.
-                    foreach ($this->buildCorrectedValues(
-                        ['' => $nCorrectionConfidence * 0.5],
-                        '(',
-                        $this->VCF->getCorrectedValues(),
-                        ')'
-                    ) as $sCorrectedValue => $nConfidence) {
-                        $this->addCorrectedValue($sCorrectedValue, $nConfidence);
-                    }
-                }
-            }
-        }
-
-
-        // Delins and substitution variants deserve some additional attention.
+        // Delins variants deserve some additional attention.
         // Based on the REF and ALT info, we may need to shift the variant or change it to a different type.
-        if (in_array($this->matched_pattern, ['delXins_with_suffix', 'substitution'])
+        if ($this->matched_pattern == 'delXins_with_suffix'
             && !$this->DNAPositions->unknown && !$this->DNAPositions->uncertain
             && count(array_unique($this->DNADelSuffix->getLengths())) == 1
             && count(array_unique($this->DNAInsSuffix->getLengths())) == 1
