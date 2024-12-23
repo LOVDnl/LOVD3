@@ -2428,7 +2428,6 @@ class HGVS_DNAVariantBody extends HGVS
         'pipe'                => [ 'HGVS_DNAPositions', 'HGVS_DNAPipe', 'HGVS_DNAPipeSuffix', [] ],
         'pipe_without_pipe'   => [ 'HGVS_DNAPositions', 'HGVS_DNAPipeSuffix', [] ],
         'unknown'             => [ 'HGVS_DNAUnknown', [] ],
-        'wildtype_with_pos'   => [ 'HGVS_DNAPositions', 'HGVS_DNAWildType', [] ],
         'wildtype'            => [ 'HGVS_DNAWildType', [] ],
         'other'               => [ 'HGVS_DNAPositions', 'HGVS_DNAVariantType', [] ],
     ];
@@ -2506,6 +2505,7 @@ class HGVS_DNAVariantType extends HGVS
     public array $patterns = [
         'substitution'        => [ 'HGVS_DNARefs', 'HGVS_DNASub', 'HGVS_DNAAlts', [] ],
         'substitution_VCF'    => [ 'HGVS_VCFRefs', 'HGVS_DNASub', 'HGVS_VCFAlts', [] ],
+        'wildtype'            => [ 'HGVS_DNAWildType', [] ],
     ];
 
     public function validate ()
