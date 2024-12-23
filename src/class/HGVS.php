@@ -2505,6 +2505,19 @@ class HGVS_DNAVariantBody extends HGVS
                 $this->data['type'] = ';';
             }
         }
+
+        // Handle somatic variants here. It's way easier for us that way.
+        if ($this->matched_pattern == 'somatic') {
+            // The second part should be something different.
+            $PartA = $this->DNAVariantType;
+            $PartB = $this->DNASomaticVariant->DNAVariantType;
+            if ($PartA->getCorrectedValue() == $PartB->getCorrectedValue()) {
+                // Throw a warning, and remove everything after the slash.
+                $this->messages['WSOMATICEQUAL'] = 'The somatic variant contains two equal variant descriptions.';
+                $this->DNASomaticVariant->setCorrectedValue('');
+            }
+        }
+
         // Delins variants deserve some additional attention.
         // Based on the REF and ALT info, we may need to shift the variant or change it to a different type.
         if ($this->matched_pattern == 'delXins_with_suffix'
