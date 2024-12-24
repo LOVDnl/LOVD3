@@ -60,6 +60,7 @@ class HGVS
     public bool $caseOK = true;
     public bool $matched = false;
     public bool $possibly_incomplete = false;
+    public bool $tainted = false;
     public int $patterns_matched = 0;
     public string $input;
     public string $current_pattern;
@@ -116,14 +117,17 @@ class HGVS
 
                 if (substr($sPattern, 0, 5) == 'HGVS_') {
                     // This is a class.
-                    // Have we seen this before? Ran it already?
-                    if (isset($this->memory[$sPattern][$sInputToParse])) {
+                    // Have we seen this before? Ran it already? But not modified it afterward?
+                    if (isset($this->memory[$sPattern][$sInputToParse]) && !$this->memory[$sPattern][$sInputToParse]->isTainted()) {
                         if ($bDebugging) {
                             print("$sClassString($sInputToParse) rule $sPatternName, pattern $sPattern, reusing previous result.\n");
                         }
                         $aPattern[$i] = $this->memory[$sPattern][$sInputToParse];
                     } else {
                         if ($bDebugging) {
+                            if (isset($this->memory[$sPattern][$sInputToParse])) {
+                                print("$sClassString($sInputToParse) rule $sPatternName, pattern $sPattern, previous result is tainted, discarding.\n");
+                            }
                             print("$sClassString($sInputToParse) rule $sPatternName, pattern $sPattern, result is pending.\n");
                         }
                         $aPattern[$i] = new $sPattern($sInputToParse, $this);
@@ -662,6 +666,26 @@ class HGVS
     public function isPossiblyIncomplete ()
     {
         return $this->possibly_incomplete;
+    }
+
+
+
+
+
+    public function isTainted ()
+    {
+        // This returns whether we're tainted. We are, when we've been edited by a different class.
+        // E.g., positions edited by variant classes. We then indicate that we need to be rebuilt and not reused.
+
+        if (!$this->tainted && $this->hasMatched()) {
+            foreach ($this->patterns[$this->matched_pattern] as $Component) {
+                if (is_object($Component) && $Component->isTainted()) {
+                    $this->tainted = true; // Make sure we are never re-used.
+                    break;
+                }
+            }
+        }
+        return $this->tainted;
     }
 
 
@@ -1938,6 +1962,7 @@ class HGVS_DNAPositions extends HGVS
                 // Also unset the length, so it will be re-calculated.
                 $this->lengths = [];
                 $this->validate();
+                $this->tainted = true; // Make sure we are never re-used.
                 return true;
             }
         }
@@ -2079,6 +2104,7 @@ class HGVS_DNAPositions extends HGVS
             $this->validate();
             // We're not super confident about this.
             $this->appendCorrectedValue('', 0.75);
+            $this->tainted = true; // Make sure we are never re-used.
             return true;
         }
 
@@ -2104,6 +2130,7 @@ class HGVS_DNAPositions extends HGVS
             $this->validate();
             // We're not super confident about this.
             $this->appendCorrectedValue('', 0.75);
+            $this->tainted = true; // Make sure we are never re-used.
             return true;
         }
 
