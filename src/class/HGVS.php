@@ -53,6 +53,7 @@ class HGVS
     public array $corrected_values = [];
     public array $data = [];
     public array $info = [];
+    public array $memory = [];
     public array $messages = [];
     public array $properties = [];
     public array $regex = [];
@@ -115,10 +116,21 @@ class HGVS
 
                 if (substr($sPattern, 0, 5) == 'HGVS_') {
                     // This is a class.
-                    $aPattern[$i] = new $sPattern($sInputToParse, $this);
-                    if ($bDebugging) {
-                        print("$sClassString($sInputToParse) rule $sPatternName, pattern $sPattern, result is pending.\n");
+                    // Have we seen this before? Ran it already?
+                    if (isset($this->memory[$sPattern][$sInputToParse])) {
+                        if ($bDebugging) {
+                            print("$sClassString($sInputToParse) rule $sPatternName, pattern $sPattern, reusing previous result.\n");
+                        }
+                        $aPattern[$i] = $this->memory[$sPattern][$sInputToParse];
+                    } else {
+                        if ($bDebugging) {
+                            print("$sClassString($sInputToParse) rule $sPatternName, pattern $sPattern, result is pending.\n");
+                        }
+                        $aPattern[$i] = new $sPattern($sInputToParse, $this);
+                        // Store for later, if needed.
+                        $this->memory[$sPattern][$sInputToParse] = $aPattern[$i];
                     }
+
                     if ($aPattern[$i]->hasMatched()) {
                         // This pattern matched. Store what is left, if anything is left.
                         if ($bDebugging) {
