@@ -225,7 +225,16 @@ class HGVS
 
             if (!$bMatching) {
                 // The rule didn't match, unset any properties that we may have set.
+                // Also, when an object is tainted, mark any following objects as well, so they will always be re-run.
+                $bTainted = false;
                 foreach ($this->properties as $sProperty) {
+                    foreach ((is_array($this->$sProperty)? $this->$sProperty : [$this->$sProperty]) as $Component) {
+                        if ($Component->isTainted()) {
+                            $bTainted = true;
+                        } elseif ($bTainted) {
+                            $Component->tainted = true;
+                        }
+                    }
                     unset($this->$sProperty);
                 }
                 $this->properties = []; // Reset the array, too.
