@@ -2973,7 +2973,7 @@ class HGVS_ReferenceSequence extends HGVS
         'LRG_transcript'              => [ '/(LRG)([_-]?)([0-9]+)(t)([0-9]+)/', [] ],
         'LRG_genomic'                 => [ '/(LRG)([_-]?)([0-9]+)/', [] ],
         // Because I do actually want to match something so we can validate the variant itself, match anything.
-        'other'                       => [ '/[^:\[\]]+(?=:)/', ['EREFERENCEFORMAT' => 'The reference sequence could not be recognised. Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.'] ],
+        'other'                       => [ '/[^:\[\]]{2,}(?=:)/', ['EREFERENCEFORMAT' => 'The reference sequence could not be recognised. Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.'] ],
     ];
 
     public function validate ()
