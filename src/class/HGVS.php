@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-12-23
+ * Modified    : 2024-12-24
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -67,7 +67,7 @@ class HGVS
     public string $value;
     public $parent;
 
-    public function __construct ($sValue, $Parent = null)
+    public function __construct ($sValue, $Parent = null, $bDebugging = false)
     {
         $this->input = $sValue;
         $this->parent = $Parent;
@@ -78,6 +78,16 @@ class HGVS
             $aMessages = array_pop($aPattern);
             $sInputToParse = $sValue;
             $bMatching = true;
+
+            // For debugging purposes, only.
+            if ($bDebugging) {
+                $sClassString = '[' . get_class($this) . "($sPatternName)]";
+                $o = $this;
+                while ($o->parent) {
+                    $sClassString = '[' . get_class($o->parent) . '(' . $o->parent->current_pattern . ') -> ' . $sClassString;
+                    $o = $o->parent;
+                }
+            }
 
             // Make sure we don't keep anything from any last runs.
             $this->caseOK = true;
@@ -94,6 +104,9 @@ class HGVS
 
                 // Quick check: do we still have something left?
                 if ($sInputToParse === '') {
+                    if ($bDebugging) {
+                        print("$sClassString($sInputToParse) ran out of input, but expecting more. aborting.\n");
+                    }
                     $bMatching = false;
                     // This can be a sign that a variant wasn't submitted completely, and we should try to get more input.
                     $this->possibly_incomplete = true;
@@ -103,8 +116,14 @@ class HGVS
                 if (substr($sPattern, 0, 5) == 'HGVS_') {
                     // This is a class.
                     $aPattern[$i] = new $sPattern($sInputToParse, $this);
+                    if ($bDebugging) {
+                        print("$sClassString($sInputToParse) rule $sPatternName, pattern $sPattern, result is pending.\n");
+                    }
                     if ($aPattern[$i]->hasMatched()) {
                         // This pattern matched. Store what is left, if anything is left.
+                        if ($bDebugging) {
+                            print("$sClassString($sInputToParse) rule $sPatternName, pattern $sPattern, success.\n");
+                        }
                         $sInputToParse = $aPattern[$i]->getSuffix();
                         // Merge their data and messages with ours.
                         $this->patterns_matched += $aPattern[$i]->getPatternsMatched();
@@ -112,6 +131,10 @@ class HGVS
                             $this->data,
                             $aPattern[$i]->getData()
                         );
+                        if ($bDebugging && $aPattern[$i]->getData()) {
+                            print("$sClassString merging data.\n");
+                            var_dump($aPattern[$i]->getData());
+                        }
                         $this->messages = array_merge(
                             $this->messages,
                             $aPattern[$i]->getMessages()
@@ -136,6 +159,9 @@ class HGVS
 
                     } else {
                         // Didn't match.
+                        if ($bDebugging) {
+                            print("$sClassString($sInputToParse) rule $sPatternName, pattern $sPattern, failed.\n");
+                        }
                         $bMatching = false;
                         // We still need to store whether any patterns were matched.
                         $this->patterns_matched += $aPattern[$i]->getPatternsMatched();
@@ -146,6 +172,9 @@ class HGVS
                 } elseif (strlen($sPattern) >= 3 && substr($sPattern, 0, 1) == '/') {
                     // Regex. Make sure it matches the start of the string. Make sure it's case-insensitive.
                     $sPattern = '/^' . substr($sPattern, 1) . 'i';
+                    if ($bDebugging) {
+                        print("$sClassString($sInputToParse) rule $sPatternName, pattern $sPattern, and this returned " . (int) preg_match($sPattern, $sInputToParse) . "\n");
+                    }
                     if (preg_match($sPattern, $sInputToParse, $aRegs)) {
                         // This pattern matched.
                         $this->patterns_matched ++;
@@ -162,6 +191,9 @@ class HGVS
 
                 } else {
                     // Assume a simple string match.
+                    if ($bDebugging) {
+                        print("$sClassString($sInputToParse) rule $sPatternName, pattern $sPattern, and this returned " . (int) (strlen($sInputToParse) >= strlen($sPattern) && substr($sInputToParse, 0, strlen($sPattern)) == $sPattern) . "\n");
+                    }
                     if (strlen($sInputToParse) >= strlen($sPattern) && substr($sInputToParse, 0, strlen($sPattern)) == $sPattern) {
                         // This pattern matched.
                         $this->patterns_matched ++;
