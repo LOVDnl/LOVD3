@@ -2364,6 +2364,7 @@ class HGVS_DNAPrefix extends HGVS
         'mitochondrial' => [ '/m/', [] ],
         'non-coding'    => [ '/n/', [] ],
         'circular'      => [ '/o/', [] ],
+        'nothing'       => [ 'HGVS_Dot', [] ],
     ];
 
     public function validate ()
@@ -2375,12 +2376,43 @@ class HGVS_DNAPrefix extends HGVS
 
         // If we have seen a reference sequence, check if we match that.
         $RefSeq = $this->getParentProperty('ReferenceSequence');
-        if ($RefSeq && !empty($RefSeq->allowed_prefixes) && !in_array($this->getCorrectedValue(), $RefSeq->allowed_prefixes)) {
-            $this->messages['EWRONGREFERENCE'] =
-                'The given reference sequence (' . $RefSeq->getCorrectedValue() . ') does not match the DNA type (' . $this->getCorrectedValue() . ').' .
-                ' For variants on ' . $RefSeq->getCorrectedValue() . ', please use the ' . implode('. or ', $RefSeq->allowed_prefixes) . '. prefix.' .
-                ' For ' . $this->getCorrectedValue() . '. variants, please use a ' . $this->matched_pattern .
-                ($this->matched_pattern == 'genomic'? '' : ' ' . $this->molecule_type) . ' reference sequence.';
+        if ($RefSeq && !empty($RefSeq->allowed_prefixes)) {
+            if ($this->matched_pattern == 'nothing') {
+                // Simple assumption based on the reference sequence.
+                $this->molecule_type = ($RefSeq->molecule_type == 'genome_transcript'? 'transcript' : $RefSeq->molecule_type);
+                $nConfidence = (1 / count($RefSeq->allowed_prefixes));
+                $this->corrected_values = array_combine(
+                    $RefSeq->allowed_prefixes,
+                    array_fill(0, count($RefSeq->allowed_prefixes), $nConfidence)
+                );
+                $this->suffix = $this->input; // Reset the suffix in case HGVS_Dot took something.
+                $this->messages['WPREFIXMISSING'] = 'This variant description seems incomplete. Variant descriptions should start with a molecule type (e.g., "' . $this->getCorrectedValue() . '.").';
+
+            } elseif (!in_array($this->getCorrectedValue(), $RefSeq->allowed_prefixes)) {
+                $this->messages['EWRONGREFERENCE'] =
+                    'The given reference sequence (' . $RefSeq->getCorrectedValue() . ') does not match the DNA type (' . $this->getCorrectedValue() . ').' .
+                    ' For variants on ' . $RefSeq->getCorrectedValue() . ', please use the ' . implode('. or ', $RefSeq->allowed_prefixes) . '. prefix.' .
+                    ' For ' . $this->getCorrectedValue() . '. variants, please use a ' . $this->matched_pattern .
+                    ($this->matched_pattern == 'genomic'? '' : ' ' . $this->molecule_type) . ' reference sequence.';
+            }
+
+        } elseif ($this->matched_pattern == 'nothing') {
+            // We can't assume based on a reference sequence, so we'll just do a wild guess and throw an error.
+            $this->molecule_type = 'transcript';
+            // If we've seen a prefix before (like, we're in an insertion), take that.
+            $PreviousPrefix = $this->getParentProperty('HGVS_DNAPrefix');
+            if ($PreviousPrefix) {
+                $this->corrected_values = $PreviousPrefix->getCorrectedValues();
+            } else {
+                $this->corrected_values = [
+                    'c' => 0.25,
+                    'g' => 0.25,
+                    'm' => 0.25,
+                    'n' => 0.25
+                ];
+            }
+            $this->suffix = $this->input; // Reset the suffix in case HGVS_Dot took something.
+            $this->messages['EPREFIXMISSING'] = 'This variant description seems incomplete. Variant descriptions should start with a molecule type (e.g., "' . $this->getCorrectedValue() . '.").';
         }
     }
 }
