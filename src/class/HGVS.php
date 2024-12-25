@@ -3270,6 +3270,40 @@ class HGVS_RNAPrefix extends HGVS
 
 
 
+class HGVS_ProteinPrefix extends HGVS
+{
+    public array $patterns = [
+        'protein' => [ '/p/', [] ],
+        'nothing' => [ 'HGVS_Dot', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->molecule_type = 'protein';
+        $this->setCorrectedValue(strtolower($this->value));
+        $this->caseOK = ($this->value == $this->getCorrectedValue());
+
+        if ($this->matched_pattern == 'nothing') {
+            $this->setCorrectedValue('p');
+            $this->suffix = $this->input; // Reset the suffix in case HGVS_Dot took something.
+            $this->messages['WPREFIXMISSING'] = 'This variant description seems incomplete. Variant descriptions should start with a molecule type (e.g., "' . $this->getCorrectedValue() . '.").';
+        }
+
+        // If we have seen a reference sequence, check if we match that.
+        $RefSeq = $this->getParentProperty('ReferenceSequence');
+        if ($RefSeq && $RefSeq->molecule_type != $this->molecule_type) {
+            $this->messages['EWRONGREFERENCE'] =
+                'The given reference sequence (' . $RefSeq->getCorrectedValue() . ') does not match the protein type (' . $this->getCorrectedValue() . ').' .
+                ' For ' . $this->getCorrectedValue() . '. variants, please use a ' . $this->molecule_type . ' reference sequence.';
+        }
+    }
+}
+
+
+
+
+
 class HGVS_Variant extends HGVS
 {
     public array $patterns = [
