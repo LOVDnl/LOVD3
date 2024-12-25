@@ -1901,12 +1901,15 @@ class HGVS_DNAPositionStart extends HGVS
                     $this->DNAPosition[1]->position_sortable = $this->DNAPosition[1]->position_limits[1];
                 }
 
-                // Start positions, when a range, internally store the lowest known value.
-                // End positions, when a range, internally store the highest known value.
+                // Storing the positions.
+                // After discussing the issue, it is decided to use to inner positions in cases where the positions are
+                //  uncertain. This means that e.g. c.(1_2)_(5_6)del will be returned as having a position_start of 2
+                //  and a position_end of 5. However, if we find a variant such as c.(1_?)_(?_6)del, we will save the
+                //  outer positions (so a position_start of 1 and a position_end of 6).
                 if (get_class($this) == 'HGVS_DNAPositionStart') {
-                    $iPositionToStore = ($this->DNAPosition[0]->unknown? 1 : 0);
-                } else {
                     $iPositionToStore = ($this->DNAPosition[1]->unknown? 0 : 1);
+                } else {
+                    $iPositionToStore = ($this->DNAPosition[0]->unknown? 1 : 0);
                 }
                 foreach (['position', 'position_sortable', 'offset'] as $variable) {
                     $this->$variable = $this->DNAPosition[$iPositionToStore]->$variable;
