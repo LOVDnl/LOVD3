@@ -919,9 +919,9 @@ class HGVS_Chromosome extends HGVS
         if (!$this->ChromosomeNumber->isValid()) {
             // We received an invalid chromosome number that we won't be able to handle.
             $this->setCorrectedValue('chr' . $sChr);
-        } elseif ($this->getParent('HGVS_VCF') && $this->getParent('HGVS_VCF')->hasProperty('Genome')) {
+        } elseif ($this->getParentProperty('Genome')) {
             // We received a genome build, choose the right NC.
-            $this->setCorrectedValue($this->refseqs[$this->getParent('HGVS_VCF')->Genome->getCorrectedValue()][$sChr]);
+            $this->setCorrectedValue($this->refseqs[$this->getParentProperty('Genome')->getCorrectedValue()][$sChr]);
         } else {
             // We didn't receive a genome build. We'll suggest them all.
             // Note that we don't have very reliable information about how much data each genome build has.
@@ -1056,7 +1056,7 @@ class HGVS_DNADelSuffix extends HGVS
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
-        $Positions = $this->getParent('HGVS_DNAVariantBody')->DNAPositions;
+        $Positions = $this->getParentProperty('DNAPositions');
         $aMessages = $Positions->getMessages();
 
         // Remove any complaints that HGVS_Length may have had, when we already threw a WSUFFIXFORMAT.
@@ -1663,7 +1663,8 @@ class HGVS_DNAPosition extends HGVS
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->unknown = ($this->matched_pattern == 'unknown');
         $this->unknown_offset = ($this->matched_pattern == 'unknown_intronic');
-        $sVariantPrefix = ($this->getParent('HGVS_Variant')? $this->getParent('HGVS_Variant')->DNAPrefix->getCorrectedValue() : 'g'); // VCFs usually don't have a prefix.
+        $VariantPrefix = $this->getParentProperty('DNAPrefix');
+        $sVariantPrefix = ($VariantPrefix? $VariantPrefix->getCorrectedValue() : 'g'); // VCFs usually don't have a prefix.
         $this->position_limits = $this->position_limits[$sVariantPrefix];
         $nCorrectionConfidence = 1;
 
@@ -1826,7 +1827,8 @@ class HGVS_DNAPositionStart extends HGVS
 
             // Before we add more errors or warnings, check if we have multiple errors that are the same.
             // We currently don't handle arrays as error messages.
-            $sVariantPrefix = $this->getParent('HGVS_Variant')->DNAPrefix->getCorrectedValue();
+            $VariantPrefix = $this->getParentProperty('DNAPrefix');
+            $sVariantPrefix = ($VariantPrefix? $VariantPrefix->getCorrectedValue() : 'g');
             // Get new messages for errors that occurred twice.
             $aDoubleMessages = array_intersect_key(
                 [
@@ -2160,12 +2162,7 @@ class HGVS_DNAPositions extends HGVS
             || ($this->matched_pattern == 'range'
                 && ($this->DNAPositionStart->uncertain || $this->DNAPositionEnd->uncertain))
         );
-        if ($this->getParent('HGVS_Variant')) {
-            $VariantPrefix = $this->getParent('HGVS_Variant')->DNAPrefix;
-        } else {
-            // VCFs don't always have a prefix.
-            $VariantPrefix = new HGVS_DNAPrefix('g');
-        }
+        $VariantPrefix = ($this->getParentProperty('DNAPrefix') ?: new HGVS_DNAPrefix('g')); // VCFs usually don't have a prefix.
         $nCorrectionConfidence = (current($this->corrected_values) ?: 1); // Fetch current one, because this object can be revalidated.
 
         if (!$this->range) {
