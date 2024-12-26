@@ -2955,67 +2955,70 @@ class HGVS_Lengths extends HGVS
         $this->range = (substr($this->matched_pattern, 0, 5) == 'range');
         $nCorrectionConfidence = 1;
 
-        if (in_array($this->matched_pattern, ['range', 'single_with_parens'])) {
-            $this->messages['WLENGTHFORMAT'] = 'This variant description contains an invalid sequence length: "' . $this->value . '".';
+        if ($this->matched_pattern == 'range') {
+            $this->messages['WLENGTHFORMAT'] = 'This variant description contains an invalid sequence length: "' . $this->value . '".' .
+                ' When the sequence length is uncertain, add parentheses.';
         }
 
-        // Store the lengths.
-        $this->lengths[0] = (int) $this->regex[1];
         if (!$this->range) {
-            $this->lengths[1] = $this->lengths[0];
-            // A bit of a hack because I put everything in one class instead of using a subclass for a single length.
-            $this->regex[2] = $this->regex[1];
+            // A single length, just copy everything.
+            $this->unknown = $this->Length->unknown;
+            $this->lengths = [$this->Length->length, $this->Length->length];
+
         } else {
-            $this->lengths[1] = (int) $this->regex[2];
-        }
+            $this->unknown = ($this->Length[0]->unknown || $this->Length[1]->unknown);
+            $this->lengths = [$this->Length[0]->length, $this->Length[1]->length];
 
-        // Check for values with zeros.
-        foreach ($this->lengths as $i => $nLength) {
-            if (!$nLength) {
-                $this->messages['ELENGTHFORMAT'] = 'This variant description contains an invalid sequence length: "' . $nLength . '".';
-            } elseif ((string) $nLength !== $this->regex[$i + 1]) {
-                $this->messages['WLENGTHFORMAT'] = 'Sequence lengths should not be prefixed by a 0.';
-                // Adjust the confidence, but not twice.
-                if (!$i || $this->range) {
-                    $nCorrectionConfidence *= 0.9;
-                }
-            }
-        }
-
-        // Check ranges.
-        if ($this->range) {
-            if ($this->lengths[0] == $this->lengths[1]) {
-                // If the lengths are the same, warn and remove one.
+            // If the lengths are the same, warn and remove one.
+            if ($this->Length[0]->length == $this->Length[1]->length) {
                 $this->messages['WSAMELENGTHS'] = 'This variant description contains two sequence lengths that are the same.';
                 $nCorrectionConfidence *= 0.9;
                 // Discard the other object.
+                $this->Length = $this->Length[0];
                 $this->range = false;
 
-            } elseif ($this->lengths[0] > $this->lengths[1]) {
+            } elseif (!$this->unknown && $this->Length[0]->length > $this->Length[1]->length) {
                 // Lengths aren't given in the right order.
                 $this->messages['WLENGTHORDER'] = 'This variant description contains two sequence lengths that are not given in the correct order.';
                 $nCorrectionConfidence *= 0.9;
                 // Swap the lengths.
+                list($this->Length[0], $this->Length[1]) = [$this->Length[1], $this->Length[0]];
                 list($this->lengths[0], $this->lengths[1]) = [$this->lengths[1], $this->lengths[0]];
             }
         }
 
         // Store the corrected value.
-        if (!$this->range) {
+        if ($this->range) {
+            $this->corrected_values = $this->buildCorrectedValues(
+                ['' => $nCorrectionConfidence],
+                '(', $this->Length[0]->getCorrectedValues(), '_', $this->Length[1]->getCorrectedValues(), ')'
+            );
+        } elseif ($this->lengths[0] == 1) {
             // Actually, when the length is 1, it's redundant, and it shouldn't be given.
-            if ($this->lengths[0] == 1) {
-                $this->setCorrectedValue('');
-            } else {
-                $this->corrected_values = $this->buildCorrectedValues(
-                    ['' => $nCorrectionConfidence],
-                    $this->lengths[0]
-                );
-            }
+            $this->setCorrectedValue('');
         } else {
             $this->corrected_values = $this->buildCorrectedValues(
                 ['' => $nCorrectionConfidence],
-                '(' . $this->lengths[0] . '_' . $this->lengths[1] . ')'
+                $this->Length->getCorrectedValues()
             );
+        }
+
+        // Handle unknown lengths.
+        if ($this->lengths[0] == '?') {
+            // It's considered to be seen at least once, if it's provided.
+            $this->lengths[0] = 1;
+        }
+        if ($this->lengths[1] == '?') {
+            // Picking a random large number gives very awkward results downstream.
+            // Instead, try to measure the variant length based on the positions.
+            $Positions = $this->getParentProperty('DNAPositions');
+            if ($Positions) {
+                $nMaxLength = $Positions->getLengths()[1];
+                $this->lengths[1] = $nMaxLength;
+            } else {
+                // Default to the minimum size, if we can't find positions.
+                $this->lengths[1] = $this->lengths[0];
+            }
         }
     }
 }
