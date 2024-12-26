@@ -358,7 +358,7 @@ class HGVS
                 return ($PositionEnd->offset == 1);
             } else {
                 // No unknowns left, only numeric offsets.
-                return ($PositionStart->offset < $PositionEnd->offset);
+                return ($PositionStart->offset <= $PositionEnd->offset);
             }
 
         } else {
