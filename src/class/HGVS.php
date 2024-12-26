@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-12-24
+ * Modified    : 2024-12-26
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2893,10 +2893,50 @@ class HGVS_Genome extends HGVS
 class HGVS_Length extends HGVS
 {
     public array $patterns = [
-        'range'              => [ '/([0-9]+)_([0-9]+)/', [] ],
-        'range_with_parens'  => [ '/\(([0-9]+)_([0-9]+)\)/', [] ],
-        'single'             => [ '/([0-9]+)/', [] ],
-        'single_with_parens' => [ '/\(([0-9]+)\)/', [] ],
+        'unknown' => [ '?', [] ],
+        'known'   => [ '/([0-9]+)/', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->unknown = ($this->matched_pattern == 'unknown');
+        $nCorrectionConfidence = 1;
+
+        if ($this->matched_pattern == 'unknown') {
+            $this->length = $this->value;
+
+        } else {
+            $this->length = (int) $this->value;
+
+            // Check for values with zeros.
+            if (!$this->length) {
+                $this->messages['ELENGTHFORMAT'] = 'This variant description contains an invalid sequence length: "' . $this->value . '".';
+            } elseif ((string) $this->length !== $this->regex[1]) {
+                $this->messages['WLENGTHWITHZERO'] = 'Sequence lengths should not be prefixed by a 0.';
+                $nCorrectionConfidence *= 0.9;
+            }
+        }
+
+        // Store the corrected value.
+        $this->corrected_values = $this->buildCorrectedValues(
+            ['' => $nCorrectionConfidence],
+            $this->length
+        );
+    }
+}
+
+
+
+
+
+class HGVS_Lengths extends HGVS
+{
+    public array $patterns = [
+        'range'              => [ 'HGVS_Length', '_', 'HGVS_Length', [] ],
+        'range_with_parens'  => [ '(', 'HGVS_Length', '_', 'HGVS_Length', ')', [] ],
+        'single'             => [ 'HGVS_Length', [] ],
+        'single_with_parens' => [ '(', 'HGVS_Length', ')', [ 'WTOOMANYPARENS' => 'This variant description contains a sequence length with redundant parentheses.' ] ],
     ];
     public array $lengths = [];
 
