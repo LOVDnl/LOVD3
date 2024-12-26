@@ -1076,7 +1076,8 @@ class HGVS_DNADelSuffix extends HGVS
             list($nMinLengthVariant, $nMaxLengthVariant) = $Positions->getLengths();
             $bPositionLengthIsCertain = ($nMinLengthVariant == $nMaxLengthVariant);
             list($nMinLengthSuffix, $nMaxLengthSuffix) = $this->getLengths();
-            $bSuffixLengthIsCertain = ($nMinLengthSuffix == $nMaxLengthSuffix);
+            $bSuffixLengthIsUnknown = ($this->hasProperty('Lengths') && $this->Lengths->unknown);
+            $bSuffixLengthIsCertain = ($nMinLengthSuffix == $nMaxLengthSuffix && !$bSuffixLengthIsUnknown);
 
             // Simplest situation first: certain everything, length matches.
             if ($bPositionLengthIsCertain && $bSuffixLengthIsCertain && $nMinLengthVariant == $nMinLengthSuffix) {
@@ -1099,7 +1100,7 @@ class HGVS_DNADelSuffix extends HGVS
                     " This is a conflict; when the deleted sequence is certain, make the variant's positions certain by removing the parentheses and remove the deleted sequence from the variant description.";
                 $Positions->makeCertain();
 
-            } else {
+            } elseif (!$bSuffixLengthIsUnknown && !isset($this->messages['EINVALIDNUCLEOTIDES'])) {
                 // Universal length checks. These messages are kept universal and slightly simplified.
                 // E.g., an ESUFFIXTOOLONG may mean that the deleted sequence CAN BE too long, but isn't always.
                 // (e.g., g.(100_200)del(100_300).
