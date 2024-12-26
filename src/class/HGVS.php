@@ -1035,22 +1035,22 @@ class HGVS_DNADel extends HGVS
 
 class HGVS_DNADelSuffix extends HGVS
 {
-    // NOTE: This class is used for deletion and duplication suffixes. By default, all messages speak of deletions.
-    //       When handling duplications, the code will fix the messages. This keeps the code very simple.
+    // NOTE: This class is used for deletion, duplication, and inversion suffixes. By default, all messages speak of
+    //       deletions. When handling other variants, the code will fix the messages. This keeps the code very simple.
     use HGVS_DNASequence; // Gets us getSequence() and getLengths().
     public array $patterns = [
         // Since none of these match "ins", a "delAinsC" won't ever pass here.
-        [ 'HGVS_Length', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
-        [ '[', 'HGVS_Length', ']', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
-        [ 'HGVS_DNARefs', 'HGVS_Length', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
-        [ 'HGVS_DNARefs', '[', 'HGVS_Length', ']', [] ],
+        [ 'HGVS_Lengths', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
+        [ '[', 'HGVS_Lengths', ']', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
+        [ 'HGVS_DNARefs', 'HGVS_Lengths', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
+        [ 'HGVS_DNARefs', '[', 'HGVS_Lengths', ']', [] ],
         [ 'HGVS_DNARefs', [] ],
         [ '(', 'HGVS_DNARefs', ')', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
-        [ '(', 'HGVS_DNARefs', 'HGVS_Length', ')', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
-        [ '(', 'HGVS_DNARefs', '[', 'HGVS_Length', '])', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
+        [ '(', 'HGVS_DNARefs', 'HGVS_Lengths', ')', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
+        [ '(', 'HGVS_DNARefs', '[', 'HGVS_Lengths', '])', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
         [ '[', 'HGVS_DNARefs', ']', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
-        [ '[', 'HGVS_DNARefs', 'HGVS_Length', ']', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
-        [ '[', 'HGVS_DNARefs', '[', 'HGVS_Length', ']]', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
+        [ '[', 'HGVS_DNARefs', 'HGVS_Lengths', ']', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
+        [ '[', 'HGVS_DNARefs', '[', 'HGVS_Lengths', ']]', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
     ];
 
     public function validate ()
@@ -1059,9 +1059,9 @@ class HGVS_DNADelSuffix extends HGVS
         $Positions = $this->getParentProperty('DNAPositions');
         $aMessages = $Positions->getMessages();
 
-        // Remove any complaints that HGVS_Length may have had, when we already threw a WSUFFIXFORMAT.
+        // Remove any complaints that HGVS_Lengths may have had, when we already threw a WSUFFIXFORMAT.
         if (isset($this->messages['WSUFFIXFORMAT'])) {
-            unset($this->messages['WLENGTHFORMAT'], $this->messages['WLENGTHORDER'], $this->messages['WSAMELENGTHS']);
+            unset($this->messages['WLENGTHFORMAT'], $this->messages['WLENGTHORDER'], $this->messages['WSAMELENGTHS'], $this->messages['WTOOMANYPARENS']);
         }
 
         // Don't check anything about the suffix length when there are problems with the positions.
@@ -1126,13 +1126,13 @@ class HGVS_DNADelSuffix extends HGVS
             // The suffix should be removed.
             // NOTE: This is not true for delAinsG, but we don't know that here yet.
             $this->setCorrectedValue('');
-        } elseif (!isset($this->Length)) {
+        } elseif (!isset($this->Lengths)) {
             $this->corrected_values = $this->DNARefs->getCorrectedValues();
         } else {
             $this->corrected_values = $this->buildCorrectedValues(
                 (isset($this->DNARefs)? $this->DNARefs->getCorrectedValues() : 'N'),
-                (!$this->Length->getCorrectedValues()? '' :
-                    $this->buildCorrectedValues('[', $this->Length->getCorrectedValues(), ']'))
+                (!$this->Lengths->getCorrectedValues()? '' :
+                    $this->buildCorrectedValues('[', $this->Lengths->getCorrectedValues(), ']'))
             );
         }
     }
@@ -1254,24 +1254,24 @@ class HGVS_DNAInsSuffix extends HGVS
         'complex_in_brackets'              => [ '[', 'HGVS_DNAInsSuffixComplex', ']', [] ],
         'positions_inverted'               => [ 'HGVS_DNAPositions', 'HGVS_DNAInv', [] ],
         'positions'                        => [ 'HGVS_DNAPositions', [] ],
-        'length_in_brackets'               => [ '[', 'HGVS_Length', ']', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
-        'sequence_with_number'             => [ 'HGVS_DNAAlts', 'HGVS_Length', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
-        'sequence_with_length'             => [ 'HGVS_DNAAlts', '[', 'HGVS_Length', ']', [] ],
+        'length_in_brackets'               => [ '[', 'HGVS_Lengths', ']', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
+        'sequence_with_number'             => [ 'HGVS_DNAAlts', 'HGVS_Lengths', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
+        'sequence_with_length'             => [ 'HGVS_DNAAlts', '[', 'HGVS_Lengths', ']', [] ],
         'sequence'                         => [ 'HGVS_DNAAlts', [] ],
         'sequence_in_parens'               => [ '(', 'HGVS_DNAAlts', ')', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
-        'sequence_with_number_in_parens'   => [ '(', 'HGVS_DNAAlts', 'HGVS_Length', ')', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
-        'sequence_with_length_in_parens'   => [ '(', 'HGVS_DNAAlts', '[', 'HGVS_Length', '])', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
+        'sequence_with_number_in_parens'   => [ '(', 'HGVS_DNAAlts', 'HGVS_Lengths', ')', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
+        'sequence_with_length_in_parens'   => [ '(', 'HGVS_DNAAlts', '[', 'HGVS_Lengths', '])', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
         'sequence_in_brackets'             => [ '[', 'HGVS_DNAAlts', ']', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
-        'sequence_with_number_in_brackets' => [ '[', 'HGVS_DNAAlts', 'HGVS_Length', ']', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
-        'sequence_with_length_in_brackets' => [ '[', 'HGVS_DNAAlts', '[', 'HGVS_Length', ']]', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
+        'sequence_with_number_in_brackets' => [ '[', 'HGVS_DNAAlts', 'HGVS_Lengths', ']', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
+        'sequence_with_length_in_brackets' => [ '[', 'HGVS_DNAAlts', '[', 'HGVS_Lengths', ']]', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
     ];
 
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
-        // Remove any complaints that HGVS_Length may have had, when we already threw a WSUFFIXFORMAT.
+        // Remove any complaints that HGVS_Lengths may have had, when we already threw a WSUFFIXFORMAT.
         if (isset($this->messages['WSUFFIXFORMAT'])) {
-            unset($this->messages['WLENGTHFORMAT'], $this->messages['WLENGTHORDER'], $this->messages['WSAMELENGTHS']);
+            unset($this->messages['WLENGTHFORMAT'], $this->messages['WLENGTHORDER'], $this->messages['WSAMELENGTHS'], $this->messages['WTOOMANYPARENS']);
         }
 
         // A deletion-insertion of one base to one base, is a substitution.
@@ -1331,14 +1331,14 @@ class HGVS_DNAInsSuffix extends HGVS
                 $this->appendCorrectedValue($this->DNAInv->getCorrectedValue());
             }
 
-        } elseif (isset($this->DNAAlts) && !isset($this->Length)) {
+        } elseif (isset($this->DNAAlts) && !isset($this->Lengths)) {
             $this->corrected_values = $this->DNAAlts->getCorrectedValues();
 
-        } elseif (isset($this->Length)) {
+        } elseif (isset($this->Lengths)) {
             $this->corrected_values = $this->buildCorrectedValues(
                 (isset($this->DNAAlts)? $this->DNAAlts->getCorrectedValues() : 'N'),
-                (!$this->Length->getCorrectedValues()? '' :
-                    $this->buildCorrectedValues('[', $this->Length->getCorrectedValues(), ']'))
+                (!$this->Lengths->getCorrectedValues()? '' :
+                    $this->buildCorrectedValues('[', $this->Lengths->getCorrectedValues(), ']'))
             );
         } else {
             // Complex insertions. The DNAInsSuffixComplex object should have filtered the components already.
@@ -1471,7 +1471,7 @@ class HGVS_DNAInsSuffixComplexComponent extends HGVS
     public array $patterns = [
         'positions_with_refseq_inv' => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAPositions', 'HGVS_DNAInv', [] ],
         'positions_with_refseq'     => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAPositions', [] ],
-        'sequence_with_length'      => [ 'HGVS_DNAAlts', '[', 'HGVS_Length', ']', [] ],
+        'sequence_with_length'      => [ 'HGVS_DNAAlts', '[', 'HGVS_Lengths', ']', [] ],
         'sequence'                  => [ 'HGVS_DNAAlts', [] ],
         'positions_inverted'        => [ 'HGVS_DNAPositions', 'HGVS_DNAInv', [] ],
         'positions'                 => [ 'HGVS_DNAPositions', [] ],
@@ -3676,7 +3676,7 @@ trait HGVS_DNASequence
                 if (in_array(get_class($Pattern), ['HGVS_DNARefs', 'HGVS_DNAAlts'])) {
                     $aSequencesMin[] = $Pattern->getCorrectedValue();
                     $aSequencesMax[] = $Pattern->getCorrectedValue();
-                } elseif (get_class($Pattern) == 'HGVS_Length') {
+                } elseif (get_class($Pattern) == 'HGVS_Lengths') {
                     $aLengths = $Pattern->getLengths();
                     $nLastKey = array_key_last($aSequencesMin);
                     if (!isset($nLastKey)) {
