@@ -3536,16 +3536,19 @@ class HGVS_VCFBody extends HGVS
         if ($nREF == 0 && $nALT == 0) {
             // Nothing left. Take the original range and add '='.
             $this->setCorrectedValue($this->getPositionString($sPosition, $nIntronOffset, 0, $nOffset) . '=');
+            $this->data['type'] = '=';
 
         } elseif ($nREF == 1 && $nALT == 1) {
             // Substitution.
             // Recalculate the position always; we might have started with a
             //  range, but ended with just a single position.
             $this->setCorrectedValue($this->getPositionString($sPosition, $nIntronOffset, $nOffset) . $sREF . '>' . $sALT);
+            $this->data['type'] = 'subst';
 
         } elseif ($nALT == 0) {
             // Deletion.
             $this->setCorrectedValue($this->getPositionString($sPosition, $nIntronOffset, $nOffset, $nREF) . 'del');
+            $this->data['type'] = 'del';
 
         } elseif ($nREF == 0) {
             // Something has been added... could be an insertion or a duplication.
@@ -3553,11 +3556,13 @@ class HGVS_VCFBody extends HGVS
                 // Duplication. Note that the start position might be quite
                 //  far from the actual insert.
                 $this->setCorrectedValue($this->getPositionString($sPosition, $nIntronOffset, ($nOffset - $nALT), $nALT) . 'dup');
+                $this->data['type'] = 'dup';
 
             } else {
                 // Insertion. We should check if we're sure about where the insertion should go.
                 // If the $sREF was '.' from the beginning, we can't be sure.
                 $this->setCorrectedValue($this->getPositionString($sPosition, $nIntronOffset, ($nOffset - 1), 2) . 'ins' . $sALT, (!$sOriREF? 0.7 : 1));
+                $this->data['type'] = 'ins';
                 if (!$sOriREF) {
                     // ADD (not replace) this suggestion to the list.
                     $this->addCorrectedValue($this->getPositionString($sPosition, $nIntronOffset, $nOffset, 2) . 'ins' . $sALT, 0.3);
@@ -3571,11 +3576,17 @@ class HGVS_VCFBody extends HGVS
             if ($sREF == strrev(str_replace(array('A', 'C', 'G', 'T'), array('T', 'G', 'C', 'A'), strtoupper($sALT)))) {
                 // Inversion.
                 $this->setCorrectedValue($this->getPositionString($sPosition, $nIntronOffset, $nOffset, $nREF) . 'inv');
+                $this->data['type'] = 'inv';
             } else {
                 // Deletion-insertion. Both REF and ALT are >1.
                 $this->setCorrectedValue($this->getPositionString($sPosition, $nIntronOffset, $nOffset, $nREF) . 'delins' . $sALT);
+                $this->data['type'] = 'delins';
             }
         }
+
+        // Store REF and ALT so we can check these values from outside of this class.
+        $this->REF = $sREF;
+        $this->ALT = $sALT;
     }
 }
 
