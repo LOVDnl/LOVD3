@@ -2520,7 +2520,7 @@ class HGVS_DNASub extends HGVS
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->setCorrectedValue($this->value);
-        $this->data['type'] = 'subst';
+        $this->data['type'] = $this->getCorrectedValue();
     }
 }
 
@@ -2829,7 +2829,7 @@ class HGVS_DNAVariantType extends HGVS
                     $this->messages['WWRONGTYPE'] = "This deletion-insertion doesn't change the given sequence.";
                 } else {
                     $this->messages['WWRONGTYPE'] = 'Based on the given sequences, this deletion-insertion should be described as ' .
-                        ($sNewType == 'subst'? 'a substitution.' :
+                        ($sNewType == '>'? 'a substitution.' :
                             ($sNewType == 'del'? 'a deletion.' :
                                 ($sNewType == 'dup'? 'a duplication.' :
                                     ($sNewType == 'ins'? 'an insertion.' : 'an inversion.'))));
@@ -3567,7 +3567,7 @@ class HGVS_VCFBody extends HGVS
             // Recalculate the position always; we might have started with a
             //  range, but ended with just a single position.
             $this->setCorrectedValue($this->getPositionString($sPosition, $nIntronOffset, $nOffset) . $sREF . '>' . $sALT);
-            $this->data['type'] = 'subst';
+            $this->data['type'] = '>';
 
         } elseif ($nALT == 0) {
             // Deletion.
