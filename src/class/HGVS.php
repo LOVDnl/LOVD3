@@ -3380,6 +3380,11 @@ class HGVS_Variant extends HGVS
         $this->predicted = (substr($this->matched_pattern, -9) == 'predicted'
             || !empty($this->DNAVariantBody->predicted)); // NOTE: This is due to c.0? being predicted.
 
+        // Clean up the messages a bit.
+        if (isset($this->messages['EPREFIXMISSING']) || isset($this->messages['WPREFIXMISSING'])) {
+            unset($this->messages['WPREFIXFORMAT']);
+        }
+
         // Some variant types aren't supported for validation and mapping.
         // But I want the message to say whether it was a valid HGVS description,
         //  so I need to do that here, once I know whether it was correct or not.
