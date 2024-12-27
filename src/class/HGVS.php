@@ -1276,18 +1276,14 @@ class HGVS_DNAInsSuffix extends HGVS
         }
 
         // A deletion-insertion of one base to one base, is a substitution.
+        // This check is purely done on the position, and any delXins variant is ignored; they will be handled later.
         if ($this->parent->getData()['type'] == 'delins'
             && $this->getParentProperty('DNAPositions')->getLengths() == [1,1]
+            && !$this->getParentProperty('DNADelSuffix')
             && isset($this->DNAAlts)
             && $this->getLengths() == [1,1]) {
             $this->messages['WWRONGTYPE'] =
                 'A deletion-insertion of one base to one base should be described as a substitution.';
-            // Force the corrected value of the DelSuffix to NOT empty.
-            $DelSuffix = $this->getParentProperty('DNADelSuffix');
-            if ($DelSuffix && $DelSuffix->getMessages()['WSUFFIXGIVEN']) {
-                // Undo that change.
-                $DelSuffix->setCorrectedValue($DelSuffix->DNARefs->getCorrectedValue());
-            }
         }
 
         // Store the corrected value.
@@ -2811,6 +2807,34 @@ class HGVS_DNAVariantType extends HGVS
                 $this
             );
             $this->parent->corrected_values = $this->VCF->getCorrectedValues();
+
+            // The VCF object stores the new variant type, so we can easily see if it's changed.
+            // If we still have a delins, we may not have changed anything at all, or we still could have made a shift.
+            // E.g., c.100_101delAAinsATT is still a delins, but should still throw an additional warning.
+            $sNewType = $this->VCF->getInfo()['type'];
+            if ($sNewType == 'delins') {
+                // Still a delins. Did it get updated to a different description?
+                if ($this->VCF->REF != $this->DNADelSuffix->getSequence()) {
+                    // Remove the WSUFFIXGIVEN that complained about about the bases following "del".
+                    unset($this->messages['WSUFFIXGIVEN']);
+                    // Then throw a proper warning. The positions MUST have been changed, as the REF got changed.
+                    $this->messages['WPOSITIONSCORRECTED'] = "The variant's positions have been corrected.";
+                }
+
+            } else {
+                // This delins is no longer a delins. We'll throw a WWRONGTYPE here.
+                // Remove the WSUFFIXGIVEN that complained about about the bases following "del".
+                unset($this->messages['WSUFFIXGIVEN']);
+                if ($sNewType == '=') {
+                    $this->messages['WWRONGTYPE'] = "This deletion-insertion doesn't change the given sequence.";
+                } else {
+                    $this->messages['WWRONGTYPE'] = 'Based on the given sequences, this deletion-insertion should be described as ' .
+                        ($sNewType == 'subst'? 'a substitution.' :
+                            ($sNewType == 'del'? 'a deletion.' :
+                                ($sNewType == 'dup'? 'a duplication.' :
+                                    ($sNewType == 'ins'? 'an insertion.' : 'an inversion.'))));
+                }
+            }
         }
     }
 }
