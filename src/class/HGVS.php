@@ -299,7 +299,7 @@ class HGVS
         ];
 
         foreach ($this as $sPropertyName => $Property) {
-            if (!in_array($sPropertyName, ['parent', 'patterns'])) {
+            if (!in_array($sPropertyName, ['memory', 'parent', 'patterns'])) {
                 $aReturn[$sPropertyName] = $Property;
             }
         }
