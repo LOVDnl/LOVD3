@@ -1590,7 +1590,8 @@ class HGVS_DNANull extends HGVS
 class HGVS_DNAPipe extends HGVS
 {
     public array $patterns = [
-        [ '/\|+/', [] ],
+        'pipe(s)' => [ '/\|+/', [] ],
+        'nothing' => [ 'HGVS_DNAPipeSuffix', [] ],
     ];
 
     public function validate ()
@@ -1598,7 +1599,14 @@ class HGVS_DNAPipe extends HGVS
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->setCorrectedValue('|');
         $this->data['type'] = 'met'; // Generalized to methylation-related variants.
-        if ($this->value != $this->getCorrectedValue()) {
+
+        if ($this->matched_pattern == 'nothing') {
+            // This description doesn't use a pipe, but should.
+            // Reset the suffix to make sure we can match it again.
+            $this->suffix = $this->input;
+            $this->messages['WPIPEMISSING'] = 'Please place a "|" between the positions and the variant type.';
+
+        } elseif ($this->value != $this->getCorrectedValue()) {
             $this->messages['WTOOMANYPIPES'] = 'One single pipe character is used to indicate a methylation-related variant.';
         }
     }
@@ -1625,14 +1633,6 @@ class HGVS_DNAPipeSuffix extends HGVS
         if ($this->matched_pattern == 'met') {
             $this->appendCorrectedValue('=');
             $this->messages['WMETFORMAT'] = 'To report normal methylation, use "met=".';
-        }
-
-        // Let's handle the pipe-check here since we also need to provide the corrected value.
-        if (!$this->getParentProperty('DNAPipe')) {
-            // We didn't have a pipe in front of us.
-            $this->data['type'] = 'met'; // Set the type that we're missing as well.
-            $this->corrected_values = $this->buildCorrectedValues('|', $this->getCorrectedValues());
-            $this->messages['WPIPEMISSING'] = 'Please place a "|" between the positions and the variant type.';
         }
     }
 }
@@ -2553,7 +2553,6 @@ class HGVS_DNAVariantBody extends HGVS
         'allele_cis'          => [ '[', 'HGVS_DNAAllele', ']', [] ],
         'somatic'             => [ 'HGVS_DNAPositions', 'HGVS_DNAVariantType', 'HGVS_DNASomaticVariant', [] ],
         'pipe'                => [ 'HGVS_DNAPositions', 'HGVS_DNAPipe', 'HGVS_DNAPipeSuffix', [] ],
-        'pipe_without_pipe'   => [ 'HGVS_DNAPositions', 'HGVS_DNAPipeSuffix', [] ],
         'other'               => [ 'HGVS_DNAPositions', 'HGVS_DNAVariantType', [] ],
         'unknown'             => [ 'HGVS_DNAUnknown', [] ],
         'wildtype'            => [ 'HGVS_DNAWildType', [] ],
