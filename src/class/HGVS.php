@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-12-26
+ * Modified    : 2024-12-27
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2556,12 +2556,6 @@ class HGVS_DNAVariantBody extends HGVS
         'allele_trans'        => [ '[', 'HGVS_DNAAllele', '];[', 'HGVS_DNAAllele', ']', [] ],
         'allele_cis'          => [ '[', 'HGVS_DNAAllele', ']', [] ],
         'somatic'             => [ 'HGVS_DNAPositions', 'HGVS_DNAVariantType', 'HGVS_DNASomaticVariant', [] ],
-        'delXins_with_suffix' => [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNADelSuffix', 'HGVS_DNAIns', 'HGVS_DNAInsSuffix', [] ],
-        'delXins'             => [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNADelSuffix', 'HGVS_DNAIns', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
-        'delins_with_suffix'  => [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNAIns', 'HGVS_DNAInsSuffix', [] ],
-        'delins'              => [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNAIns', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
-        'del_with_suffix'     => [ 'HGVS_DNAPositions', 'HGVS_DNADel', 'HGVS_DNADelSuffix', [] ],
-        'del'                 => [ 'HGVS_DNAPositions', 'HGVS_DNADel', [] ],
         'pipe'                => [ 'HGVS_DNAPositions', 'HGVS_DNAPipe', 'HGVS_DNAPipeSuffix', [] ],
         'pipe_without_pipe'   => [ 'HGVS_DNAPositions', 'HGVS_DNAPipeSuffix', [] ],
         'other'               => [ 'HGVS_DNAPositions', 'HGVS_DNAVariantType', [] ],
@@ -2643,33 +2637,6 @@ class HGVS_DNAVariantBody extends HGVS
             }
         }
 
-        // Delins variants deserve some additional attention.
-        // Based on the REF and ALT info, we may need to shift the variant or change it to a different type.
-        if ($this->matched_pattern == 'delXins_with_suffix'
-            && !$this->DNAPositions->unknown && !$this->DNAPositions->uncertain
-            && count(array_unique($this->DNADelSuffix->getLengths())) == 1
-            && count(array_unique($this->DNAInsSuffix->getLengths())) == 1
-            && !array_filter(array_keys($this->messages), function ($sKey) { return ($sKey[0] == 'E' && $sKey != 'EINVALIDNUCLEOTIDES'); })) {
-            // Positions are known; REF and ALT are known. Toss it all in a VCF parser.
-            $this->VCF = new HGVS_VCFBody(
-                ($this->DNAPositions->DNAPosition ?? $this->DNAPositions->DNAPositionStart)->getCorrectedValue() . ':' .
-                $this->DNADelSuffix->getSequence() . ':' .
-                $this->DNAInsSuffix->getSequence(),
-                $this
-            );
-            $this->corrected_values = $this->VCF->getCorrectedValues();
-        }
-
-        if (isset($this->messages['WWRONGTYPE'])) {
-            // We need to convert the variant from one type into the next.
-            if ($this->data['type'] == 'delins'
-                && strpos($this->messages['WWRONGTYPE'], 'substitution') !== false
-                && isset($this->DNADelSuffix)) {
-                // Remove the warning that complained about the base after the del.
-                unset($this->messages['WSUFFIXGIVEN']);
-            }
-        }
-
         if ($this->matched_pattern == 'wildtype') {
             $this->messages['IALLWILDTYPE'] =
                 'Using the "=" symbol without providing positions indicates that the entire reference sequence has been sequenced and found not to be changed.' .
@@ -2687,6 +2654,12 @@ class HGVS_DNAVariantType extends HGVS
     public array $patterns = [
         'substitution'        => [ 'HGVS_DNARefs', 'HGVS_DNASub', 'HGVS_DNAAlts', [] ],
         'substitution_VCF'    => [ 'HGVS_VCFRefs', 'HGVS_DNASub', 'HGVS_VCFAlts', [] ],
+        'delXins_with_suffix' => [ 'HGVS_DNADel', 'HGVS_DNADelSuffix', 'HGVS_DNAIns', 'HGVS_DNAInsSuffix', [] ],
+        'delXins'             => [ 'HGVS_DNADel', 'HGVS_DNADelSuffix', 'HGVS_DNAIns', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
+        'delins_with_suffix'  => [ 'HGVS_DNADel', 'HGVS_DNAIns', 'HGVS_DNAInsSuffix', [] ],
+        'delins'              => [ 'HGVS_DNADel', 'HGVS_DNAIns', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
+        'del_with_suffix'     => [ 'HGVS_DNADel', 'HGVS_DNADelSuffix', [] ],
+        'del'                 => [ 'HGVS_DNADel', [] ],
         'ins_with_suffix'     => [ 'HGVS_DNAIns', 'HGVS_DNAInsSuffix', [] ],
         'ins'                 => [ 'HGVS_DNAIns', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for insertions.' ] ],
         'dup_with_suffix'     => [ 'HGVS_DNADup', 'HGVS_DNADupSuffix', [] ],
@@ -2816,6 +2789,28 @@ class HGVS_DNAVariantType extends HGVS
                     }
                 }
             }
+        }
+
+        // Delins variants with a REF deserve some additional attention, too.
+        // Based on the REF and ALT info, we may need to shift the variant or change it to a different type.
+        if ($this->matched_pattern == 'delXins_with_suffix'
+            && !$Positions->unknown && !$Positions->uncertain
+            && count(array_unique($this->DNADelSuffix->getLengths())) == 1
+            && count(array_unique($this->DNAInsSuffix->getLengths())) == 1
+            && !array_filter(
+                array_keys($this->messages),
+                function ($sKey)
+                {
+                    return ($sKey[0] == 'E' && $sKey != 'EINVALIDNUCLEOTIDES');
+                })) {
+            // Positions are known; REF and ALT are known. Toss it all in a VCF parser.
+            $this->VCF = new HGVS_VCFBody(
+                ($Positions->DNAPosition ?? $Positions->DNAPositionStart)->getCorrectedValue() . ':' .
+                $this->DNADelSuffix->getSequence() . ':' .
+                $this->DNAInsSuffix->getSequence(),
+                $this
+            );
+            $this->parent->corrected_values = $this->VCF->getCorrectedValues();
         }
     }
 }
