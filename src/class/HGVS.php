@@ -2552,7 +2552,6 @@ class HGVS_DNAVariantBody extends HGVS
         'allele_trans'        => [ '[', 'HGVS_DNAAllele', '];[', 'HGVS_DNAAllele', ']', [] ],
         'allele_cis'          => [ '[', 'HGVS_DNAAllele', ']', [] ],
         'somatic'             => [ 'HGVS_DNAPositions', 'HGVS_DNAVariantType', 'HGVS_DNASomaticVariant', [] ],
-        'pipe'                => [ 'HGVS_DNAPositions', 'HGVS_DNAPipe', 'HGVS_DNAPipeSuffix', [] ],
         'other'               => [ 'HGVS_DNAPositions', 'HGVS_DNAVariantType', [] ],
         'unknown'             => [ 'HGVS_DNAUnknown', [] ],
         'wildtype'            => [ 'HGVS_DNAWildType', [] ],
@@ -2663,6 +2662,7 @@ class HGVS_DNAVariantType extends HGVS
         'inv'                 => [ 'HGVS_DNAInv', [] ],
         'con_with_suffix'     => [ 'HGVS_DNACon', 'HGVS_DNAInsSuffix', [] ],
         'con'                 => [ 'HGVS_DNACon', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
+        'pipe'                => [ 'HGVS_DNAPipe', 'HGVS_DNAPipeSuffix', [] ],
         'wildtype'            => [ 'HGVS_DNAWildType', [] ],
     ];
 
