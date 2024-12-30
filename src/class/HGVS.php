@@ -3108,8 +3108,8 @@ class HGVS_Lengths extends HGVS
                 ['' => $nCorrectionConfidence],
                 '(', $this->Length[0]->getCorrectedValues(), '_', $this->Length[1]->getCorrectedValues(), ')'
             );
-        } elseif ($this->lengths[0] == 1) {
-            // Actually, when the length is 1, it's redundant, and it shouldn't be given.
+        } elseif ($this->lengths[0] == 1 && !$this->getParent('HGVS_DNARepeatComponent')) {
+            // Actually, when the length is 1, and we're not a repeat, it's redundant and it shouldn't be given.
             $this->setCorrectedValue('');
         } else {
             $this->corrected_values = $this->buildCorrectedValues(
