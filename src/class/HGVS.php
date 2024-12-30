@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-12-27
+ * Modified    : 2024-12-30
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -3665,6 +3665,49 @@ class HGVS_VCFSeparator extends HGVS
     public array $patterns = [
         [ '/[: -]?/', [] ],
     ];
+}
+
+
+
+
+
+trait HGVS_CheckBasesGiven
+{
+    // Enables a WBASESGIVEN check, where the given REFs are compared to the given position length.
+    // This is meant for variants that don't need those bases, like wild-type variants or methylation-related variants.
+    public function checkBasesGiven ()
+    {
+        // Check the given bases (if any) and compare them to the position length.
+        $Positions = $this->getParentProperty('DNAPositions');
+        $Refs = $this->getParentProperty('DNARefs');
+        if ($Positions && $Refs && !$Positions->uncertain && !$Positions->unknown) {
+            // We're not implementing all checks that, e.g., DNADelSuffix implements.
+            // These variants don't happen often. If I would like to implement all of that,
+            //  then move the code over to this trait and use this trait in DNADelSuffix.
+
+            // The suffix should not have been used only when the variant length matches the length given in the suffix.
+            $nVariantLength = $Positions->getLengths()[0];
+            $nSuffixLength = strlen($Refs->getCorrectedValue());
+
+            // Simplest situation first: length matches.
+            if ($nVariantLength == $nSuffixLength) {
+                $this->messages['WBASESGIVEN'] = 'The given sequence is redundant and should be removed.';
+                $Refs->setCorrectedValue('');
+
+            } elseif (!isset($Refs->messages['EINVALIDNUCLEOTIDES'])) {
+                // Universal length checks. These messages are kept universal and slightly simplified.
+                if ($nSuffixLength < $nVariantLength) {
+                    $this->messages['EBASESTOOSHORT'] =
+                        "The variant's positions indicate a sequence that's longer than the given sequence." .
+                        " Please adjust either the variant's positions or the given sequence.";
+                } else {
+                    $this->messages['EBASESTOOLONG'] =
+                        "The variant's positions indicate a sequence that's shorter than the given sequence." .
+                        " Please adjust either the variant's positions or the given sequence.";
+                }
+            }
+        }
+    }
 }
 
 
