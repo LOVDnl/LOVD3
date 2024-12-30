@@ -2539,6 +2539,44 @@ class HGVS_DNARepeat extends HGVS
         $this->corrected_values = $this->buildCorrectedValues(...$aCorrectedValues);
         return $this->corrected_values;
     }
+
+
+
+
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->data['type'] = 'repeat';
+        $this->corrected_values = $this->getCorrectedValues();
+
+        // Run a full validation, but only when we're the "main" repeat class.
+        if ($this->parent && get_class($this->parent) == 'HGVS_DNAVariantType') {
+            $aRepeatUnits = $this->getComponents();
+
+            // Repeats can't have uncertain positions.
+            $Positions = $this->getParentProperty('DNAPositions');
+            if ($Positions && ($Positions->uncertain || $Positions->unknown)) {
+                $this->messages['EWRONGTYPE'] = 'The repeat syntax can not be used with uncertain positions. Rewrite your variant description as a deletion or insertion, depending on whether the repeat contracted or expanded.';
+
+            } else {
+                // Full validation of the repeat.
+                $Prefix = $this->getParentProperty('DNAPrefix');
+                $sPrefix = ($Prefix? $Prefix->getCorrectedValue() : 'g');
+                if ($sPrefix == 'c') {
+                    foreach ($aRepeatUnits as $Component) {
+                        list($nMinLength, $nMaxLength) = $Component->getLengths();
+                        if ($nMinLength == $nMaxLength && ($nMinLength % 3)) {
+                            // Repeat variants on coding DNA should always have a length of a multiple of three bases.
+                            $this->messages['EINVALIDREPEATLENGTH'] =
+                                'A repeat sequence of coding DNA should always have a length of (a multiple of) 3.';
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 
