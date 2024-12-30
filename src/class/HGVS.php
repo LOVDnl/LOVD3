@@ -2488,10 +2488,57 @@ class HGVS_DNARefs extends HGVS
 
 class HGVS_DNARepeat extends HGVS
 {
+    public array $components = [];
     public array $patterns = [
         'multiple' => [ 'HGVS_DNARepeatComponent', 'HGVS_DNARepeat', [] ],
         'single'   => [ 'HGVS_DNARepeatComponent', [] ],
     ];
+
+    public function getComponents ()
+    {
+        // This function collects all components stored in this class and puts them in an array.
+        if (count($this->components) > 0) {
+            return $this->components;
+        }
+
+        foreach ($this->patterns[$this->matched_pattern] as $Pattern) {
+            if (is_object($Pattern)) {
+                if (get_class($Pattern) == 'HGVS_DNARepeatComponent') {
+                    $this->components[] = $Pattern;
+                } else {
+                    // Another complex with one or more components.
+                    $this->components = array_merge(
+                        $this->components,
+                        $Pattern->getComponents()
+                    );
+                }
+            }
+        }
+
+        return $this->components;
+    }
+
+
+
+
+
+    public function getCorrectedValues ()
+    {
+        // This function returns the corrected values, possibly building them first.
+        // This function had to be overloaded because I may have modified the components and I can't use the patterns.
+        if ($this->corrected_values) {
+            return $this->corrected_values;
+        }
+
+        $aCorrectedValues = [];
+        foreach ($this->getComponents() as $Component) {
+            $aCorrectedValues[] = $Component->getCorrectedValues();
+        }
+
+        // Now, build the whole array.
+        $this->corrected_values = $this->buildCorrectedValues(...$aCorrectedValues);
+        return $this->corrected_values;
+    }
 }
 
 
@@ -2500,6 +2547,7 @@ class HGVS_DNARepeat extends HGVS
 
 class HGVS_DNARepeatComponent extends HGVS
 {
+    use HGVS_DNASequence;
     public array $patterns = [
         // NOTE: We're using DNAAlts, because mixed repeats can be described using IUPAC codes other than A, C, G, or T.
         'sequence_with_length'      => [ 'HGVS_DNAAlts', '[', 'HGVS_Lengths', ']', [] ],
