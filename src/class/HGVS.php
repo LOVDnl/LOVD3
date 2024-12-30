@@ -2574,6 +2574,24 @@ class HGVS_DNARepeat extends HGVS
                         }
                     }
                 }
+
+                if (empty($this->messages['EINVALIDREPEATLENGTH']) && $Positions && $Positions->range) {
+                    // Do a rudimentary length check. Take all given bases, and compare it to the positions.
+                    // We don't know the number of repeats that the reference has, but at least the bases should fit.
+                    $nPositionsLength = $Positions->getLengths()[0];
+                    // This is the simplest way, not going through all objects.
+                    $sSequence = preg_replace('/\[[^\]]+\]/', '', $this->getValue());
+                    $nSequenceLength = strlen($sSequence);
+
+                    if ($nSequenceLength > $nPositionsLength) {
+                        $this->messages['EINVALIDREPEATLENGTH'] =
+                            'The sequence ' . $sSequence . ' does not fit in the given positions ' . $Positions->getCorrectedValue() . '. Adjust your positions or the given sequences.';
+
+                    } elseif (count($aRepeatUnits) == 1 && ($nPositionsLength % $nSequenceLength)) {
+                        $this->messages['EINVALIDREPEATLENGTH'] =
+                            'The given repeat unit (' . $sSequence . ') does not fit in the given positions ' . $Positions->getCorrectedValue() . '. Adjust your positions or the given sequences.';
+                    }
+                }
             }
         }
     }
