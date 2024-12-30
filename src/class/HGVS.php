@@ -2649,6 +2649,22 @@ class HGVS_DNARepeat extends HGVS
                     }
                 }
             }
+
+            // If there is a suffix, check for sequence without a length. We assume they forgot a "[1]".
+            if ($this->suffix) {
+                $Suffix = new HGVS_DNAAlts($this->suffix, $this);
+                if ($Suffix && $Suffix->isValid()) {
+                    $this->messages['WSUFFIXFORMAT'] =
+                        'The part after "' . $aRepeatUnits[array_key_last($aRepeatUnits)]->getValue() . '" does not follow HGVS guidelines.' .
+                        ' When describing repeats, each unit needs a length.';
+                    // Add the sequence to the repeats and try again.
+                    $this->components[] = new HGVS_DNARepeatComponent($this->suffix . '[1]');
+                    $this->corrected_values = [];
+                    $this->suffix = '';
+                    unset($this->messages['EINVALIDREPEATLENGTH']);
+                    return $this->validate();
+                }
+            }
         }
     }
 }
