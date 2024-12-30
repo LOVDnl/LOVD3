@@ -1598,6 +1598,7 @@ class HGVS_DNANull extends HGVS
 
 class HGVS_DNAPipe extends HGVS
 {
+    use HGVS_CheckBasesGiven; // Gives us checkBasesGiven().
     public array $patterns = [
         'pipe(s)' => [ '/\|+/', [] ],
         'nothing' => [ 'HGVS_DNAPipeSuffix', [] ],
@@ -1608,6 +1609,9 @@ class HGVS_DNAPipe extends HGVS
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->setCorrectedValue('|');
         $this->data['type'] = 'met'; // Generalized to methylation-related variants.
+
+        // Check any possible Refs compared to the positions. If they match, complain about the given Refs.
+        $this->checkBasesGiven();
 
         if ($this->matched_pattern == 'nothing') {
             // This description doesn't use a pipe, but should.
@@ -2539,6 +2543,7 @@ class HGVS_DNASub extends HGVS
 
 class HGVS_DNAUnknown extends HGVS
 {
+    use HGVS_CheckBasesGiven; // Gives us checkBasesGiven().
     public array $patterns = [
         [ '?', [] ],
     ];
@@ -2547,6 +2552,8 @@ class HGVS_DNAUnknown extends HGVS
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->data['type'] = $this->getCorrectedValue();
+        // Check any possible Refs compared to the positions. If they match, complain about the given Refs.
+        $this->checkBasesGiven();
     }
 }
 
@@ -2857,6 +2864,7 @@ class HGVS_DNAVariantType extends HGVS
 
 class HGVS_DNAWildType extends HGVS
 {
+    use HGVS_CheckBasesGiven; // Gives us checkBasesGiven().
     public array $patterns = [
         [ '=', [] ],
     ];
@@ -2865,6 +2873,8 @@ class HGVS_DNAWildType extends HGVS
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->data['type'] = $this->getCorrectedValue();
+        // Check any possible Refs compared to the positions. If they match, complain about the given Refs.
+        $this->checkBasesGiven();
     }
 }
 
