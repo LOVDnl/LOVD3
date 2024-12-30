@@ -1571,6 +1571,15 @@ class HGVS_DNANull extends HGVS
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
+        // We're a bit special. We don't allow any input to be left.
+        // The reason for this is that we don't want to match DNAPositions starting with a zero.
+        // However, if we would go last in line, the DNAPositions + DNAUnknown would pick c.0? up.
+        if ($this->suffix) {
+            // There is more left. We're not an actual DNANull.
+            $this->matched = false;
+            return;
+        }
+
         $this->data['type'] = substr($this->getCorrectedValue(), 0, 1);
         $this->predicted = ($this->matched_pattern == 'predicted');
 
@@ -2662,7 +2671,11 @@ class HGVS_DNAVariantType extends HGVS
         'inv'                 => [ 'HGVS_DNAInv', [] ],
         'con_with_suffix'     => [ 'HGVS_DNACon', 'HGVS_DNAInsSuffix', [] ],
         'con'                 => [ 'HGVS_DNACon', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
+        'pipe_with_refs'      => [ 'HGVS_DNARefs', 'HGVS_DNAPipe', 'HGVS_DNAPipeSuffix', [] ],
         'pipe'                => [ 'HGVS_DNAPipe', 'HGVS_DNAPipeSuffix', [] ],
+        'unknown_with_refs'   => [ 'HGVS_DNARefs', 'HGVS_DNAUnknown', [ 'EINVALID' => 'This variant description seems incomplete.' ] ],
+        'unknown'             => [ 'HGVS_DNAUnknown', [ 'EINVALID' => 'This variant description seems incomplete.' ] ],
+        'wildtype_with_refs'  => [ 'HGVS_DNARefs', 'HGVS_DNAWildType', [] ],
         'wildtype'            => [ 'HGVS_DNAWildType', [] ],
     ];
 
