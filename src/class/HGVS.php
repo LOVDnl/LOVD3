@@ -2486,6 +2486,30 @@ class HGVS_DNARefs extends HGVS
 
 
 
+class HGVS_DNARepeat extends HGVS
+{
+    public array $patterns = [
+        'multiple' => [ 'HGVS_DNARepeatComponent', 'HGVS_DNARepeat', [] ],
+        'single'   => [ 'HGVS_DNARepeatComponent', [] ],
+    ];
+}
+
+
+
+
+
+class HGVS_DNARepeatComponent extends HGVS
+{
+    public array $patterns = [
+        // NOTE: We're using DNAAlts, because mixed repeats can be described using IUPAC codes other than A, C, G, or T.
+        'sequence_with_length'      => [ 'HGVS_DNAAlts', '[', 'HGVS_Lengths', ']', [] ],
+    ];
+}
+
+
+
+
+
 class HGVS_DNASomatic extends HGVS
 {
     public array $patterns = [
@@ -2678,6 +2702,7 @@ class HGVS_DNAVariantType extends HGVS
         'inv'                 => [ 'HGVS_DNAInv', [] ],
         'con_with_suffix'     => [ 'HGVS_DNACon', 'HGVS_DNAInsSuffix', [] ],
         'con'                 => [ 'HGVS_DNACon', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
+        'repeat'              => [ 'HGVS_DNARepeat', [] ],
         'pipe_with_refs'      => [ 'HGVS_DNARefs', 'HGVS_DNAPipe', 'HGVS_DNAPipeSuffix', [] ],
         'pipe'                => [ 'HGVS_DNAPipe', 'HGVS_DNAPipeSuffix', [] ],
         'unknown_with_refs'   => [ 'HGVS_DNARefs', 'HGVS_DNAUnknown', [ 'EINVALID' => 'This variant description seems incomplete.' ] ],
