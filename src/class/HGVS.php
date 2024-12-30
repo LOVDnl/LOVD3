@@ -2590,6 +2590,62 @@ class HGVS_DNARepeat extends HGVS
                     } elseif (count($aRepeatUnits) == 1 && ($nPositionsLength % $nSequenceLength)) {
                         $this->messages['EINVALIDREPEATLENGTH'] =
                             'The given repeat unit (' . $sSequence . ') does not fit in the given positions ' . $Positions->getCorrectedValue() . '. Adjust your positions or the given sequences.';
+
+                    } else {
+                        // OK, this one is complex. We have multiple repeats (e.g., g.1_9AC[20]GT[10])
+                        //  and we need to check if any combination of units fits the given positions.
+                        $bInvalidLength = true;
+
+                        // Collect all sequence lengths.
+                        $aRepeatUnitCounts = array_map(
+                            function ($Component) {
+                                return [strlen($Component->DNAAlts->getCorrectedValue()), 1];
+                            }, $aRepeatUnits
+                        );
+
+                        // Now, loop through all possible sequence combinations to make sure that I know that a certain
+                        //  combination of repeats fits the given sequence perfectly (the assumed wild-type sequence).
+                        while (true) {
+                            $nTotalLength = array_reduce(
+                                $aRepeatUnitCounts,
+                                function ($nCurrentLength, $aRepeatUnit) {
+                                    return $nCurrentLength + ($aRepeatUnit[0] * $aRepeatUnit[1]);
+                                }
+                            );
+                            if ($nTotalLength == $nPositionsLength) {
+                                // Fits perfectly!
+                                $bInvalidLength = false;
+                                break;
+
+                            } elseif ($nTotalLength > $nPositionsLength) {
+                                // See if we can continue somehow.
+                                for ($i = array_key_last($aRepeatUnitCounts); $i >= 0; $i--) {
+                                    if ($aRepeatUnitCounts[$i][1] == 1) {
+                                        // This unit is present just once, continue up the list.
+                                        continue;
+                                    }
+                                    // This is the first non-1 value in the list. If it's the first repeat, we're done.
+                                    if (!$i) {
+                                        // Nope, it doesn't fit.
+                                        break 2;
+                                    } else {
+                                        // Reset this unit and try to increase the previous one.
+                                        $aRepeatUnitCounts[$i][1] = 1;
+                                        $aRepeatUnitCounts[$i - 1][1]++;
+                                        break;
+                                    }
+                                }
+
+                            } else {
+                                // We're not there yet.
+                                $aRepeatUnitCounts[array_key_last($aRepeatUnitCounts)][1]++;
+                            }
+                        }
+
+                        if ($bInvalidLength) {
+                            $this->messages['EINVALIDREPEATLENGTH'] =
+                                'The given repeat units (' . implode(', ', array_map(function ($Component) { return $Component->DNAAlts->getCorrectedValue(); }, $aRepeatUnits)) . ') do not fit in the given positions ' . $Positions->getCorrectedValue() . '. Adjust your positions or the given sequences.';
+                        }
                     }
                 }
             }
