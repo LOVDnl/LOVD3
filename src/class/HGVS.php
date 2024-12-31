@@ -2453,6 +2453,43 @@ class HGVS_DNAPositions extends HGVS
                 $this->DNAPosition->getCorrectedValues()
             );
         }
+
+        // Do a final check, if perhaps a hyphen should have been an underscore.
+        if (isset($this->messages['EFALSEINTRONIC']) && strpos($this->getValue(), '-') !== false) {
+            // Sometimes users use a hyphen where they mean an underscore. Do a simple check for this.
+            // I don't think we can have multiple corrected values here, but just in case.
+            $aCorrections = $this->getCorrectedValues();
+            $aNewCorrections = [];
+            $aNewData = [];
+            foreach ($aCorrections as $sPositions => $nConfidence) {
+                // First, check if we haven't already done something to solve the problem.
+                if ($sPositions == $this->getValue()) {
+                    // Our current suggestion is unchanged, and therefore, invalid. Try to replace the hyphen.
+                    $PositionsCorrected = new HGVS_DNAPositions(str_replace('-', '_', $sPositions), $this->parent);
+                    if ($PositionsCorrected->isValid() && !$PositionsCorrected->getSuffix()) {
+                        // This is a better option then what we have. Replace this.
+                        // Add a higher confidence since the error will reduce the confidence with a factor 0.1.
+                        $aNewCorrections[$PositionsCorrected->getCorrectedValue()] = ($nConfidence * 10);
+                        if (!$aNewData) {
+                            //  Also, collect the new data.
+                            $aNewData = $PositionsCorrected->getData();
+                        }
+                        continue;
+                    }
+                }
+                // If we get here, the fix failed. Don't change a thing.
+                $aNewCorrections[$sPositions] = $nConfidence;
+            }
+
+            // Overwrite everything, when needed.
+            if ($aCorrections != $aNewCorrections) {
+                $this->corrected_values = $aNewCorrections;
+                $this->data = array_merge(
+                    $this->getData(),
+                    $aNewData
+                );
+            }
+        }
     }
 }
 
