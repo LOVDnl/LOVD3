@@ -740,6 +740,31 @@ class HGVS
 
 
 
+    public function requireMissingReferenceSequence ()
+    {
+        // Flips the requirement for a reference sequence.
+        // Instead of complaining where there is none, complain when we do have one.
+
+        // We could simply check for EREFSEQMISSING, but that means calling this function twice will result in issues.
+        // We are assuming that we're the root class.
+        if ($this->hasProperty('ReferenceSequence')) {
+            $this->messages['WREFSEQGIVEN'] = 'In this field, a reference sequence should not be provided.';
+            // FIXME: And what about the corrected values?
+
+        } else {
+            // Unset the error in case we had it.
+            unset($this->messages['EREFSEQMISSING']);
+        }
+        // Rebuild the info just in case.
+        $this->buildInfo();
+
+        return true;
+    }
+
+
+
+
+
     public function setCorrectedValue ($sValue, $nConfidence = 1)
     {
         // Conveniently sets the corrected value for us.
