@@ -3687,8 +3687,8 @@ class HGVS_Variant extends HGVS
         //  so I need to do that here, once I know whether it was correct or not.
         if ($this->predicted
             || (isset($this->DNAVariantBody->DNAPositions)
-                && ($this->DNAVariantBody->DNAPositions->uncertain || $this->DNAVariantBody->DNAPositions->unknown))
-            || in_array($this->data['type'] ?? '', ['0', '?', ';', 'met'])
+                && ($this->DNAVariantBody->DNAPositions->uncertain || $this->DNAVariantBody->DNAPositions->unknown || $this->DNAVariantBody->DNAPositions->ISCN))
+            || in_array($this->data['type'] ?? '', ['0', '?', ';', 'met', 'repeat'])
             || $this->DNAVariantBody->getCorrectedValue() == '=') {
             if ($this->caseOK
                 && !array_filter(array_keys($this->messages), function ($sKey) { return in_array($sKey[0], ['E','W']); })) {
