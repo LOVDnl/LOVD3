@@ -323,6 +323,25 @@ class HGVS
 
 
 
+    public function allowMissingReferenceSequence ()
+    {
+        // Remove any error message about not having a reference sequence.
+        // Apparently, in this context, we're OK not having one.
+
+        if (isset($this->messages['EREFSEQMISSING'])) {
+            $this->messages['IREFSEQMISSING'] = $this->messages['EREFSEQMISSING'];
+            unset($this->messages['EREFSEQMISSING']);
+            // Rebuild the info just in case.
+            $this->buildInfo();
+        }
+
+        return true;
+    }
+
+
+
+
+
     public function appendCorrectedValue ($sValue, $nConfidence = 1)
     {
         // Append to any existing corrected value(s), using the given confidence.
