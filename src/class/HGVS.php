@@ -2412,6 +2412,27 @@ class HGVS_DNAPositions extends HGVS
                 }
             }
             $this->data['range'] = $this->range;
+
+            // Since we know we're the positions of this variant (although we could still be just part of an allele),
+            //  add some additional checks related to positions and prefixes or reference sequences.
+            if (isset($this->messages['EFALSEUTR'])) {
+                // This warning has been triggered by the variant's prefix. Now, check the reference sequence, too.
+                // If we use a genomic reference sequence, there isn't much to do; the error must be in the position.
+                // But when there isn't a reference sequence, have a closer look at the given positions; if they are
+                //  very small, this won't be a genomic variant; the prefix is probably an error.
+                // First, fix the positions.
+                $this->data['position_start'] = 0;
+                $this->data['position_end'] = 0;
+                $RefSeq = $this->getParentProperty('ReferenceSequence');
+                if (($RefSeq && in_array($RefSeq->molecule_type, ['genome_transcript', 'transcript']))
+                    || !array_diff_key($this->messages, array_flip(['EFALSEUTR', 'EFALSEINTRONIC']))) {
+                    // Option 1: Both the reference sequence and the positions indicate this is a transcript.
+                    //           The prefix already threw an EWRONGREFERENCE, but that didn't suggest a fix.
+                    // Option 2: We only have EFALSEUTR, the rest looks good.
+                    // Just suggest using c, the only prefix with an UTR.
+                    $VariantPrefix->setCorrectedValue('c');
+                }
+            }
         }
 
         // Now, store the corrected value.
