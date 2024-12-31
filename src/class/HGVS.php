@@ -1666,6 +1666,7 @@ class HGVS_DNAPosition extends HGVS
     public array $position_limits = [
         'g' => [1, 4294967295, 0, 0], // position min, position max, offset min, offset max.
         'm' => [1, 4294967295, 0, 0],
+        'o' => [1, 4294967295, 0, 0],
         'c' => [-8388608, 8388607, -2147483648, 2147483647],
         'n' => [1, 8388607, -2147483648, 2147483647],
     ];
