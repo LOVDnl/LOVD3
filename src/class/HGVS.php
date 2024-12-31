@@ -1662,6 +1662,8 @@ class HGVS_DNAPosition extends HGVS
         'unknown'          => [ '?', [] ],
         'unknown_intronic' => [ '/([-‐*]?([0-9]+))([+‐-]\?)/u', [] ],
         'known'            => [ '/([-‐*]?([0-9]+))([+‐-]([0-9]+))?/u', [] ], // Note: We're using these sub patterns in the validation.
+        'pter'             => [ '/pter/', [] ],
+        'qter'             => [ '/qter/', [] ],
     ];
     public array $position_limits = [
         'g' => [1, 4294967295, 0, 0], // position min, position max, offset min, offset max.
@@ -1678,6 +1680,7 @@ class HGVS_DNAPosition extends HGVS
         $this->unknown_offset = ($this->matched_pattern == 'unknown_intronic');
         $VariantPrefix = $this->getParentProperty('DNAPrefix');
         $sVariantPrefix = ($VariantPrefix? $VariantPrefix->getCorrectedValue() : 'g'); // VCFs usually don't have a prefix.
+        $this->ISCN = false;
         $this->position_limits = $this->position_limits[$sVariantPrefix];
         $nCorrectionConfidence = 1;
 
@@ -1690,6 +1693,29 @@ class HGVS_DNAPosition extends HGVS
             // Set the intronic range to 0.
             $this->position_limits[2] = 0;
             $this->position_limits[3] = 0;
+
+        } elseif (in_array($this->matched_pattern, ['pter', 'qter'])) {
+            $RefSeq = $this->getParentProperty('ReferenceSequence');
+            if ($RefSeq && $RefSeq->molecule_type != 'chromosome') {
+                $this->messages['EWRONGREFERENCE'] =
+                    'A chromosomal reference sequence is required for pter, cen, or qter positions.';
+            }
+            $this->setCorrectedValue(strtolower($this->value));
+            $this->caseOK = ($this->value == $this->getCorrectedValue());
+            $this->UTR = false;
+            $this->intronic = false;
+            $this->offset = 0;
+            if ($this->matched_pattern == 'pter') {
+                $this->position = $this->position_limits[0];
+                $this->position_limits[1] = $this->position;
+            } else {
+                $this->position = $this->position_limits[1];
+                $this->position_limits[0] = $this->position;
+            }
+            $this->position_sortable = $this->position;
+            $this->position_limits[2] = 0;
+            $this->position_limits[3] = 0;
+            $this->ISCN = true;
 
         } else {
             // We've seen input from papers that don't use a hyphen-minus (-) but a non-breaking hyphen (‐).
@@ -1828,13 +1854,13 @@ class HGVS_DNAPositionStart extends HGVS
 
         if (!$this->range) {
             // A single position, just copy everything.
-            foreach (['unknown', 'unknown_offset', 'UTR', 'intronic', 'position', 'position_sortable', 'position_limits', 'offset'] as $variable) {
+            foreach (['unknown', 'unknown_offset', 'UTR', 'intronic', 'position', 'position_sortable', 'position_limits', 'offset', 'ISCN'] as $variable) {
                 $this->$variable = $this->DNAPosition->$variable;
             }
 
         } else {
             // Copy the booleans first.
-            foreach (['unknown', 'unknown_offset', 'UTR', 'intronic'] as $variable) {
+            foreach (['unknown', 'unknown_offset', 'UTR', 'intronic', 'ISCN'] as $variable) {
                 $this->$variable = ($this->DNAPosition[0]->$variable || $this->DNAPosition[1]->$variable);
             }
 
@@ -2183,13 +2209,13 @@ class HGVS_DNAPositions extends HGVS
 
         if (!$this->range) {
             // A single position, just copy everything.
-            foreach (['unknown', 'unknown_offset', 'UTR', 'intronic', 'position', 'position_sortable', 'position_limits', 'offset'] as $variable) {
+            foreach (['unknown', 'unknown_offset', 'UTR', 'intronic', 'position', 'position_sortable', 'position_limits', 'offset', 'ISCN'] as $variable) {
                 $this->$variable = $this->DNAPosition->$variable;
             }
 
         } else {
             // Copy only the booleans; the rest doesn't apply to a range.
-            foreach (['unknown', 'unknown_offset', 'UTR', 'intronic'] as $variable) {
+            foreach (['unknown', 'unknown_offset', 'UTR', 'intronic', 'ISCN'] as $variable) {
                 $this->$variable = ($this->DNAPositionStart->$variable || $this->DNAPositionEnd->$variable);
             }
 
@@ -2392,7 +2418,8 @@ class HGVS_DNAPrefix extends HGVS
         if ($RefSeq && !empty($RefSeq->allowed_prefixes)) {
             if ($this->matched_pattern == 'nothing') {
                 // Simple assumption based on the reference sequence.
-                $this->molecule_type = ($RefSeq->molecule_type == 'genome_transcript'? 'transcript' : $RefSeq->molecule_type);
+                $this->molecule_type = ($RefSeq->molecule_type == 'genome_transcript'? 'transcript' :
+                    ($RefSeq->molecule_type == 'chromosome'? 'genome' : $RefSeq->molecule_type));
                 $nConfidence = (1 / count($RefSeq->allowed_prefixes));
                 $this->corrected_values = array_combine(
                     $RefSeq->allowed_prefixes,
@@ -3362,7 +3389,7 @@ class HGVS_ReferenceSequence extends HGVS
                 break;
 
             case 'refseq_genomic':
-                $this->molecule_type = 'genome';
+                $this->molecule_type = (strtoupper($this->regex[1]) == 'NC'? 'chromosome' : 'genome');
                 $this->allowed_prefixes = [(strtoupper($this->regex[1]) == 'NC' && in_array((int) $this->regex[3], ['1807', '12920'])? 'm' : 'g')];
                 $this->setCorrectedValue(
                     strtoupper($this->regex[1]) .
