@@ -3722,6 +3722,62 @@ class HGVS_RNARefs extends HGVS_DNARefs
 
 
 
+class HGVS_ProteinPositionPosition extends HGVS
+{
+    public array $patterns = [
+        [ '/([0-9]+)/', [] ],
+    ];
+    public array $position_limits = [
+        'p' => [1, 65535], // position min, position max.
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $VariantPrefix = $this->getParentProperty('ProteinPrefix');
+        $sVariantPrefix = ($VariantPrefix? $VariantPrefix->getCorrectedValue() : 'p');
+        $this->position_limits = $this->position_limits[$sVariantPrefix];
+        $nCorrectionConfidence = 1;
+
+        // Store the position and sortable position separately.
+        $this->position = (int) $this->regex[1];
+        $this->position_sortable = $this->position;
+
+        // Check for values with zeros.
+        if (!$this->position) {
+            $this->messages['EPOSITIONFORMAT'] = 'This variant description contains an invalid position: "' . $this->value . '".';
+        } elseif ((string) $this->position !== $this->regex[1]) {
+            $this->messages['WPOSITIONWITHZERO'] = 'Variant positions should not be prefixed by a 0.';
+            $nCorrectionConfidence *= 0.9;
+        }
+
+        // Check minimum and maximum values.
+        if ($this->position_sortable > $this->position_limits[1]) {
+            $this->messages['EPOSITIONLIMIT'] = 'Position is beyond the possible limits of its type: "' . $this->value . '".';
+        }
+
+        // Adjust minimum and maximum values, to be used in further processing, but keep within limits.
+        if ($this->position_sortable < $this->position_limits[0]) {
+            $this->position_limits[1] = $this->position_limits[0];
+        } elseif ($this->position_sortable > $this->position_limits[1]) {
+            $this->position_limits[0] = $this->position_limits[1];
+        } else {
+            $this->position_limits[0] = $this->position_sortable;
+            $this->position_limits[1] = $this->position_sortable;
+        }
+
+        // Store the corrected value.
+        $this->corrected_values = $this->buildCorrectedValues(
+            ['' => $nCorrectionConfidence],
+            $this->position
+        );
+    }
+}
+
+
+
+
+
 class HGVS_ProteinPrefix extends HGVS
 {
     public array $patterns = [
