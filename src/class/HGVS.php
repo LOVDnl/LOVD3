@@ -3829,6 +3829,32 @@ class HGVS_ProteinRef extends HGVS
             $this->setCorrectedValue(strtoupper($this->value[0]) . strtolower(substr($this->value, 1)));
         }
         $this->caseOK = ($this->value == $this->getCorrectedValue());
+
+        if ($this->matched_pattern == 'invalid_long') {
+            // Check if we can predict which one they meant.
+            $aValidCodes = array_flip(explode('|', substr($this->patterns['valid_long'][0], 2, -2)));
+            foreach (array_keys($aValidCodes) as $sCode) {
+                $aValidCodes[$sCode] = similar_text($this->getCorrectedValue(), $sCode);
+            }
+            // Filter the array; only values of 2 will be accepted (3 is full overlap).
+            $aSuggestions = array_filter($aValidCodes, function ($nSimilarity) { return ($nSimilarity >= 2); });
+            $nSuggestions = count($aSuggestions);
+
+            // If we end up with something that at least had two characters overlapping, suggest those.
+            if ($nSuggestions) {
+                // Set the confidence to a proper percentage.
+                $aSuggestions = array_combine(
+                    array_keys($aSuggestions),
+                    array_fill(0, $nSuggestions, (1/$nSuggestions))
+                );
+
+                ksort($aSuggestions);
+                $this->corrected_values = $this->buildCorrectedValues($aSuggestions);
+                $this->messages['WINVALIDAMINOACIDS'] = 'This variant description contains invalid amino acids: "' . $this->value . '".';
+            } else {
+                $this->messages['EINVALIDAMINOACIDS'] = 'This variant description contains invalid amino acids: "' . $this->value . '".';
+            }
+        }
     }
 }
 
