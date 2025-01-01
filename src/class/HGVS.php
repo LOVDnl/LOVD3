@@ -1020,7 +1020,8 @@ class HGVS_DNAAlts extends HGVS
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
-        $this->setCorrectedValue(strtoupper($this->value));
+        $caseCorrection = (get_class($this) == 'HGVS_RNAAlts'? 'strtolower' : 'strtoupper');
+        $this->setCorrectedValue($caseCorrection($this->value));
         $this->caseOK = ($this->value == $this->getCorrectedValue());
 
         // If we had checked the 'valid' rule first, we would not support recognizing invalid nucleotides after valid
@@ -1028,11 +1029,15 @@ class HGVS_DNAAlts extends HGVS
         //  problem, so we're first just matching everything.
 
         // Check for invalid nucleotides.
-        $sUnknownBases = preg_replace($this->patterns['valid'][0], '', $this->getCorrectedValue());
+        $sUnknownBases = preg_replace($this->patterns['valid'][0] . 'i', '', $this->getCorrectedValue());
         if ($sUnknownBases) {
             $this->messages['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
-            // Then, replace the 'U's with 'T's.
-            $this->setCorrectedValue(str_replace('U', 'T', $this->getCorrectedValue()));
+            // Then, replace the 'U's with 'T's or the other way around.
+            if (get_class($this) == 'HGVS_RNAAlts') {
+                $this->setCorrectedValue(str_replace('t', 'u', $this->getCorrectedValue()));
+            } else {
+                $this->setCorrectedValue(str_replace('U', 'T', $this->getCorrectedValue()));
+            }
         }
     }
 }
@@ -3653,6 +3658,18 @@ class HGVS_ReferenceSequence extends HGVS
                 break;
         }
     }
+}
+
+
+
+
+
+class HGVS_RNAAlts extends HGVS_DNAAlts
+{
+    public array $patterns = [
+        'invalid' => [ '/[A-Z]+/', [] ],
+        'valid'   => [ '/[ACGUMRWSYKVHDBN]+/', [] ],
+    ];
 }
 
 
