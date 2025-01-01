@@ -3812,6 +3812,30 @@ class HGVS_ProteinPrefix extends HGVS
 
 
 
+class HGVS_ProteinRef extends HGVS
+{
+    public array $patterns = [
+        'valid_long'   => [ '/(Ala|Cys|Asp|Glu|Phe|Gly|His|Ile|Lys|Leu|Met|Asn|Pro|Gln|Arg|Ser|Thr|Sec|Val|Trp|Xaa|Tyr|Ter)/', [] ],
+        'invalid_long' => [ '/[A-Z][a-z]{2}/', [] ],
+        'valid_short'  => [ '/[AC-IK-NP-Y*]/', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        if ($this->matched_pattern == 'valid_short') {
+            $this->setCorrectedValue(strtoupper($this->value));
+        } else {
+            $this->setCorrectedValue(strtoupper($this->value[0]) . strtolower(substr($this->value, 1)));
+        }
+        $this->caseOK = ($this->value == $this->getCorrectedValue());
+    }
+}
+
+
+
+
+
 class HGVS_Variant extends HGVS
 {
     public array $patterns = [
