@@ -3722,6 +3722,27 @@ class HGVS_RNARefs extends HGVS_DNARefs
 
 
 
+class HGVS_ProteinPosition extends HGVS
+{
+    public array $patterns = [
+        // NOTE: The HGVS nomenclature doesn't state that unknown protein positions can't be used in a description.
+        //       However, the nomenclature doesn't explain how to use it, and therefore, we will not define it.
+        [ 'HGVS_ProteinRef', 'HGVS_ProteinPositionPosition', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        foreach (['position', 'position_sortable', 'position_limits'] as $variable) {
+            $this->$variable = $this->ProteinPositionPosition->$variable;
+        }
+    }
+}
+
+
+
+
+
 class HGVS_ProteinPositionPosition extends HGVS
 {
     public array $patterns = [
