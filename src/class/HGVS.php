@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2024-12-31
+ * Modified    : 2025-01-01
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -3676,7 +3676,7 @@ class HGVS_RNAPrefix extends HGVS
 
         // If we have seen a reference sequence, check if we match that.
         $RefSeq = $this->getParentProperty('ReferenceSequence');
-        if ($RefSeq && $RefSeq->molecule_type != $this->molecule_type) {
+        if ($RefSeq && $RefSeq->molecule_type != $this->molecule_type && $RefSeq->molecule_type != 'genome_transcript') {
             $this->messages['EWRONGREFERENCE'] =
                 'The given reference sequence (' . $RefSeq->getCorrectedValue() . ') does not match the RNA type (' . $this->getCorrectedValue() . ').' .
                 ' For ' . $this->getCorrectedValue() . '. variants, please use a ' . $this->molecule_type . ' reference sequence.';
