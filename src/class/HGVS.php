@@ -839,6 +839,12 @@ class HGVS_DNAAllele extends HGVS
                 ';',
                 $this->DNAAllele->getCorrectedValues()
             );
+
+        } elseif ($this->matched_pattern == 'multiple_cis') {
+            // We don't allow everything in cis. A "null" value (c.0) is not something that can go in cis.
+            if ($this->DNAVariantBody->getInfo()['type'] == '0' || $this->DNAAllele->getInfo()['type'] == '0') {
+                $this->messages['EALLELEINVALIDCIS'] = 'This is not a possible combination of variants in cis. Did you mean to report them in trans?';
+            }
         }
     }
 }
