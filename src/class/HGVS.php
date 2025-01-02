@@ -1621,11 +1621,11 @@ class HGVS_DNANull extends HGVS
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
-        // We're a bit special. We don't allow any input to be left.
+        // We're a bit special. We don't allow input to be left that may be a position.
         // The reason for this is that we don't want to match DNAPositions starting with a zero.
         // However, if we would go last in line, the DNAPositions + DNAUnknown would pick c.0? up.
-        if ($this->suffix !== '') {
-            // There is more left. We're not an actual DNANull.
+        if ($this->suffix !== '' && preg_match('/^[0-9_*+-]/', $this->suffix)) {
+            // There is more left that could be position. We're not an actual DNANull.
             $this->matched = false;
             return;
         }
