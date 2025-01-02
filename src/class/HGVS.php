@@ -796,7 +796,6 @@ class HGVS_DNAAllele extends HGVS
     public array $components = [];
     public array $patterns = [
         'multiple_cis'     => [ 'HGVS_DNAVariantBody', ';', 'HGVS_DNAAllele', [] ],
-        'multiple_unknown' => [ 'HGVS_DNAVariantBody', '(;)', 'HGVS_DNAAllele', [] ],
         'multiple_comma'   => [ 'HGVS_DNAVariantBody', ',', 'HGVS_DNAAllele', [ 'WALLELEFORMAT' => 'The allele syntax uses semicolons (;) to separate variants, not commas.' ] ],
         'single'           => [ 'HGVS_DNAVariantBody', [] ],
     ];
@@ -3009,11 +3008,34 @@ class HGVS_DNAVariantBody extends HGVS
                 $this->DNAAlleleUnknownPhase->getMessages()
             );
             $this->suffix = $this->DNAAlleleUnknownPhase->getSuffix();
-            $this->corrected_values = $this->buildCorrectedValues(
-                $this->getCorrectedValues(),
-                '(;)',
-                $this->DNAAlleleUnknownPhase->getCorrectedValues()
-            );
+
+            // Since we handled the "(;)" here, the allele object will never see it. As such, when (;) is used within
+            //  square brackets, the Allele object will see only one VariantBody. We need to handle that intelligently.
+            // If we're given within an Allele, complain.
+            $Allele = $this->getParent('HGVS_DNAAllele');
+            if ($Allele) {
+                // Unknown phasing shouldn't have used square brackets.
+                $this->messages['WALLELEUNKNOWNPHASING'] = 'For unknown phasing indicated with parentheses around the semicolon, like "(;)", the allele syntax does not use square brackets.';
+                // There are two possible fixes. Either we meant to have unknown phasing but the square brackets
+                //  were the problem, or we meant cis phasing. We are not in the position here to remove square brackets
+                //  as we haven't processed them all yet. So we'll do that later.
+                $this->corrected_values = $this->buildCorrectedValues(
+                    $this->getCorrectedValues(),
+                    [
+                        '(;)' => 0.6, // We'll handle removal of the square brackets later.
+                        ';' => 0.4,
+                    ],
+                    $this->DNAAlleleUnknownPhase->getCorrectedValues()
+                );
+
+            } else {
+                // We're not within an allele, so just append the corrected values.
+                $this->corrected_values = $this->buildCorrectedValues(
+                    $this->getCorrectedValues(),
+                    '(;)',
+                    $this->DNAAlleleUnknownPhase->getCorrectedValues()
+                );
+            }
         }
     }
 }
