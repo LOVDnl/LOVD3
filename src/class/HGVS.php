@@ -1624,7 +1624,7 @@ class HGVS_DNANull extends HGVS
         // We're a bit special. We don't allow any input to be left.
         // The reason for this is that we don't want to match DNAPositions starting with a zero.
         // However, if we would go last in line, the DNAPositions + DNAUnknown would pick c.0? up.
-        if ($this->suffix) {
+        if ($this->suffix !== '') {
             // There is more left. We're not an actual DNANull.
             $this->matched = false;
             return;
@@ -2792,7 +2792,7 @@ class HGVS_DNARepeat extends HGVS
             }
 
             // If there is a suffix, check for sequence without a length. We assume they forgot a "[1]".
-            if ($this->suffix) {
+            if ($this->suffix !== '') {
                 $Suffix = new HGVS_DNAAlts($this->suffix, $this);
                 if ($Suffix && $Suffix->isValid()) {
                     $this->messages['WSUFFIXFORMAT'] =
