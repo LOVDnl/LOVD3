@@ -2944,8 +2944,36 @@ class HGVS_DNAVariantBody extends HGVS
 
             // This syntax should have more than one child.
             if (count($this->DNAAllele->getComponents()) == 1) {
-                $this->messages['WWRONGTYPE'] = 'The allele syntax with square brackets is meant for multiple variants.';
-                $this->corrected_values = $this->DNAAllele->getCorrectedValues();
+                // This could be an error (c.[100A>G]), but it can also happen with (;) used within square brackets.
+                if (!isset($this->DNAAllele->getMessages()['WALLELEUNKNOWNPHASING'])) {
+                    $this->messages['WWRONGTYPE'] = 'The allele syntax with square brackets is meant for multiple variants.';
+                    $this->corrected_values = $this->DNAAllele->getCorrectedValues();
+                } else {
+                    // The VariantBody that found the (;) suggested changing this to ; or leaving it. The suggestion of
+                    //  leaving it should have its square brackets removed, but only if we're not nested.
+                    if ($this->getParent('HGVS_DNAAllele')) {
+                        // We're nested. Remove the suggestion that kept the (;).
+                        foreach (array_keys($this->DNAAllele->getCorrectedValues()) as $sValue) {
+                            if (strpos($sValue, '(;)') !== false) {
+                                unset($this->DNAAllele->corrected_values[$sValue]);
+                            }
+                        }
+
+                    } else {
+                        // Not nested. Update our own corrected values.
+                        $aCorrectedValues = [];
+                        foreach ($this->getCorrectedValues() as $sValue => $nConfidence) {
+                            if (strpos($sValue, '(;)') !== false) {
+                                // Remove the square brackets.
+                                $aCorrectedValues[substr($sValue, 1, -1)] = $nConfidence;
+                            } else {
+                                // Just copy it.
+                                $aCorrectedValues[$sValue] = $nConfidence;
+                            }
+                        }
+                        $this->corrected_values = $aCorrectedValues;
+                    }
+                }
             } else {
                 // OK, set the type to that of the allele syntax.
                 $this->data['type'] = ';';
