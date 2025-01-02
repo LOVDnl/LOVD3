@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2025-01-01
+ * Modified    : 2025-01-02
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2906,6 +2906,8 @@ class HGVS_DNAUnknown extends HGVS
 class HGVS_DNAVariantBody extends HGVS
 {
     public array $patterns = [
+        // NOTE: The allele syntax with unknown phasing ("variant(;)variant") is handled outside of these patterns.
+        //       Otherwise, many patterns will need to be repeated here as we don't support optional patterns (yet).
         'null'                => [ 'HGVS_DNANull', [] ],
         'allele_trans'        => [ '[', 'HGVS_DNAAllele', '];[', 'HGVS_DNAAllele', ']', [] ],
         'allele_cis'          => [ '[', 'HGVS_DNAAllele', ']', [] ],
@@ -2993,6 +2995,25 @@ class HGVS_DNAVariantBody extends HGVS
             $this->messages['IALLWILDTYPE'] =
                 'Using the "=" symbol without providing positions indicates that the entire reference sequence has been sequenced and found not to be changed.' .
                 ' If this is not what was intended, provide the positions that were found not to be changed.';
+        }
+
+        // Special case: handling of unknown phasing of the allele syntax. This doesn't make sense with every variant.
+        // E.g., a Null followed by an unknown phasing allele makes no sense because they can't be in cis.
+        // There is no real guidance on this, but I'm going for a strict set of variants that can have unknown alleles.
+        if (in_array($this->matched_pattern, ['allele_trans', 'allele_cis', 'other'])
+            && strlen($this->suffix) > 3 && substr($this->suffix, 0, 3) == '(;)') {
+            $this->data['type'] = ';';
+            $this->DNAAlleleUnknownPhase = new HGVS_DNAVariantBody(substr($this->suffix, 3), $this);
+            $this->messages = array_merge(
+                $this->messages,
+                $this->DNAAlleleUnknownPhase->getMessages()
+            );
+            $this->suffix = $this->DNAAlleleUnknownPhase->getSuffix();
+            $this->corrected_values = $this->buildCorrectedValues(
+                $this->getCorrectedValues(),
+                '(;)',
+                $this->DNAAlleleUnknownPhase->getCorrectedValues()
+            );
         }
     }
 }
