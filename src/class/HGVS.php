@@ -3066,6 +3066,52 @@ class HGVS_DNAVariantBody extends HGVS
                     );
                 }
             }
+
+        } elseif (!in_array($this->matched_pattern, ['allele_trans', 'allele_cis'])
+            && !$this->getParent('HGVS_DNAAllele')
+            && strlen($this->suffix) > 1 && substr($this->suffix, 0, 1) == ';') {
+            // Allele syntax without square brackets? We're not handling alleles and not in one, but there is a ";".
+            // If so, try to match what's next and predict whether this was cis or trans.
+            $this->DNAAllele = new HGVS_DNAVariantBody(substr($this->suffix, 1), $this);
+            if ($this->DNAAllele->hasMatched()) {
+                // When what we matched is also an allele, then abort, because we don't know how to handle that.
+                if ($this->DNAAllele->getInfo()['type'] == ';') {
+                    // Abort.
+                    return;
+                }
+
+                $this->data['type'] = ';';
+                $this->messages = array_merge(
+                    $this->messages,
+                    $this->DNAAllele->getMessages()
+                );
+                $this->suffix = $this->DNAAllele->getSuffix();
+                $this->messages['WALLELEMISSINGBRACKETS'] = 'The allele syntax uses square brackets to surround alleles.';
+
+                // Assume that trans is always possible.
+                $this->corrected_values = $this->buildCorrectedValues(
+                    [
+                        '[' => 0.6,
+                    ],
+                    $this->getCorrectedValues(),
+                    '];[',
+                    $this->DNAAllele->getCorrectedValues(),
+                    ']'
+                );
+
+                // Cis is only possible for "normal" variants that surely don't overwrite the existing variant.
+                // I have limited power here, so I'll just handle the basic checks and stay conservative.
+                // Allow cis only for something with positions.
+                if ($this->hasProperty('DNAPositions') && $this->DNAAllele->hasProperty('DNAPositions')) {
+                    // Handling multiple fixes (which can happen) is kinda hard, make it simple.
+                    foreach ($this->getCorrectedValues() as $sCorrectedValue => $nConfidence) {
+                        $this->addCorrectedValue(
+                            str_replace('];[', ';', $sCorrectedValue),
+                            ($nConfidence * 2) / 3, // This looks weird, but changes 0.6 into 0.4.
+                        );
+                    }
+                }
+            }
         }
     }
 }
