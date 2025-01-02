@@ -2712,8 +2712,7 @@ class HGVS_DNARepeat extends HGVS
                 $sPrefix = ($Prefix? $Prefix->getCorrectedValue() : 'g');
                 if ($sPrefix == 'c') {
                     foreach ($aRepeatUnits as $Component) {
-                        list($nMinLength, $nMaxLength) = $Component->getLengths();
-                        if ($nMinLength == $nMaxLength && ($nMinLength % 3)) {
+                        if ($Component->hasProperty('DNAAlts') && (strlen($Component->DNAAlts->getCorrectedValue()) % 3)) {
                             // Repeat variants on coding DNA should always have a length of a multiple of three bases.
                             $this->messages['EINVALIDREPEATLENGTH'] =
                                 'A repeat sequence of coding DNA should always have a length of (a multiple of) 3.';
