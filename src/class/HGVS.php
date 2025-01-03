@@ -2319,7 +2319,7 @@ class HGVS_DNAPositions extends HGVS
                 $PositionC = ($this->DNAPositionEnd->range? $this->DNAPositionEnd->DNAPosition[0] : $this->DNAPositionEnd);
                 $PositionD = $this->DNAPositionEnd; // Will anyway be C if D == ?.
 
-                if (!$this->arePositionsSorted($PositionA, $PositionD)) {
+                if (!$this->arePositionsSorted($PositionA, $PositionD) && !in_array($sVariantPrefix, ['m', 'o'])) {
                     $this->messages['WPOSITIONORDER'] = "This variant description contains positions not given in the correct order.";
                     // Due to excessive complexity with ranges and possible solutions and assumptions,
                     //  we'll only swap positions when neither Start nor End is a range.
@@ -2338,7 +2338,7 @@ class HGVS_DNAPositions extends HGVS
                         $nCorrectionConfidence *= 0.8;
                     }
 
-                } elseif (!$this->arePositionsSorted($PositionB, $PositionC)) {
+                } elseif (!$this->arePositionsSorted($PositionB, $PositionC) && !in_array($sVariantPrefix, ['m', 'o'])) {
                     // We can't fix that, so throw an error, not a warning.
                     $this->messages['EPOSITIONFORMAT'] = "This variant description contains positions that overlap but that are not the same.";
 
