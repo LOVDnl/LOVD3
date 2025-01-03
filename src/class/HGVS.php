@@ -1311,10 +1311,18 @@ class HGVS_DNAIns extends HGVS
             } elseif (!$Positions->uncertain && $Positions->getCorrectedValue() != '?_?' && $Positions->getLengths() != [2,2]) {
                 // An insertion must always get two positions which are next to each other,
                 //  since the inserted nucleotides will be placed in the middle of those.
-                $this->messages['WPOSITIONSNOTFORINS'] =
-                    'An insertion must have taken place between two neighboring positions.' .
-                    ' If the exact location is unknown, please indicate this by placing parentheses around the positions.';
-                $Positions->makeUncertain();
+                if (!$Positions->unknown) {
+                    // No unknown positions involved, throw a warning and suggest a fix.
+                    // E.g., c.1_10insA -> c.(1_10)insA.
+                    $this->messages['WPOSITIONSNOTFORINS'] =
+                        'An insertion must have taken place between two neighboring positions.' .
+                        ' If the exact location is unknown, please indicate this by placing parentheses around the positions.';
+                    $Positions->makeUncertain();
+                } else {
+                    // E.g., c.1_?insA; we can't suggest anything here.
+                    $this->messages['EPOSITIONSNOTFORINS'] =
+                        'An insertion must have taken place between two neighboring positions.';
+                }
 
             } elseif ($Positions->uncertain && $Positions->getLengths() == [1,2]) {
                 // If the exact location of an insertion is unknown, this can be indicated
