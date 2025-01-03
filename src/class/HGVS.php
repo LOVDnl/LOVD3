@@ -791,6 +791,27 @@ class HGVS
 
 
 
+class HGVS_Caret extends HGVS
+{
+    public array $patterns = [
+        // NOTE: The HGVS nomenclature hasn't clarified the "or" syntax well. It's likely a "moving target" and needs
+        //        clarification and an improved definition in the HGVS nomenclature. Until then, we won't support it.
+        'anything' => [ '/.*\^.+/', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->data['type'] = '^';
+        $this->messages['ENOTSUPPORTED'] = 'Currently, variant descriptions using "^" are not yet supported. This does not necessarily mean the description is not valid according to the HGVS nomenclature.';
+        $this->setCorrectedValue($this->value);
+    }
+}
+
+
+
+
+
 class HGVS_DNAAllele extends HGVS
 {
     public array $components = [];
@@ -2915,6 +2936,7 @@ class HGVS_DNAVariantBody extends HGVS
         'null'                => [ 'HGVS_DNANull', [] ],
         'allele_trans'        => [ '[', 'HGVS_DNAAllele', '];[', 'HGVS_DNAAllele', ']', [] ],
         'allele_cis'          => [ '[', 'HGVS_DNAAllele', ']', [] ],
+        'or'                  => [ 'HGVS_DNAPositions', 'HGVS_Caret', [] ],
         'somatic'             => [ 'HGVS_DNAPositions', 'HGVS_DNAVariantType', 'HGVS_DNASomaticVariant', [] ],
         'other'               => [ 'HGVS_DNAPositions', 'HGVS_DNAVariantType', [] ],
         'unknown'             => [ 'HGVS_DNAUnknown', [] ],
