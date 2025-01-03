@@ -804,6 +804,15 @@ class HGVS_Caret extends HGVS
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->data['type'] = '^';
         $this->messages['ENOTSUPPORTED'] = 'Currently, variant descriptions using "^" are not yet supported. This does not necessarily mean the description is not valid according to the HGVS nomenclature.';
+
+        // Our tool will still fail when more input is expected. Try to fix that.
+        if (preg_match('/([\])]+)$/', $this->input, $aRegs)) {
+            // Our input ended with a closing bracket or parenthesis. Add them to our suffix.
+            $this->suffix = $aRegs[1];
+            // But then, take it off of our value, as well.
+            $this->value = substr($this->value, 0, -strlen($aRegs[1]));
+        }
+
         $this->setCorrectedValue($this->value);
     }
 }
