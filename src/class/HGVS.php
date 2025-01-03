@@ -1308,7 +1308,7 @@ class HGVS_DNAIns extends HGVS
                 $this->messages['EPOSITIONFORMAT'] =
                     'An insertion must be provided with the two positions between which the insertion has taken place.';
 
-            } elseif (!$Positions->uncertain && $Positions->getLengths() != [2,2]) {
+            } elseif (!$Positions->uncertain && $Positions->getCorrectedValue() != '?_?' && $Positions->getLengths() != [2,2]) {
                 // An insertion must always get two positions which are next to each other,
                 //  since the inserted nucleotides will be placed in the middle of those.
                 $this->messages['WPOSITIONSNOTFORINS'] =
