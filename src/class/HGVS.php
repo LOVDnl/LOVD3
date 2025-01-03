@@ -3580,6 +3580,7 @@ class HGVS_ReferenceSequence extends HGVS
     public array $patterns = [
         'refseq_genomic_coding'       => [ '/(N[CG])([_-])?([0-9]+)(\.[0-9]+)?\(([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?\)/', [] ],
         'refseq_genomic_non-coding'   => [ '/(N[CG])([_-])?([0-9]+)(\.[0-9]+)?\(([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?\)/', [] ],
+        'refseq_genomic_with_gene'    => [ '/(N[CG])([_-]?)([0-9]+)(\.[0-9]+)?\(([A-Z][A-Za-z0-9#@-]*(_v[0-9]+)?)\)/', [] ],
         'refseq_genomic'              => [ '/(N[CG])([_-])?([0-9]+)(\.[0-9]+)?/', [] ],
         'refseq_coding_genomic'       => [ '/([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?\((N[CG])([_-])?([0-9]+)(\.[0-9]+)?\)/', [] ],
         'refseq_coding_with_gene'     => [ '/([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?\(([A-Z][A-Za-z0-9#@-]*(_v[0-9]+)?)\)/', [] ],
@@ -3664,6 +3665,7 @@ class HGVS_ReferenceSequence extends HGVS
                 break;
 
             case 'refseq_genomic':
+            case 'refseq_genomic_with_gene':
                 $this->molecule_type = (strtoupper($this->regex[1]) == 'NC'? 'chromosome' : 'genome');
                 $this->allowed_prefixes = [(strtoupper($this->regex[1]) == 'NC' && in_array((int) $this->regex[3], ['1807', '12920'])? 'm' : 'g')];
                 $this->setCorrectedValue(
@@ -3673,6 +3675,17 @@ class HGVS_ReferenceSequence extends HGVS
                     (!isset($this->regex[4])? '' : '.' . (int) substr($this->regex[4], 1))
                 );
                 $this->caseOK = ($this->value == strtoupper($this->value));
+
+                // Handle the NC(GENE) format, only allowed for the mitochondrial reference sequence.
+                if ($this->matched_pattern == 'refseq_genomic_with_gene' && $this->allowed_prefixes == ['m']) {
+                    // Mitochondrial reference sequence with a gene symbol. Also allow c. and n. prefixes.
+                    $this->molecule_type = 'genome_transcript';
+                    $this->allowed_prefixes[] = 'c';
+                    $this->allowed_prefixes[] = 'n';
+
+                    // Obviously, not all gene symbols are uppercase, but the mitochondrial genes all are.
+                    $this->appendCorrectedValue('(' . strtoupper($this->regex[5]) . ')');
+                }
 
                 if (($this->regex[2] ?? '') != '_') {
                     $this->messages['WREFERENCEFORMAT'] =
@@ -3687,6 +3700,10 @@ class HGVS_ReferenceSequence extends HGVS
                     $this->messages['EREFERENCEFORMAT'] =
                         'The reference sequence ID is missing the required version number.' .
                         ' NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.';
+                } elseif ($this->matched_pattern == 'refseq_genomic_with_gene' && $this->allowed_prefixes == ['g']) {
+                    // Not mitochondrial. The gene has already been removed. We should just complain about it.
+                    // Note that we won't switch to allow c. or n. prefixes.
+                    $this->messages['WREFERENCEFORMAT'] = 'The reference sequence ID should not include a gene symbol.';
                 }
                 break;
 
