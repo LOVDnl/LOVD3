@@ -3698,7 +3698,7 @@ class HGVS_ReferenceSequence extends HGVS
                 // But I don't want to throw an error, either. It could still be valid HGVS nomenclature.
                 $this->messages['WREFERENCENOTSUPPORTED'] =
                     'Currently, variant descriptions using "' . $this->value . '" are not yet supported.' .
-                    ' This does not necessarily mean the description is not valid HGVS.' .
+                    ' This does not necessarily mean the description is not valid according to the HGVS nomenclature.' .
                     ' Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.';
                 break;
 
