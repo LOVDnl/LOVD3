@@ -3925,8 +3925,18 @@ class HGVS_ReferenceSequence extends HGVS
                 if (in_array(strtolower($this->value), ['http', 'https'])) {
                     $this->matched = false;
                     return;
+                } else {
+                    // We also want to be absolutely certain that we are not matching a variant description that has a
+                    //  reference sequence further downstream, like c.100_101insNC_...:...
+                    // We'll check this by tossing in the description in the variant object and see what we get.
+                    $Variant = new HGVS_Variant($this->input);
+                    if ($Variant->hasMatched()) {
+                        // That doesn't mean that it's valid, but it's more likely to be a variant description
+                        //  than a reference sequence, so discard it here.
+                        $this->matched = false;
+                        return;
+                    }
                 }
-
                 break;
         }
     }
