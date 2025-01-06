@@ -1413,7 +1413,8 @@ class HGVS_DNAInsSuffix extends HGVS
             && !$this->getParentProperty('DNADelSuffix')
             && isset($this->DNAAlts)
             && $this->getLengths() == [1,1]) {
-            $this->messages['WWRONGTYPE'] =
+            // Make this an EWRONGTYPE, since I can't fix it without a del suffix.
+            $this->messages['EWRONGTYPE'] =
                 'A deletion-insertion of one base to one base should be described as a substitution.';
         }
 
