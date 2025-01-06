@@ -1381,6 +1381,8 @@ class HGVS_DNAInsSuffix extends HGVS
 {
     use HGVS_DNASequence; // Gets us getSequence() and getLengths().
     public array $patterns = [
+        'positions_with_refseq_inv'        => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAPositions', 'HGVS_DNAInv', [ 'WSUFFIXFORMATISCOMPLEX' => 'Use square brackets for complex insertions.' ] ],
+        'positions_with_refseq'            => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAPositions', [ 'WSUFFIXFORMATISCOMPLEX' => 'Use square brackets for complex insertions.' ] ],
         'complex_in_brackets'              => [ '[', 'HGVS_DNAInsSuffixComplex', ']', [] ],
         'positions_inverted'               => [ 'HGVS_DNAPositions', 'HGVS_DNAInv', [] ],
         'positions'                        => [ 'HGVS_DNAPositions', [] ],
@@ -1416,7 +1418,15 @@ class HGVS_DNAInsSuffix extends HGVS
         }
 
         // Store the corrected value.
-        if (isset($this->DNAPositions)) {
+        if (substr($this->matched_pattern, 0, 21) == 'positions_with_refseq') {
+            // This required square brackets. I threw the warning already.
+            $this->corrected_values = $this->buildCorrectedValues(
+                '[',
+                $this->getCorrectedValues(), // This will use the objects in our pattern.
+                ']'
+            );
+
+        } elseif (isset($this->DNAPositions)) {
             // However, some additional checks are needed.
             // Unknown single positions aren't allowed.
             // Numeric single positions are assumed to be lengths.
