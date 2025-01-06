@@ -3682,7 +3682,7 @@ class HGVS_ReferenceSequence extends HGVS
         'refseq_non-coding'           => [ '/([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
         'refseq_gene_with_coding'     => [ '/(?:[A-Z][A-Za-z0-9#@-]*)\(([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?\)/', [] ],
         'refseq_gene_with_non-coding' => [ '/(?:[A-Z][A-Za-z0-9#@-]*)\(([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?\)/', [] ],
-        'refseq_protein'              => [ '/([NX]P)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
+        'refseq_protein'              => [ '/([NXY]P)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
         'refseq_other'                => [ '/^(N[TW]_([0-9]{6})|[A-Z][0-9]{5}|[A-Z]{2}[0-9]{6})(\.[0-9]+)/', [] ],
         'ensembl_genomic'             => [ '/(ENSG)([_-])?([0-9]+)(\.[0-9]+)?/', [] ],
         'ensembl_transcript'          => [ '/(ENST)([_-])?([0-9]+)(\.[0-9]+)?/', [] ],
