@@ -2956,6 +2956,24 @@ class HGVS_DNASub extends HGVS
 
 
 
+class HGVS_DNASup extends HGVS
+{
+    public array $patterns = [
+        [ '/sup/', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->setCorrectedValue(strtolower($this->value));
+        $this->caseOK = ($this->value == $this->getCorrectedValue());
+    }
+}
+
+
+
+
+
 class HGVS_DNAUnknown extends HGVS
 {
     use HGVS_CheckBasesGiven; // Gives us checkBasesGiven().
@@ -3215,6 +3233,7 @@ class HGVS_DNAVariantType extends HGVS
         'con_with_suffix'     => [ 'HGVS_DNACon', 'HGVS_DNAInsSuffix', [] ],
         'con'                 => [ 'HGVS_DNACon', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
         'cnv'                 => [ 'HGVS_DNACNV', [] ],
+        'sup'                 => [ 'HGVS_DNASup', [] ],
         'repeat'              => [ 'HGVS_DNARepeat', [] ],
         'pipe_with_refs'      => [ 'HGVS_DNARefs', 'HGVS_DNAPipe', 'HGVS_DNAPipeSuffix', [] ],
         'pipe'                => [ 'HGVS_DNAPipe', 'HGVS_DNAPipeSuffix', [] ],
