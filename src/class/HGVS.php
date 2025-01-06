@@ -1804,6 +1804,20 @@ class HGVS_DNAPosition extends HGVS
             $this->position_limits[3] = 0;
 
         } elseif (in_array($this->matched_pattern, ['pter', 'qter'])) {
+            if (!in_array($sVariantPrefix, ['g', 'm'])) {
+                if (isset($VariantPrefix->getMessages()['EPREFIXMISSING']) || isset($VariantPrefix->getMessages()['WPREFIXMISSING'])) {
+                    // Actually the prefix is missing completely. In that case, remove all suggestions that aren't g.
+                    //  and m. and just leave it.
+                    foreach (array_keys($VariantPrefix->corrected_values) as $sPrefix) {
+                        if (!in_array($sPrefix, ['g', 'm'])) {
+                            unset($VariantPrefix->corrected_values[$sPrefix]);
+                        }
+                    }
+                } else {
+                    // There really was a prefix, so complain that they used the wrong one.
+                    $this->messages['EWRONGPREFIX'] = 'Chromosomal positions pter, cen, and qter can only be reported using "g." or "m." genomic prefixes.';
+                }
+            }
             $RefSeq = $this->getParentProperty('ReferenceSequence');
             if ($RefSeq && $RefSeq->molecule_type != 'chromosome') {
                 $this->messages['EWRONGREFERENCE'] =
