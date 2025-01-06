@@ -4559,11 +4559,16 @@ trait HGVS_DNASequence
         $aSequencesMin = [];
         $aSequencesMax = [];
 
-        foreach ($this->patterns[$this->matched_pattern] as $Pattern) {
+        // Copy the patterns to check so we can handle complex insertions. We'll be modifying this array.
+        $aPatternsToCheck = $this->patterns[$this->matched_pattern];
+        // A foreach() won't allow us to modify the array, so use a for() loop.
+        for ($i = 0; isset($aPatternsToCheck[$i]); $i++) {
+            $Pattern = $aPatternsToCheck[$i];
             if (is_object($Pattern)) {
                 if (in_array(get_class($Pattern), ['HGVS_DNARefs', 'HGVS_DNAAlts'])) {
                     $aSequencesMin[] = $Pattern->getCorrectedValue();
                     $aSequencesMax[] = $Pattern->getCorrectedValue();
+
                 } elseif (get_class($Pattern) == 'HGVS_Lengths') {
                     $aLengths = $Pattern->getLengths();
                     $nLastKey = array_key_last($aSequencesMin);
@@ -4576,6 +4581,14 @@ trait HGVS_DNASequence
 
                     $aSequencesMin[$nLastKey] = str_repeat($aSequencesMin[$nLastKey], $aLengths[0]);
                     $aSequencesMax[$nLastKey] = str_repeat($aSequencesMax[$nLastKey], $aLengths[1]);
+
+                } elseif (get_class($Pattern) == 'HGVS_DNAInsSuffixComplex') {
+                    // We do not handle these directly, but we simply add the components to our list.
+                    foreach ($Pattern->getComponents() as $Component) {
+                        foreach ($Component->patterns[$Component->matched_pattern] as $Pattern) {
+                            $aPatternsToCheck[] = $Pattern;
+                        }
+                    }
                 }
             }
             // Other patterns are ignored (strings and the message array).
