@@ -1313,11 +1313,29 @@ class HGVS_DNAIns extends HGVS
                     //  our sent corrected value may disappear. However, this has a side effect.
                     //  It'll change the variant's getInfo() output.
                     $Positions->addPosition('?');
-                    $sCode = 'WPOSITIONMISSING';
                 } else {
-                    $sCode = 'EPOSITIONMISSING';
+                    // Leverage the intelligence of the VCF parser to fix this one. It can handle the positions and
+                    //  create multiple suggestions for this insertion. It's a bit of a hack as we need to isolate the
+                    //  new positions from the given suggestions and then copy those over to $Positions. The great thing
+                    //  is that is supports intronic positions since it uses DNAPosition in the backend.
+                    // We do need the prefix to assess whether -1 can work as a position.
+                    $Prefix = $this->getParentProperty('DNAPrefix');
+                    $VCF = new HGVS_VCFBody($Positions->getCorrectedValue() . ':.:A', $this);
+                    $aCorrections = [];
+                    foreach ($VCF->getCorrectedValues() as $sValue => $nConfidence) {
+                        if ($Prefix && $Prefix->getCorrectedValue() != 'c') {
+                            // A negative position is, if generated, not possible.
+                            if (substr($sValue, 0, 1) == '-') {
+                                continue;
+                            }
+                        }
+                        $aCorrections[substr($sValue, 0, -4)] = $nConfidence;
+                    }
+                    if ($aCorrections) {
+                        $Positions->corrected_values = $aCorrections;
+                    }
                 }
-                $this->messages[$sCode] =
+                $this->messages['WPOSITIONMISSING'] =
                     'An insertion must be provided with the two positions between which the insertion has taken place.';
 
             } elseif ($Positions->DNAPositionStart->range || $Positions->DNAPositionEnd->range) {
