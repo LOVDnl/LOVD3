@@ -2967,6 +2967,29 @@ class HGVS_DNASup extends HGVS
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->setCorrectedValue(strtolower($this->value));
         $this->caseOK = ($this->value == $this->getCorrectedValue());
+        $this->data['type'] = $this->getCorrectedValue();
+
+        // We require genomic positions and chromosomal reference sequences.
+        $Prefix = $this->getParentProperty('DNAPrefix');
+        if ($Prefix && !in_array($Prefix->getCorrectedValue(), ['g', 'm'])) {
+            if (isset($Prefix->getMessages()['EPREFIXMISSING']) || isset($Prefix->getMessages()['WPREFIXMISSING'])) {
+                // Actually the prefix is missing completely. In that case, remove all suggestions that aren't g.
+                //  and m. and just leave it.
+                foreach (array_keys($Prefix->corrected_values) as $sPrefix) {
+                    if (!in_array($sPrefix, ['g', 'm'])) {
+                        unset($Prefix->corrected_values[$sPrefix]);
+                    }
+                }
+            } else {
+                // There really was a prefix, so complain that they used the wrong one.
+                $this->messages['EWRONGPREFIX'] = 'Supernumerary chromosomes can only be reported using "g." or "m." genomic prefixes.';
+            }
+        }
+        $RefSeq = $this->getParentProperty('ReferenceSequence');
+        if ($RefSeq && $RefSeq->molecule_type != 'chromosome') {
+            $this->messages['EWRONGREFERENCE'] =
+                'A chromosomal reference sequence is required to report supernumerary chromosomes.';
+        }
     }
 }
 
@@ -4138,7 +4161,7 @@ class HGVS_Variant extends HGVS
         if ($this->predicted
             || (isset($this->DNAVariantBody->DNAPositions)
                 && ($this->DNAVariantBody->DNAPositions->uncertain || $this->DNAVariantBody->DNAPositions->unknown || $this->DNAVariantBody->DNAPositions->ISCN))
-            || in_array($this->data['type'] ?? '', ['0', '?', ';', 'met', 'repeat'])
+            || in_array($this->data['type'] ?? '', ['0', '?', ';', 'met', 'repeat', 'sup'])
             || $this->DNAVariantBody->getCorrectedValue() == '=') {
             if ($this->caseOK
                 && !array_filter(array_keys($this->messages), function ($sKey) { return in_array($sKey[0], ['E','W']); })) {
