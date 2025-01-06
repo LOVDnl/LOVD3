@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2025-01-03
+ * Modified    : 2025-01-06
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1074,6 +1074,23 @@ class HGVS_DNAAlts extends HGVS
                 $this->setCorrectedValue(str_replace('U', 'T', $this->getCorrectedValue()));
             }
         }
+    }
+}
+
+
+
+
+
+class HGVS_DNACNV extends HGVS
+{
+    public array $patterns = [
+        [ '[', 'HGVS_Lengths', ']', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->data['type'] = 'cnv';
     }
 }
 
@@ -3183,6 +3200,7 @@ class HGVS_DNAVariantType extends HGVS
         'inv'                 => [ 'HGVS_DNAInv', [] ],
         'con_with_suffix'     => [ 'HGVS_DNACon', 'HGVS_DNAInsSuffix', [] ],
         'con'                 => [ 'HGVS_DNACon', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
+        'cnv'                 => [ 'HGVS_DNACNV', [] ],
         'repeat'              => [ 'HGVS_DNARepeat', [] ],
         'pipe_with_refs'      => [ 'HGVS_DNARefs', 'HGVS_DNAPipe', 'HGVS_DNAPipeSuffix', [] ],
         'pipe'                => [ 'HGVS_DNAPipe', 'HGVS_DNAPipeSuffix', [] ],
