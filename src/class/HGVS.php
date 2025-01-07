@@ -3732,6 +3732,8 @@ class HGVS_ReferenceSequence extends HGVS
         'ensembl_transcript'          => [ '/(ENST)([_-])?([0-9]+)(\.[0-9]+)?/', [] ],
         'LRG_transcript'              => [ '/(LRG)([_-]?)([0-9]+)(t)([0-9]+)/', [] ],
         'LRG_genomic'                 => [ '/(LRG)([_-]?)([0-9]+)/', [] ],
+        'build_and_chr'               => [ 'HGVS_Genome', 'HGVS_VCFSeparator', 'HGVS_Chromosome', [] ],
+        'chr'                         => [ 'HGVS_Chromosome', [] ],
         // Because I do actually want to match something so we can validate the variant itself, match anything.
         'other'                       => [ '/[^:;\[\]]{2,}(?=:)/', ['EREFERENCEFORMAT' => 'The reference sequence could not be recognised. Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.'] ],
     ];
@@ -3959,6 +3961,23 @@ class HGVS_ReferenceSequence extends HGVS
                     $this->messages['WREFERENCEFORMAT'] =
                         'LRG reference sequence IDs require an underscore between the prefix and the numeric ID.';
                 }
+                break;
+
+            case 'build_and_chr':
+            case 'chr':
+                // First, make sure we're not just a large number or so. We currently match 123456del, and that's bad.
+                if ($this->suffix !== '' && substr($this->suffix, 0, 1) != ':') {
+                    // Abort.
+                    return 0; // Break out of this pattern only.
+                }
+
+                $this->molecule_type = 'chromosome';
+                $this->allowed_prefixes = [($this->Chromosome->ChromosomeNumber->getCorrectedValue() == 'M'? 'm' : 'g')];
+                $this->messages['WREFSEQMISSING'] = 'You indicated this variant is located on chromosome ' . $this->Chromosome->ChromosomeNumber->getCorrectedValue() .
+                    '. However, the HGVS nomenclature does not include chromosomes in variant descriptions, they are represented by reference sequences.' .
+                    ' Therefore, please provide a reference sequence for this chromosome.';
+                // The build is not needed; the Chromosome object has used it already.
+                $this->corrected_values = $this->Chromosome->getCorrectedValues();
                 break;
 
             case 'other':
