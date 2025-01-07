@@ -2992,7 +2992,7 @@ class HGVS_DNASub extends HGVS
         // "→" seen in NYX_11062472_Pusch-2000.pdf ("1040T→C")
         // Because " " has already been trimmed to "", make pattern optional.
         // Note the "u" modifier to allow for UTF-8 characters.
-        'invalid' => [ '/[®?!.4→]/u', [] ],
+        'invalid' => [ '/[®?!.4→]?/u', [] ],
     ];
 
     public function validate ()
@@ -3001,6 +3001,17 @@ class HGVS_DNASub extends HGVS
         $this->setCorrectedValue('>');
         $this->data['type'] = $this->getCorrectedValue();
         if ($this->matched_pattern == 'invalid') {
+            // A bit of a weird hack. We made our match optional, since we need to match a space. But a fully optional
+            //  match will match always and mess everything up.
+            if (!$this->value) {
+                // Accept this only when the Refs had a suffix with a space.
+                $DNARefs = $this->getParentProperty('DNARefs');
+                if (!$DNARefs || !preg_match('/^\s+/', $DNARefs->getSuffix())) {
+                    // I can't find any whitespace, so likely this is a false positive. Abort.
+                    return false; // Break out of the entire object.
+                }
+            }
+
             $this->messages['WSUBSTFORMAT'] = 'This variant description contains an invalid character, probably because it was copied from a PDF file.';
         }
     }
