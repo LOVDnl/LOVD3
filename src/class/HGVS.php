@@ -2980,6 +2980,7 @@ class HGVS_DNASub extends HGVS
 {
     public array $patterns = [
         'valid'   => [ '>', [] ],
+        'slash'   => [ '/', [] ],
         // Special characters arising from copying variants from PDFs. Some journals decided to use specialized fonts to
         //  create markup for normal characters, such as the ">" in a substitution. This is a terrible idea, as
         //  text-recognition then completely fails and copying the variant from the PDF results in a broken format.
@@ -3000,7 +3001,9 @@ class HGVS_DNASub extends HGVS
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->setCorrectedValue('>');
         $this->data['type'] = $this->getCorrectedValue();
-        if ($this->matched_pattern == 'invalid') {
+        if ($this->matched_pattern == 'slash') {
+            $this->messages['WSUBSTFORMAT'] = 'Substitutions are indicated using the ">" character, not the "/" character.';
+        } elseif ($this->matched_pattern == 'invalid') {
             // A bit of a weird hack. We made our match optional, since we need to match a space. But a fully optional
             //  match will match always and mess everything up.
             if (!$this->value) {
