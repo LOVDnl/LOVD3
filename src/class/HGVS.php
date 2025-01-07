@@ -2979,14 +2979,30 @@ class HGVS_DNASomaticVariant extends HGVS
 class HGVS_DNASub extends HGVS
 {
     public array $patterns = [
-        [ '>', [] ],
+        'valid'   => [ '>', [] ],
+        // Special characters arising from copying variants from PDFs. Some journals decided to use specialized fonts to
+        //  create markup for normal characters, such as the ">" in a substitution. This is a terrible idea, as
+        //  text-recognition then completely fails and copying the variant from the PDF results in a broken format.
+        // " " seen in AIPL1_20702822_Jacobson-2011.pdf ("c.216G A")
+        // "®" seen in CACNA1F_9662399_Strom-1998.pdf ("1106G®A")
+        // "?" seen in CACNA1F_12111638_Wutz-2002.pdf ("220T?C")
+        // "!" seen in CRB1_32351147_Liu-2020.pdf ("C!T")
+        // "." seen in MERTK_19403518_Charbel%20Issa-2009.pdf ("c.2189+1G.T")
+        // "4" seen in MERTK_30851773_Bhatia-2019.pdf ("c.1647T4G")
+        // "→" seen in NYX_11062472_Pusch-2000.pdf ("1040T→C")
+        // Because " " has already been trimmed to "", make pattern optional.
+        // Note the "u" modifier to allow for UTF-8 characters.
+        'invalid' => [ '/[®?!.4→]/u', [] ],
     ];
 
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
-        $this->setCorrectedValue($this->value);
+        $this->setCorrectedValue('>');
         $this->data['type'] = $this->getCorrectedValue();
+        if ($this->matched_pattern == 'invalid') {
+            $this->messages['WSUBSTFORMAT'] = 'This variant description contains an invalid character, probably because it was copied from a PDF file.';
+        }
     }
 }
 
