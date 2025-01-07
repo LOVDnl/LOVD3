@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2025-01-06
+ * Modified    : 2025-01-07
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -223,8 +223,54 @@ class HGVS
                 }
             }
 
-            if (!$bMatching) {
-                // The rule didn't match, unset any properties that we may have set.
+            $this->matched = $bMatching;
+            if ($bMatching) {
+                $this->matched_pattern = $sPatternName;
+                // Permanently store the objects, useful for rebuilding the corrected value later.
+                // Restore the messages just in case.
+                $this->patterns[$sPatternName] = array_merge($aPattern, [$aMessages]);
+
+                if ($sInputToParse !== '') {
+                    // We matched everything, but there is a suffix, something left that didn't match.
+                    // In the main HGVS object, this is a problem. Otherwise, this is what we have to return to the parent.
+                    $this->value = substr($sValue, 0, -strlen($sInputToParse));
+                    $this->suffix = $sInputToParse;
+                    if (!isset($this->parent)) {
+                        // This is the main HGVS class. The variant has a suffix that we didn't identify.
+                        // If this is just whitespace, this is acceptable, we'll just throw a WWHITESPACE.
+                        if (trim($sInputToParse) === '') {
+                            $this->messages['WWHITESPACE'] = 'This variant description contains one or more whitespace characters (spaces, tabs, etc).';
+                        } else {
+                            $this->messages['WINPUTLEFT'] = 'We stopped reading past "' . $this->value . '".';
+                        }
+                    }
+
+                } else {
+                    // Nothing left at all. We're done!
+                    $this->value = $sValue;
+                    $this->suffix = '';
+                }
+
+                // Add the message(s) from this specific rule.
+                $this->messages = array_merge(
+                    $this->messages,
+                    $aMessages
+                );
+
+                // Validate the object further. This may still result in a failure!
+                $b = $this->validate();
+                if ($b === 0) {
+                    // This is a request to just skip this pattern.
+                    $this->matched = false;
+                } elseif ($b === false) {
+                    // This is a request to break this entire object.
+                    $this->matched = false;
+                    break;
+                }
+            }
+
+            if (!$this->matched) {
+                // The rule didn't match, or validate() canceled the match. Unset any properties that we may have set.
                 // Also, when an object is tainted, mark any following objects as well, so they will always be re-run.
                 $bTainted = false;
                 foreach ($this->properties as $sProperty) {
@@ -239,48 +285,13 @@ class HGVS
                 }
                 $this->properties = []; // Reset the array, too.
                 continue;
-            } else {
-                $this->matched_pattern = $sPatternName;
-                // Permanently store the objects, useful for rebuilding the corrected value later.
-                // Restore the messages just in case.
-                $this->patterns[$sPatternName] = array_merge($aPattern, [$aMessages]);
             }
-
-            if ($sInputToParse !== '') {
-                // We matched everything, but there is a suffix, something left that didn't match.
-                // In the main HGVS object, this is a problem. Otherwise, this is what we have to return to the parent.
-                $this->value = substr($sValue, 0, -strlen($sInputToParse));
-                $this->suffix = $sInputToParse;
-                if (!isset($this->parent)) {
-                    // This is the main HGVS class. The variant has a suffix that we didn't identify.
-                    // If this is just whitespace, this is acceptable, we'll just throw a WWHITESPACE.
-                    if (trim($sInputToParse) === '') {
-                        $this->messages['WWHITESPACE'] = 'This variant description contains one or more whitespace characters (spaces, tabs, etc).';
-                    } else {
-                        $this->messages['WINPUTLEFT'] = 'We stopped reading past "' . $this->value . '".';
-                    }
-                }
-
-            } else {
-                // Nothing left at all. We're done!
-                $this->value = $sValue;
-                $this->suffix = '';
-            }
-
-            // Add the message(s) from this specific rule.
-            $this->messages = array_merge(
-                $this->messages,
-                $aMessages
-            );
 
             break;
         }
 
-        // If we have matched, make sure we run additional checks.
-        $this->matched = $bMatching;
-        if ($bMatching) {
-            $this->validate();
-        } else {
+        // If we have not matched, fail completely.
+        if (!$this->matched) {
             $this->messages['EFAIL'] = 'Failed to recognize a HGVS nomenclature-compliant variant description in your input.';
         }
     }
@@ -1716,8 +1727,7 @@ class HGVS_DNANull extends HGVS
         // However, if we would go last in line, the DNAPositions + DNAUnknown would pick c.0? up.
         if ($this->suffix !== '' && preg_match('/^[0-9_*+-]/', $this->suffix)) {
             // There is more left that could be position. We're not an actual DNANull.
-            $this->matched = false;
-            return;
+            return false; // Break out of the entire object.
         }
 
         $this->data['type'] = substr($this->getCorrectedValue(), 0, 1);
@@ -2702,8 +2712,7 @@ class HGVS_DNARefs extends HGVS
             // OK, we can't match this part. We can match anything that came before, though.
             if (!$nReservedWord) {
                 // The string starts with a reserved keyword. Pretend that didn't match anything.
-                $this->matched = false;
-                return;
+                return false; // Break out of the entire object.
             } else {
                 // Register that we matched up to the reserved keyword.
                 $this->suffix = substr($this->value, $nReservedWord) . $this->suffix;
@@ -3934,8 +3943,7 @@ class HGVS_ReferenceSequence extends HGVS
 
                 // Some black listing is needed, though.
                 if (in_array(strtolower($this->value), ['http', 'https'])) {
-                    $this->matched = false;
-                    return;
+                    return 0; // Break out of this pattern only.
                 } else {
                     // We also want to be absolutely certain that we are not matching a variant description that has a
                     //  reference sequence further downstream, like c.100_101insNC_...:...
@@ -3944,8 +3952,7 @@ class HGVS_ReferenceSequence extends HGVS
                     if ($Variant->hasMatched()) {
                         // That doesn't mean that it's valid, but it's more likely to be a variant description
                         //  than a reference sequence, so discard it here.
-                        $this->matched = false;
-                        return;
+                        return false; // Break out of the entire object.
                     }
                 }
                 break;
