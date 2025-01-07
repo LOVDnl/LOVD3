@@ -794,6 +794,17 @@ class HGVS
             if (!$this->caseOK) {
                 $this->messages['WWRONGCASE'] = 'This is not a valid HGVS description, due to characters being in the wrong case.';
             }
+
+            if (get_class($this) == 'HGVS') {
+                // Something we can only do here; handle a missing reference sequence followed by a colon. E.g., ":c.10del".
+                if (isset($this->messages['EREFERENCEFORMAT']) && $this->ReferenceSequence->getCorrectedValue() == '') {
+                    $this->messages['WREFERENCEFORMAT'] = 'A colon was given, but no reference sequence was found.';
+                    unset($this->messages['EREFERENCEFORMAT']);
+                    // A simple, yet effective solution. Simply remove the refseq and the colon from the pattern.
+                    array_shift($this->patterns[$this->matched_pattern]);
+                    array_shift($this->patterns[$this->matched_pattern]);
+                }
+            }
         }
     }
 }
@@ -3765,7 +3776,7 @@ class HGVS_ReferenceSequence extends HGVS
         'build_and_chr'               => [ 'HGVS_Genome', 'HGVS_VCFSeparator', 'HGVS_Chromosome', [] ],
         'chr'                         => [ 'HGVS_Chromosome', [] ],
         // Because I do actually want to match something so we can validate the variant itself, match anything.
-        'other'                       => [ '/[^:;\[\]]{2,}(?=:)/', ['EREFERENCEFORMAT' => 'The reference sequence could not be recognised. Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.'] ],
+        'other'                       => [ '/([^:;\[\]]{2,})?(?=:)/', ['EREFERENCEFORMAT' => 'The reference sequence could not be recognised. Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.'] ],
     ];
 
     public function validate ()
