@@ -3066,6 +3066,7 @@ class HGVS_DNAVariantBody extends HGVS
         'or'                  => [ 'HGVS_DNAPositions', 'HGVS_Caret', [] ],
         'somatic'             => [ 'HGVS_DNAPositions', 'HGVS_DNAVariantType', 'HGVS_DNASomaticVariant', [] ],
         'other'               => [ 'HGVS_DNAPositions', 'HGVS_DNAVariantType', [] ],
+        'protein-like_subst'  => [ 'HGVS_DNARefs', 'HGVS_DNAPositions', 'HGVS_DNAAlts', [ 'WINVALID' => 'This is not a valid HGVS description. Did you mean to write a substitution?' ] ],
         'unknown'             => [ 'HGVS_DNAUnknown', [] ],
         'wildtype'            => [ 'HGVS_DNAWildType', [] ],
     ];
@@ -3170,6 +3171,29 @@ class HGVS_DNAVariantBody extends HGVS
 
                 $this->data['type'] = $this->DNASomaticVariant->DNASomatic->getInfo()['type'];
             }
+        }
+
+        // Handle protein-like substitutions.
+        if ($this->matched_pattern == 'protein-like_subst') {
+            // But consider this a match only if we have a prefix OR when there are no unknown nucleotides.
+            // Also, the REF and ALT should be both just one nucleotide long.
+            $Prefix = $this->getParentProperty('DNAPrefix');
+            if ($this->DNAPositions->range
+                || isset($this->messages['EINVALIDNUCLEOTIDES'])
+                || strlen($this->DNARefs->getCorrectedValue()) > 1
+                || strlen($this->DNAAlts->getCorrectedValue()) > 1) {
+                // Likely a protein description, instead, or something else entirely.
+                return 0; // Break out of this pattern only.
+            }
+
+            // A warning has already been thrown. Just set the corrected value.
+            $this->corrected_values = $this->buildCorrectedValues(
+                $this->DNAPositions->getCorrectedValues(),
+                $this->DNARefs->getCorrectedValues(),
+                '>',
+                $this->DNAAlts->getCorrectedValues(),
+            );
+            $this->data['type'] = '>';
         }
 
         if ($this->matched_pattern == 'wildtype') {
