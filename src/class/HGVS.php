@@ -3755,14 +3755,14 @@ class HGVS_Lengths extends HGVS
 class HGVS_ReferenceSequence extends HGVS
 {
     public array $patterns = [
-        'refseq_genomic_coding'       => [ '/(N[CG])([_-])?([0-9]+)(\.[0-9]+)?[({]([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', [] ],
-        'refseq_genomic_non-coding'   => [ '/(N[CG])([_-])?([0-9]+)(\.[0-9]+)?[({]([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', [] ],
+        'refseq_genomic_coding'       => [ '/(N[CG])([_-]?)([0-9]+)(\.[0-9]+)?[({]([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', [] ],
+        'refseq_genomic_non-coding'   => [ '/(N[CG])([_-]?)([0-9]+)(\.[0-9]+)?[({]([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', [] ],
         'refseq_genomic_with_gene'    => [ '/(N[CG])([_-]?)([0-9]+)(\.[0-9]+)?[({]([A-Z][A-Za-z0-9#@-]*(_v[0-9]+)?)[)}]/', [] ],
-        'refseq_genomic'              => [ '/(N[CG])([_-])?([0-9]+)(\.[0-9]+)?/', [] ],
-        'refseq_coding_genomic'       => [ '/([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?[({](N[CG])([_-])?([0-9]+)(\.[0-9]+)?[)}]/', [] ],
+        'refseq_genomic'              => [ '/(N[CG])([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
+        'refseq_coding_genomic'       => [ '/([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?[({](N[CG])([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', [] ],
         'refseq_coding_with_gene'     => [ '/([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?[({]([A-Z][A-Za-z0-9#@-]*(_v[0-9]+)?)[)}]/', [] ],
         'refseq_coding'               => [ '/([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
-        'refseq_non-coding_genomic'   => [ '/([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?[({](N[CG])([_-])?([0-9]+)(\.[0-9]+)?[)}]/', [] ],
+        'refseq_non-coding_genomic'   => [ '/([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?[({](N[CG])([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', [] ],
         'refseq_non-coding_with_gene' => [ '/([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?[({]([A-Z][A-Za-z0-9#@-]*(_v[0-9]+)?)[)}]/', [] ],
         'refseq_non-coding'           => [ '/([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
         'refseq_gene_with_genomic'    => [ '/([A-Z][A-Za-z0-9#@-]*)[({](N[CG])([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', [] ],
@@ -3770,8 +3770,8 @@ class HGVS_ReferenceSequence extends HGVS
         'refseq_gene_with_non-coding' => [ '/(?:[A-Z][A-Za-z0-9#@-]*)[({]([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', [] ],
         'refseq_protein'              => [ '/([NXY]P)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
         'refseq_other'                => [ '/^(N[TW]_([0-9]{6})|[A-Z][0-9]{5}|[A-Z]{2}[0-9]{6})(\.[0-9]+)/', [] ],
-        'ensembl_genomic'             => [ '/(ENSG)([_-])?([0-9]+)(\.[0-9]+)?/', [] ],
-        'ensembl_transcript'          => [ '/(ENST)([_-])?([0-9]+)(\.[0-9]+)?/', [] ],
+        'ensembl_genomic'             => [ '/(ENSG)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
+        'ensembl_transcript'          => [ '/(ENST)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
         'LRG_transcript'              => [ '/(LRG)([_-]?)([0-9]+)(t)([0-9]+)/', [] ],
         'LRG_genomic'                 => [ '/(LRG)([_-]?)([0-9]+)/', [] ],
         'build_and_chr'               => [ 'HGVS_Genome', 'HGVS_VCFSeparator', 'HGVS_Chromosome', [] ],
@@ -3822,7 +3822,7 @@ class HGVS_ReferenceSequence extends HGVS
                 );
                 $this->caseOK = ($this->value == strtoupper($this->value));
 
-                if (($this->regex[2] ?? '') != '_' || ($this->regex[6] ?? '') != '_') {
+                if ($this->regex[2] != '_' || $this->regex[6] != '_') {
                     $this->messages['WREFERENCEFORMAT'] =
                         'NCBI reference sequence IDs require an underscore between the prefix and the numeric ID.';
                 } elseif (strlen((int) $this->regex[3]) > 6) {
@@ -3881,7 +3881,7 @@ class HGVS_ReferenceSequence extends HGVS
                     $this->appendCorrectedValue('(' . strtoupper($this->regex[5]) . ')');
                 }
 
-                if (($this->regex[2] ?? '') != '_') {
+                if ($this->regex[2] != '_') {
                     $this->messages['WREFERENCEFORMAT'] =
                         'NCBI reference sequence IDs require an underscore between the prefix and the numeric ID.';
                 } elseif (strlen((int) $this->regex[3]) > 6) {
@@ -3921,7 +3921,7 @@ class HGVS_ReferenceSequence extends HGVS
                 );
                 $this->caseOK = ($this->regex[1] == strtoupper($this->regex[1]));
 
-                if (($this->regex[2] ?? '') != '_') {
+                if ($this->regex[2] != '_') {
                     $this->messages['WREFERENCEFORMAT'] =
                         'NCBI reference sequence IDs require an underscore between the prefix and the numeric ID.';
                 } elseif (strlen((int) $this->regex[3]) > 9) {
@@ -3974,7 +3974,7 @@ class HGVS_ReferenceSequence extends HGVS
                 );
                 $this->caseOK = ($this->value == strtoupper($this->value));
 
-                if (!empty($this->regex[2])) {
+                if ($this->regex[2]) {
                     $this->messages['WREFERENCEFORMAT'] =
                         'Ensembl reference sequence IDs don\'t allow a divider between the prefix and the numeric ID.';
                 } elseif (strlen((int) $this->regex[3]) > 11) {
@@ -4003,7 +4003,7 @@ class HGVS_ReferenceSequence extends HGVS
                 $this->caseOK = ($this->regex[1] == strtoupper($this->regex[1])
                     && $this->regex[4] == strtolower($this->regex[4]));
 
-                if (($this->regex[2] ?? '') != '_') {
+                if ($this->regex[2] != '_') {
                     $this->messages['WREFERENCEFORMAT'] =
                         'LRG reference sequence IDs require an underscore between the prefix and the numeric ID.';
                 }
@@ -4019,7 +4019,7 @@ class HGVS_ReferenceSequence extends HGVS
                 );
                 $this->caseOK = ($this->regex[1] == strtoupper($this->regex[1]));
 
-                if (($this->regex[2] ?? '') != '_') {
+                if ($this->regex[2] != '_') {
                     $this->messages['WREFERENCEFORMAT'] =
                         'LRG reference sequence IDs require an underscore between the prefix and the numeric ID.';
                 }
