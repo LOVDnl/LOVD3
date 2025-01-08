@@ -3755,19 +3755,19 @@ class HGVS_Lengths extends HGVS
 class HGVS_ReferenceSequence extends HGVS
 {
     public array $patterns = [
-        'refseq_genomic_coding'       => [ '/(N[CG])([_-])?([0-9]+)(\.[0-9]+)?\(([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?\)/', [] ],
-        'refseq_genomic_non-coding'   => [ '/(N[CG])([_-])?([0-9]+)(\.[0-9]+)?\(([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?\)/', [] ],
-        'refseq_genomic_with_gene'    => [ '/(N[CG])([_-]?)([0-9]+)(\.[0-9]+)?\(([A-Z][A-Za-z0-9#@-]*(_v[0-9]+)?)\)/', [] ],
+        'refseq_genomic_coding'       => [ '/(N[CG])([_-])?([0-9]+)(\.[0-9]+)?[({]([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', [] ],
+        'refseq_genomic_non-coding'   => [ '/(N[CG])([_-])?([0-9]+)(\.[0-9]+)?[({]([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', [] ],
+        'refseq_genomic_with_gene'    => [ '/(N[CG])([_-]?)([0-9]+)(\.[0-9]+)?[({]([A-Z][A-Za-z0-9#@-]*(_v[0-9]+)?)[)}]/', [] ],
         'refseq_genomic'              => [ '/(N[CG])([_-])?([0-9]+)(\.[0-9]+)?/', [] ],
-        'refseq_coding_genomic'       => [ '/([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?\((N[CG])([_-])?([0-9]+)(\.[0-9]+)?\)/', [] ],
-        'refseq_coding_with_gene'     => [ '/([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?\(([A-Z][A-Za-z0-9#@-]*(_v[0-9]+)?)\)/', [] ],
+        'refseq_coding_genomic'       => [ '/([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?[({](N[CG])([_-])?([0-9]+)(\.[0-9]+)?[)}]/', [] ],
+        'refseq_coding_with_gene'     => [ '/([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?[({]([A-Z][A-Za-z0-9#@-]*(_v[0-9]+)?)[)}]/', [] ],
         'refseq_coding'               => [ '/([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
-        'refseq_non-coding_genomic'   => [ '/([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?\((N[CG])([_-])?([0-9]+)(\.[0-9]+)?\)/', [] ],
-        'refseq_non-coding_with_gene' => [ '/([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?\(([A-Z][A-Za-z0-9#@-]*(_v[0-9]+)?)\)/', [] ],
+        'refseq_non-coding_genomic'   => [ '/([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?[({](N[CG])([_-])?([0-9]+)(\.[0-9]+)?[)}]/', [] ],
+        'refseq_non-coding_with_gene' => [ '/([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?[({]([A-Z][A-Za-z0-9#@-]*(_v[0-9]+)?)[)}]/', [] ],
         'refseq_non-coding'           => [ '/([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
-        'refseq_gene_with_genomic'    => [ '/([A-Z][A-Za-z0-9#@-]*)\((N[CG])([_-]?)([0-9]+)(\.[0-9]+)?\)/', [] ],
-        'refseq_gene_with_coding'     => [ '/(?:[A-Z][A-Za-z0-9#@-]*)\(([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?\)/', [] ],
-        'refseq_gene_with_non-coding' => [ '/(?:[A-Z][A-Za-z0-9#@-]*)\(([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?\)/', [] ],
+        'refseq_gene_with_genomic'    => [ '/([A-Z][A-Za-z0-9#@-]*)[({](N[CG])([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', [] ],
+        'refseq_gene_with_coding'     => [ '/(?:[A-Z][A-Za-z0-9#@-]*)[({]([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', [] ],
+        'refseq_gene_with_non-coding' => [ '/(?:[A-Z][A-Za-z0-9#@-]*)[({]([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', [] ],
         'refseq_protein'              => [ '/([NXY]P)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
         'refseq_other'                => [ '/^(N[TW]_([0-9]{6})|[A-Z][0-9]{5}|[A-Z]{2}[0-9]{6})(\.[0-9]+)/', [] ],
         'ensembl_genomic'             => [ '/(ENSG)([_-])?([0-9]+)(\.[0-9]+)?/', [] ],
@@ -3841,6 +3841,10 @@ class HGVS_ReferenceSequence extends HGVS
                     $this->messages['EREFERENCEFORMAT'] =
                         'The reference sequence ID is missing the required version number.' .
                         ' NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.';
+                } elseif (!isset($this->messages['WREFERENCEFORMAT']) && $this->caseOK
+                    && $this->value != $this->getCorrectedValue()) {
+                    // Something else was wrong.
+                    $this->messages['WREFERENCEFORMAT'] = 'The reference sequence is formatted incorrectly.';
                 }
                 break;
 
@@ -3894,6 +3898,9 @@ class HGVS_ReferenceSequence extends HGVS
                     // Not mitochondrial. The gene has already been removed. We should just complain about it.
                     // Note that we won't switch to allow c. or n. prefixes.
                     $this->messages['WREFERENCEFORMAT'] = 'The reference sequence ID should not include a gene symbol.';
+                } elseif ($this->caseOK && $this->value != $this->getCorrectedValue()) {
+                    // Something else was wrong.
+                    $this->messages['WREFERENCEFORMAT'] = 'The reference sequence is formatted incorrectly.';
                 }
                 break;
 
@@ -3930,6 +3937,9 @@ class HGVS_ReferenceSequence extends HGVS
                 } elseif (!in_array($this->matched_pattern, ['refseq_coding', 'refseq_non-coding', 'refseq_protein'])) {
                     $this->messages['WREFERENCEFORMAT'] =
                         'The reference sequence ID should not include a gene symbol.';
+                } elseif ($this->caseOK && $this->value != $this->getCorrectedValue()) {
+                    // Something else was wrong.
+                    $this->messages['WREFERENCEFORMAT'] = 'The reference sequence is formatted incorrectly.';
                 }
                 break;
 
