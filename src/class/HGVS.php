@@ -4518,6 +4518,12 @@ class HGVS_VCFBody extends HGVS
             return false; // Break out of the entire object.
         }
 
+        // Also, the VCF separators need to be the same. We're getting too many false positives, otherwise.
+        if ($this->VCFSeparator[0]->getValue() != $this->VCFSeparator[1]->getValue()) {
+            // Likely something else.
+            return false; // Break out of the entire object.
+        }
+
         // Loop through the REF and ALT to isolate where they are different.
         // Recognize deletions, insertions, duplications, and more.
         // (ANNOVAR does something else than most other VCF generators)
