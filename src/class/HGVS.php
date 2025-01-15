@@ -1112,7 +1112,17 @@ class HGVS_DNACNV extends HGVS
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
-        $this->data['type'] = 'cnv';
+
+        if (!$this->Lengths->getCorrectedValue()) {
+            // The length was 1, and this has been corrected away.
+            // Here, we interpret this as a WT variant.
+            $this->data['type'] = '=';
+            $this->messages['WWRONGTYPE'] = 'Did you mean to describe an unchanged sequence?';
+            $this->setCorrectedValue('=');
+
+        } else {
+            $this->data['type'] = 'cnv';
+        }
     }
 }
 
