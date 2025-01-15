@@ -4510,6 +4510,14 @@ class HGVS_VCFBody extends HGVS
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
 
+        // Since the VCF format is very loose already (any number followed by two words will match), we have to be a bit
+        //  strict here. We don't want to have false positives when scanning text, which will happen if we match text
+        //  like "30 patients with". Simply refuse to match with EINVALIDNUCLEOTIDES.
+        if (isset($this->messages['EINVALIDNUCLEOTIDES'])) {
+            // This is more likely something else. Bail out.
+            return false; // Break out of the entire object.
+        }
+
         // Loop through the REF and ALT to isolate where they are different.
         // Recognize deletions, insertions, duplications, and more.
         // (ANNOVAR does something else than most other VCF generators)
