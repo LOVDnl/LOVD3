@@ -3424,6 +3424,14 @@ class HGVS_DNAVariantType extends HGVS
                 return 0; // Break out of this pattern only.
             }
 
+            // Have "2 A C" sent to the VCF code, instead of having it handled here.
+            // We'll have WWHITESPACE and WSUBSTFORMAT, while I rather have a WVCF.
+            // Therefore, bail out when the variant body already has a WWHITESPACE and when DNASub is a whitespace.
+            if (!$this->DNASub->getValue() && $this->getParent('HGVS_DNAVariantBody') && isset($this->getParent('HGVS_DNAVariantBody')->getMessages()['WWHITESPACE'])) {
+                // Let the VCF handle this.
+                return false; // Break out of the entire object.
+            }
+
             if ($this->matched_pattern == 'substitution') {
                 $sREF = $this->DNARefs->getCorrectedValue();
                 $sALT = $this->DNAAlts->getCorrectedValue();
