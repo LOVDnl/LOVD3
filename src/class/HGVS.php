@@ -3414,6 +3414,16 @@ class HGVS_DNAVariantType extends HGVS
         // Substitutions deserve some additional attention.
         // Since this is the only class where we'll have all the data, all substitution checks need to be done here.
         if (in_array($this->matched_pattern, ['substitution', 'substitution_VCF'])) {
+            // First, if our DNASub was not actually a '>', we require DNARefs and DNAAlts to have valid nucleotides.
+            // Since the VCF format is very loose already (any number followed by two words will match), we have to be a
+            //  bit strict here. We don't want to have false positives when scanning text, which will happen if we match
+            //  text like "30 patients with". Simply refuse to match with EINVALIDNUCLEOTIDES.
+            if ($this->DNASub->getValue() != '>'
+                && (isset($this->messages['EINVALIDNUCLEOTIDES']) || $this->matched_pattern == 'substitution_VCF')) {
+                // This is more likely something else. Bail out.
+                return 0; // Break out of this pattern only.
+            }
+
             if ($this->matched_pattern == 'substitution') {
                 $sREF = $this->DNARefs->getCorrectedValue();
                 $sALT = $this->DNAAlts->getCorrectedValue();
