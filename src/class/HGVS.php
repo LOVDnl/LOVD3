@@ -1151,6 +1151,21 @@ class HGVS_DNACon extends HGVS
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
+
+        // Before we handle this nicely as a delins, double-check for a false negative.
+        // When this library is used for text-mining, we'll match on things like "14 controls". That's not acceptable.
+        // Check for a combination of things that suggest we're not trying to report a conversion here.
+        $Positions = $this->getParentProperty('DNAPositions');
+        $aContraIndications = [
+            (int) ($Positions && !$Positions->range),
+            (int) ($this->parent && isset($this->parent->getMessages()['WWHITESPACE'])),
+            (int) ($this->suffix && preg_match('/^[A-Z]+\b/i', $this->suffix)) // matches "conflict" but not "NC_...".
+        ];
+        // When 2 out of 3 contraindications are true, bail out.
+        if (array_sum($aContraIndications) > 1) {
+            return false; // Break out of the entire object.
+        }
+
         $this->setCorrectedValue('delins');
         $this->data['type'] = $this->getCorrectedValue();
         $this->messages['WWRONGTYPE'] = 'A conversion should be described as a deletion-insertion.';
