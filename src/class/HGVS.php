@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2025-01-08
+ * Modified    : 2025-01-15
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -908,14 +908,14 @@ class HGVS_DNAAllele extends HGVS
 class HGVS_Chr extends HGVS
 {
     public array $patterns = [
-        [ '/chr/', [] ],
+        [ '/chr(omosome)?/', [] ],
     ];
 
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
-        $this->setCorrectedValue(strtolower($this->value));
-        $this->caseOK = ($this->value == $this->getCorrectedValue());
+        $this->setCorrectedValue('chr');
+        $this->caseOK = ($this->value == strtolower($this->value));
     }
 }
 
