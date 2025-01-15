@@ -3606,7 +3606,7 @@ class HGVS_Dot extends HGVS
 {
     public array $patterns = [
         'something' => [ '/[:.,]+/', [] ],
-        'nothing'   => [ '/(?=[(A-Z0-9*-])/', [] ],
+        'nothing'   => [ '/(?=[[(A-Z0-9*-])/', [] ],
     ];
 
     public function validate ()
