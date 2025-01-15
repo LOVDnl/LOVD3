@@ -1113,7 +1113,19 @@ class HGVS_DNACNV extends HGVS
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
 
-        if (!$this->Lengths->getCorrectedValue()) {
+        // At least two positions are required. With only one position, it's very old repeat syntax.
+        $Prefix = ($this->getParentProperty('DNAPrefix') ?: $this->getParentProperty('RNAPrefix'));
+        $Positions = $this->getParentProperty('DNAPositions');
+        if ($Positions && !$Positions->range) {
+            // This is very old repeat syntax. Actually, with a range, it is too,
+            //  but we can't really tell the difference (except for the variant length, I guess).
+            // Anyway, this, for sure, is wrong.
+            $this->data['type'] = 'repeat';
+            $this->messages['EBASESMISSING'] = 'This repeat syntax is no longer supported; the positions should span the entire repeat sequence, and the sequence of the repeat should be given, e.g., c.6955_6993CAG[26].';
+            // Make sure no corrections are made. We also get here with, e.g., "100[1]" and we don't want that changed.
+            $this->setCorrectedValue($this->value);
+
+        } elseif (!$this->Lengths->getCorrectedValue()) {
             // The length was 1, and this has been corrected away.
             // Here, we interpret this as a WT variant.
             $this->data['type'] = '=';
