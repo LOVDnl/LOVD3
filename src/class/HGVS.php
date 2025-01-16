@@ -4406,10 +4406,12 @@ class HGVS_VariantIdentifier extends HGVS
             'range'          => false,
             'type'           => 'identifier',
         ];
+        // Increase the confidence when we have no suffix, to counteract the EINVALID.
+        $nConfidence = ($this->suffix === ''? 10 : 1);
         if (substr($this->matched_pattern, 0, 7) == 'ClinVar') {
-            $this->setCorrectedValue(strtoupper($this->value));
+            $this->setCorrectedValue(strtoupper($this->value), $nConfidence);
         } else {
-            $this->setCorrectedValue(strtolower($this->value));
+            $this->setCorrectedValue(strtolower($this->value), $nConfidence);
         }
         $this->caseOK = ($this->value == $this->getCorrectedValue());
         $this->messages['EINVALID'] = 'This is not a valid HGVS description; it looks like a ' .
