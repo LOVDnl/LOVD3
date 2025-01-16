@@ -3846,6 +3846,7 @@ class HGVS_ReferenceSequence extends HGVS
         'LRG_transcript'              => [ '/(LRG)([_-]?)([0-9]+)([({[]?)(t)([0-9]+)([)}\]]?)/', [] ],
         'LRG_genomic'                 => [ '/(LRG)([_-]?)([0-9]+)/', [] ],
         'build_and_chr'               => [ 'HGVS_Genome', 'HGVS_VCFSeparator', 'HGVS_Chromosome', [] ],
+        'build(chr)'                  => [ 'HGVS_Genome', '(', 'HGVS_Chromosome', ')', [] ],
         'chr'                         => [ 'HGVS_Chromosome', [] ],
         // Because I do actually want to match something so we can validate the variant itself, match anything.
         'other'                       => [ '/([^:;\[\]]{2,})?(?=:)/', ['EREFERENCEFORMAT' => 'The reference sequence could not be recognised. Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.'] ],
@@ -4100,6 +4101,7 @@ class HGVS_ReferenceSequence extends HGVS
                 break;
 
             case 'build_and_chr':
+            case 'build(chr)':
             case 'chr':
                 $this->molecule_type = 'chromosome';
                 $this->allowed_prefixes = [($this->Chromosome->ChromosomeNumber->getCorrectedValue() == 'M'? 'm' : 'g')];
