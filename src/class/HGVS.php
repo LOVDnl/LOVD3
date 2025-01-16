@@ -357,6 +357,12 @@ class HGVS
     public function appendCorrectedValue ($sValue, $nConfidence = 1)
     {
         // Append to any existing corrected value(s), using the given confidence.
+
+        // If there aren't any corrected values yet, generate them first.
+        if (!$this->corrected_values) {
+            $this->getCorrectedValues();
+        }
+
         $this->corrected_values = $this->buildCorrectedValues($this->corrected_values, [$sValue => $nConfidence]);
 
         return true;
