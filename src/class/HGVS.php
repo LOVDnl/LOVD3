@@ -49,6 +49,7 @@ class HGVS
         'VCF'                => [ 'HGVS_VCF', ['WVCF' => 'Recognized a VCF-like format; converting this format to HGVS nomenclature.'] ],
         'reference_sequence' => [ 'HGVS_ReferenceSequence', [] ],
         'genome_build'       => [ 'HGVS_Genome', [] ],
+        'variant_identifier' => [ 'HGVS_VariantIdentifier', [] ],
     ];
     public array $corrected_values = [];
     public array $data = [];
@@ -4380,6 +4381,39 @@ class HGVS_Variant extends HGVS
                 $this->messages['WNOTSUPPORTED'] .= ' Please submit your variants separately.';
             }
         }
+    }
+}
+
+
+
+
+
+class HGVS_VariantIdentifier extends HGVS
+{
+    public array $patterns = [
+        'dbSNP'              => [ '/rs[0-9]+/', [] ],
+        'ClinVar_reference'  => [ '/RCV[0-9]+(\.[0-9]+)?/', [] ],
+        'ClinVar_submission' => [ '/SCV[0-9]+(\.[0-9]+)?/', [] ],
+        'ClinVar_variation'  => [ '/VCV[0-9]+(\.[0-9]+)?/', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->data = [
+            'position_start' => 0,
+            'position_end'   => 0,
+            'range'          => false,
+            'type'           => 'identifier',
+        ];
+        if (substr($this->matched_pattern, 0, 7) == 'ClinVar') {
+            $this->setCorrectedValue(strtoupper($this->value));
+        } else {
+            $this->setCorrectedValue(strtolower($this->value));
+        }
+        $this->caseOK = ($this->value == $this->getCorrectedValue());
+        $this->messages['EINVALID'] = 'This is not a valid HGVS description; it looks like a ' .
+            str_replace('_', ' ', $this->matched_pattern) . ' identifier. Please provide a variant description following the HGVS nomenclature.';
     }
 }
 
