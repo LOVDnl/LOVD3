@@ -4101,12 +4101,6 @@ class HGVS_ReferenceSequence extends HGVS
 
             case 'build_and_chr':
             case 'chr':
-                // First, make sure we're not just a large number or so. We currently match 123456del, and that's bad.
-                if ($this->suffix !== '' && substr($this->suffix, 0, 1) != ':') {
-                    // Abort.
-                    return 0; // Break out of this pattern only.
-                }
-
                 $this->molecule_type = 'chromosome';
                 $this->allowed_prefixes = [($this->Chromosome->ChromosomeNumber->getCorrectedValue() == 'M'? 'm' : 'g')];
                 $this->messages['WREFSEQMISSING'] = 'You indicated this variant is located on chromosome ' . $this->Chromosome->ChromosomeNumber->getCorrectedValue() .
