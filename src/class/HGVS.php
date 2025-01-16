@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2025-01-15
+ * Modified    : 2025-01-16
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -3274,6 +3274,25 @@ class HGVS_DNAVariantBody extends HGVS
             $this->data['type'] = '>';
         }
 
+        // Another check: for variants like c.(100)A>G, we're not sure whether we mean c.100A>G or perhaps c.(100A>G).
+        if ($this->hasProperty('DNAPositions') && isset($this->DNAPositions->messages['WTOOMANYPARENS'])
+            && !$this->DNAPositions->range
+            && (!$this->getParent('HGVS_Variant') || $this->getParent('HGVS_Variant')->current_pattern != 'DNA_predicted')) {
+            // Reduce the current prediction(s) with 50%.
+            $this->corrected_values = $this->buildCorrectedValues(
+                ['' => 0.5],
+                $this->getCorrectedValues()
+            );
+            // Then add the c.(100A>G) suggestion. It's easier to build it manually.
+            foreach ($this->buildCorrectedValues(
+                '(',
+                $this->getCorrectedValues(),
+                ')'
+            ) as $sCorrectedValue => $nConfidence) {
+                $this->addCorrectedValue($sCorrectedValue, $nConfidence);
+            }
+        }
+
         if ($this->matched_pattern == 'wildtype') {
             $this->messages['IALLWILDTYPE'] =
                 'Using the "=" symbol without providing positions indicates that the entire reference sequence has been sequenced and found not to be changed.' .
@@ -3523,24 +3542,6 @@ class HGVS_DNAVariantType extends HGVS
                     ['' => $nCorrectionConfidence],
                     $this->VCF->getCorrectedValues()
                 );
-                // Another check: for variants like c.(100)A>G, we're not sure whether we mean c.100A>G or perhaps c.(100A>G).
-                if (isset($Positions->messages['WTOOMANYPARENS']) && !$Positions->range
-                    && (!$this->getParent('HGVS_Variant') || $this->getParent('HGVS_Variant')->current_pattern != 'DNA_predicted')) {
-                    // Reduce the current prediction(s) with 50%.
-                    $this->parent->corrected_values = $this->buildCorrectedValues(
-                        ['' => 0.5],
-                        $this->parent->getCorrectedValues()
-                    );
-                    // Then add the c.(100A>G) suggestion. It's easier to build it manually.
-                    foreach ($this->buildCorrectedValues(
-                        ['' => $nCorrectionConfidence * 0.5],
-                        '(',
-                        $this->VCF->getCorrectedValues(),
-                        ')'
-                    ) as $sCorrectedValue => $nConfidence) {
-                        $this->parent->addCorrectedValue($sCorrectedValue, $nConfidence);
-                    }
-                }
             }
         }
 
