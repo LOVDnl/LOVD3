@@ -1043,7 +1043,7 @@ class HGVS_Chromosome extends HGVS
 class HGVS_ChromosomeNumber extends HGVS
 {
     public array $patterns = [
-        'number' => [ '/[0-9]{1,2}/', [] ],
+        'number' => [ '/[0-9]{1,2}(?![0-9])/', [] ],
         'X'      => [ '/X/', [] ],
         'Y'      => [ '/Y/', [] ],
         'M'      => [ '/M/', [] ],
