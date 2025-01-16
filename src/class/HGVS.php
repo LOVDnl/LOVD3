@@ -1857,8 +1857,8 @@ class HGVS_DNAPosition extends HGVS
 {
     public array $patterns = [
         'unknown'          => [ '?', [] ],
-        'unknown_intronic' => [ '/([-‐*]?([0-9]+))([+‐-]\?)/u', [] ],
-        'known'            => [ '/([-‐*]?([0-9]+))([+‐-]([0-9]+))?/u', [] ], // Note: We're using these sub patterns in the validation.
+        'unknown_intronic' => [ '/([-‐*]?([0-9,]+))([+‐-]\?)/u', [] ],
+        'known'            => [ '/([-‐*]?([0-9,]+))([+‐-]([0-9,]+))?/u', [] ],
         'pter'             => [ '/pter/', [] ],
         'qter'             => [ '/qter/', [] ],
     ];
@@ -1936,6 +1936,14 @@ class HGVS_DNAPosition extends HGVS
                     $sValue = str_replace('‐', '-', $sValue);
                 });
                 $this->messages['WPOSITIONFORMAT'] = 'Invalid character "‐" found in variant position; only regular hyphens are allowed to be used in the HGVS nomenclature.';
+            }
+
+            // Remove grouping separators (thousand separators, commas).
+            if (strpos($this->value, ',') !== false) {
+                array_walk($this->regex, function (&$sValue) {
+                    $sValue = str_replace(',', '', $sValue);
+                });
+                $this->messages['WPOSITIONFORMAT'] = 'Invalid character "," found in variant position; the HGVS nomenclature does not use grouping separators within positions.';
             }
 
             $this->UTR = !ctype_digit($this->value[0]);
