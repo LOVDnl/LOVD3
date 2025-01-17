@@ -2490,7 +2490,16 @@ class HGVS_DNAPositions extends HGVS
                 $PositionC = ($this->DNAPositionEnd->range? $this->DNAPositionEnd->DNAPosition[0] : $this->DNAPositionEnd);
                 $PositionD = $this->DNAPositionEnd; // Will anyway be C if D == ?.
 
-                if (!$this->arePositionsSorted($PositionA, $PositionD) && !in_array($sVariantPrefix, ['m', 'o'])) {
+                if (in_array($sVariantPrefix, ['m', 'o'])
+                    && !$this->arePositionsSorted($PositionA, $PositionD)
+                    && !$this->arePositionsSorted($PositionB, $PositionC)) {
+                    // Unsorted positions on circular chromosomes won't be reported, but we'll throw a WNOTSUPPORTED.
+                    // We don't really have a good way of having the main class report this, because how would it know
+                    //  this very specific case popped up? Since we don't know if the rest of the variant is valid, just
+                    //  don't mention anything about the validity.
+                    $this->messages['WNOTSUPPORTED'] = 'This syntax is currently not supported for mapping and validation.';
+
+                } elseif (!$this->arePositionsSorted($PositionA, $PositionD)) {
                     $this->messages['WPOSITIONORDER'] = "This variant description contains positions not given in the correct order.";
                     // Due to excessive complexity with ranges and possible solutions and assumptions,
                     //  we'll only swap positions when neither Start nor End is a range.
@@ -2509,7 +2518,7 @@ class HGVS_DNAPositions extends HGVS
                         $nCorrectionConfidence *= 0.8;
                     }
 
-                } elseif (!$this->arePositionsSorted($PositionB, $PositionC) && !in_array($sVariantPrefix, ['m', 'o'])) {
+                } elseif (!$this->arePositionsSorted($PositionB, $PositionC)) {
                     // We can't fix that, so throw an error, not a warning.
                     $this->messages['EPOSITIONFORMAT'] = "This variant description contains positions that overlap but that are not the same.";
 
