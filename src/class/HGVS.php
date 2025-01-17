@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2025-01-16
+ * Modified    : 2025-01-17
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1406,7 +1406,7 @@ class HGVS_DNAIns extends HGVS
 
             } elseif ($Positions->DNAPositionStart->range || $Positions->DNAPositionEnd->range) {
                 // An insertion should not be defined using more than two positions.
-                $this->messages['EPOSITIONFORMAT'] =
+                $this->messages['EPOSITIONSNOTFORINS'] =
                     'An insertion must be provided with the two positions between which the insertion has taken place.';
 
             } elseif (!$Positions->uncertain && $Positions->getCorrectedValue() != '?_?' && $Positions->getLengths() != [2,2]) {
