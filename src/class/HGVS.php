@@ -2717,6 +2717,11 @@ class HGVS_DNAPrefix extends HGVS
                     ' For variants on ' . $RefSeq->getCorrectedValue() . ', please use the ' . implode('. or ', $RefSeq->allowed_prefixes) . '. prefix.' .
                     ' For ' . $this->getCorrectedValue() . '. variants, please use a ' . $this->matched_pattern .
                     ($this->matched_pattern == 'genomic'? '' : ' ' . $this->molecule_type) . ' reference sequence.';
+                // Specifically for LRGs; suggest to add "t1". That's a "dumb" suggestion,
+                //  but we anyway will have a low confidence score, since we're raising an error here, not a warning.
+                if ($RefSeq->matched_pattern == 'LRG_genomic') {
+                    $RefSeq->appendCorrectedValue('t1');
+                }
             }
 
         } elseif ($this->matched_pattern == 'nothing') {
