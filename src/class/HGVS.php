@@ -1501,15 +1501,15 @@ class HGVS_DNAInsSuffix extends HGVS
             if ($this->DNAPositions->unknown && !$this->DNAPositions->range) {
                 // E.g., ins? or ins(?).
                 $this->setCorrectedValue('N[?]', 0.8); // We're not really sure that was what's meant.
-                $this->messages['WSUFFIXFORMAT'] = 'The part after "' . $this->parent->getData()['type'] . '" does not follow HGVS guidelines.' .
-                    ' To report an insertion of an unknown number of nucleotides, use "' . $this->parent->getData()['type'] . $this->getCorrectedValue() . '".';
+                $this->messages['WSUFFIXFORMAT'] = 'The part after "ins" does not follow HGVS guidelines.' .
+                    ' To report an insertion of an unknown number of nucleotides, use "' . $this->getCorrectedValue() . '".';
                 // Also remove the possible warning given by the Positions object. It doesn't like "(?)".
                 unset($this->messages['WTOOMANYPARENS']);
 
             } elseif (!$this->DNAPositions->intronic && !$this->DNAPositions->UTR && !$this->DNAPositions->range) {
                 // E.g., ins10 or ins(10). We will only interpret this as a length.
                 $this->setCorrectedValue('N[' . $this->DNAPositions->getCorrectedValue() . ']');
-                $this->messages['WSUFFIXFORMAT'] = 'The part after "' . $this->parent->getData()['type'] . '" does not follow HGVS guidelines.';
+                $this->messages['WSUFFIXFORMAT'] = 'The part after "ins" does not follow HGVS guidelines.';
                 // Also remove the possible warning given by the Positions object. It doesn't like "(10)".
                 unset($this->messages['WTOOMANYPARENS']);
 
@@ -1517,11 +1517,11 @@ class HGVS_DNAInsSuffix extends HGVS
                 && !$this->DNAPositions->DNAPositionStart->range && !$this->DNAPositions->DNAPositionEnd->range) {
                 // E.g., ins(10_20). Can be lengths (60% certainty) or positions (40% certainty).
                 $this->setCorrectedValue('N[' . $this->DNAPositions->getCorrectedValue() . ']', 0.6);
-                $this->messages['WSUFFIXFORMAT'] = 'The part after "' . $this->parent->getData()['type'] . '" does not follow HGVS guidelines.' .
-                    ' To report an insertion of an uncertain number of nucleotides, use "' . $this->parent->getData()['type'] . $this->getCorrectedValue() . '".';
+                $this->messages['WSUFFIXFORMAT'] = 'The part after "ins" does not follow HGVS guidelines.' .
+                    ' To report an insertion of an uncertain number of nucleotides, use "' . $this->getCorrectedValue() . '".';
                 $this->DNAPositions->makeCertain();
                 $this->addCorrectedValue($this->DNAPositions->getCorrectedValue(), 0.4);
-                $this->messages['WSUFFIXFORMAT'] .= ' To refer to the inserted sequence using an uncertain range of positions, use "' . $this->parent->getData()['type'] . array_keys($this->getCorrectedValues())[1] . '".';
+                $this->messages['WSUFFIXFORMAT'] .= ' To refer to the inserted sequence using an uncertain range of positions, use "' . array_keys($this->getCorrectedValues())[1] . '".';
                 // Also remove the possible warning given by the Positions object. It doesn't like "((10)_(20))".
                 unset($this->messages['WTOOMANYPARENS']);
 
