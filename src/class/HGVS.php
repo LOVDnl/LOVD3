@@ -1467,6 +1467,8 @@ class HGVS_DNAInsSuffix extends HGVS
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
+        // NOTE: This class is inherited by DNAInsSuffixComplexComponent.
+
         // Remove any complaints that HGVS_Lengths may have had, when we already threw a WSUFFIXFORMAT.
         if (isset($this->messages['WSUFFIXFORMAT'])) {
             unset($this->messages['WLENGTHFORMAT'], $this->messages['WLENGTHORDER'], $this->messages['WSAMELENGTHS'], $this->messages['WTOOMANYPARENS']);
@@ -1474,7 +1476,9 @@ class HGVS_DNAInsSuffix extends HGVS
 
         // A deletion-insertion of one base to one base, is a substitution.
         // This check is purely done on the position, and any delXins variant is ignored; they will be handled later.
-        if ($this->parent->getData()['type'] == 'delins'
+        if (get_class($this) == 'HGVS_DNAInsSuffix' // Don't run when we're in a complex insertion.
+            && $this->getParent('HGVS_DNAVariantType')
+            && $this->getParent('HGVS_DNAVariantType')->getData()['type'] == 'delins'
             && $this->getParentProperty('DNAPositions')->getLengths() == [1,1]
             && !$this->getParentProperty('DNADelSuffix')
             && isset($this->DNAAlts)
@@ -1486,12 +1490,14 @@ class HGVS_DNAInsSuffix extends HGVS
 
         // Store the corrected value.
         if (substr($this->matched_pattern, 0, 21) == 'positions_with_refseq') {
-            // This required square brackets. I threw the warning already.
-            $this->corrected_values = $this->buildCorrectedValues(
-                '[',
-                $this->getCorrectedValues(), // This will use the objects in our pattern.
-                ']'
-            );
+            if (get_class($this) == 'HGVS_DNAInsSuffix') {
+                // This required square brackets. I threw the warning already.
+                $this->corrected_values = $this->buildCorrectedValues(
+                    '[',
+                    $this->getCorrectedValues(), // This will use the objects in our pattern.
+                    ']'
+                );
+            }
 
         } elseif (isset($this->DNAPositions)) {
             // However, some additional checks are needed.
@@ -1543,22 +1549,17 @@ class HGVS_DNAInsSuffix extends HGVS
                 (!$this->Lengths->getCorrectedValues()? '' :
                     $this->buildCorrectedValues('[', $this->Lengths->getCorrectedValues(), ']'))
             );
-        } else {
+
+        } elseif ($this->matched_pattern == 'complex_in_brackets') {
             // Complex insertions. The DNAInsSuffixComplex object should have filtered the components already.
             // The square brackets should go when there is only one child and there are no reference sequences involved.
             $aComponents = $this->DNAInsSuffixComplex->getComponents();
             $nComponents = count($aComponents);
-            if ($this->matched_pattern == 'complex_in_brackets'
-                && $nComponents == 1
+            if ($nComponents == 1
                 && !$aComponents[0]->hasProperty('ReferenceSequence')) {
                 // The brackets should go.
                 $this->messages['WSUFFIXFORMATNOTCOMPLEX'] = 'The part after "ins" does not follow HGVS guidelines. Only use square brackets for complex insertions.';
                 $this->corrected_values = $this->DNAInsSuffixComplex->getCorrectedValues();
-
-            } else {
-                $this->corrected_values = $this->buildCorrectedValues(
-                    '[', $this->DNAInsSuffixComplex->getCorrectedValues(), ']'
-                );
             }
         }
 
@@ -1669,7 +1670,7 @@ class HGVS_DNAInsSuffixComplex extends HGVS
 
 
 
-class HGVS_DNAInsSuffixComplexComponent extends HGVS
+class HGVS_DNAInsSuffixComplexComponent extends HGVS_DNAInsSuffix
 {
     public array $patterns = [
         'positions_with_refseq_inv' => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAPositions', 'HGVS_DNAInv', [] ],
