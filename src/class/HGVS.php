@@ -2638,6 +2638,33 @@ class HGVS_DNAPositions extends HGVS
                 ['' => $nCorrectionConfidence],
                 $this->DNAPositionStart->getCorrectedValues(), '_', $this->DNAPositionEnd->getCorrectedValues()
             );
+
+            // However, if "pter" or "qter" are involved and stuff has been moved around,
+            //  also suggest the possibility of a typo.
+            if (isset($this->messages['WPOSITIONORDER']) && !$this->DNAPositionStart->range && !$this->DNAPositionEnd->range) {
+                if ($this->DNAPositionStart->getCorrectedValue() == 'pter'
+                    && $this->DNAPositionEnd->getCorrectedValue() != 'qter') {
+                    // First, lower the current confidence.
+                    $this->appendCorrectedValue('', 0.5);
+                    // Then, suggest the alternative fix.
+                    $this->addCorrectedValue(
+                        $this->DNAPositionEnd->getCorrectedValue() . '_qter',
+                        $nCorrectionConfidence * 0.5
+                    );
+
+                } elseif ($this->DNAPositionEnd->getCorrectedValue() == 'qter'
+                    && $this->DNAPositionStart->getCorrectedValue() != 'pter') {
+                    // First, lower the current confidence.
+                    $this->appendCorrectedValue('', 0.5);
+                    // Then, suggest the alternative fix.
+                    $this->addCorrectedValue(
+                        'pter_' . $this->DNAPositionStart->getCorrectedValue(),
+                        $nCorrectionConfidence * 0.5
+                    );
+                }
+
+            }
+
         } else {
             $this->corrected_values = $this->buildCorrectedValues(
                 ['' => $nCorrectionConfidence],
