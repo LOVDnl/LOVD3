@@ -1121,7 +1121,6 @@ class HGVS_DNACNV extends HGVS
         // Provide additional rules for validation, and stores values for the variant info if needed.
 
         // At least two positions are required. With only one position, it's very old repeat syntax.
-        $Prefix = ($this->getParentProperty('DNAPrefix') ?: $this->getParentProperty('RNAPrefix'));
         $Positions = $this->getParentProperty('DNAPositions');
         if ($Positions && !$Positions->range) {
             // This is very old repeat syntax. Actually, with a range, it is too,
@@ -1385,11 +1384,11 @@ class HGVS_DNAIns extends HGVS
                     //  new positions from the given suggestions and then copy those over to $Positions. The great thing
                     //  is that is supports intronic positions since it uses DNAPosition in the backend.
                     // We do need the prefix to assess whether -1 can work as a position.
-                    $Prefix = $this->getParentProperty('DNAPrefix');
+                    $VariantPrefix = ($this->getParentProperty('DNAPrefix') ?: $this->getParentProperty('RNAPrefix'));
                     $VCF = new HGVS_VCFBody($Positions->getCorrectedValue() . ':.:A', $this);
                     $aCorrections = [];
                     foreach ($VCF->getCorrectedValues() as $sValue => $nConfidence) {
-                        if ($Prefix && $Prefix->getCorrectedValue() != 'c') {
+                        if ($VariantPrefix && !in_array($VariantPrefix->getCorrectedValue(), ['c', 'r'])) {
                             // A negative position is, if generated, not possible.
                             if (substr($sValue, 0, 1) == '-') {
                                 continue;
@@ -1789,8 +1788,8 @@ class HGVS_DNANull extends HGVS
         $this->data['type'] = substr($this->getCorrectedValue(), 0, 1);
         $this->predicted = ($this->matched_pattern == 'predicted');
 
-        $Prefix = $this->getParentProperty('DNAPrefix');
-        if ($Prefix && in_array($Prefix->getCorrectedValue(), ['g', 'm'])) {
+        $VariantPrefix = ($this->getParentProperty('DNAPrefix') ?: $this->getParentProperty('RNAPrefix'));
+        if ($VariantPrefix && in_array($VariantPrefix->getCorrectedValue(), ['g', 'm'])) {
             // This is only allowed for transcript-based reference sequences, as it's a consequence of a genomic change
             //  (a deletion or so). It indicates the lack of expression of the transcript.
             $this->messages['EWRONGTYPE'] = 'The 0-allele is used to indicate there is no expression of a given transcript. This can not be used for genomic variants.';
@@ -1882,8 +1881,9 @@ class HGVS_DNAPosition extends HGVS
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->unknown = ($this->matched_pattern == 'unknown');
         $this->unknown_offset = ($this->matched_pattern == 'unknown_intronic');
-        $VariantPrefix = $this->getParentProperty('DNAPrefix');
-        $sVariantPrefix = ($VariantPrefix? $VariantPrefix->getCorrectedValue() : 'g'); // VCFs usually don't have a prefix.
+        // VCFs usually don't have a prefix, assume g. when missing.
+        $VariantPrefix = ($this->getParentProperty('DNAPrefix') ?: ($this->getParentProperty('RNAPrefix') ?: new HGVS_DNAPrefix('g')));
+        $sVariantPrefix = str_replace('r', 'c', $VariantPrefix->getCorrectedValue());
         $this->ISCN = false;
         $this->position_limits = $this->position_limits[$sVariantPrefix];
         $nCorrectionConfidence = 1;
@@ -2092,8 +2092,9 @@ class HGVS_DNAPositionStart extends HGVS
 
             // Before we add more errors or warnings, check if we have multiple errors that are the same.
             // We currently don't handle arrays as error messages.
-            $VariantPrefix = $this->getParentProperty('DNAPrefix');
-            $sVariantPrefix = ($VariantPrefix? $VariantPrefix->getCorrectedValue() : 'g');
+            // VCFs usually don't have a prefix, assume g. when missing.
+            $VariantPrefix = ($this->getParentProperty('DNAPrefix') ?: ($this->getParentProperty('RNAPrefix') ?: new HGVS_DNAPrefix('g')));
+            $sVariantPrefix = str_replace('r', 'c', $VariantPrefix->getCorrectedValue());
             // Get new messages for errors that occurred twice.
             $aDoubleMessages = array_intersect_key(
                 [
@@ -2434,7 +2435,9 @@ class HGVS_DNAPositions extends HGVS
             || ($this->matched_pattern == 'range'
                 && ($this->DNAPositionStart->uncertain || $this->DNAPositionEnd->uncertain))
         );
-        $VariantPrefix = ($this->getParentProperty('DNAPrefix') ?: new HGVS_DNAPrefix('g')); // VCFs usually don't have a prefix.
+        // VCFs usually don't have a prefix, assume g. when missing.
+        $VariantPrefix = ($this->getParentProperty('DNAPrefix') ?: ($this->getParentProperty('RNAPrefix') ?: new HGVS_DNAPrefix('g')));
+        $sVariantPrefix = str_replace('r', 'c', $VariantPrefix->getCorrectedValue());
         $nCorrectionConfidence = (current($this->corrected_values) ?: 1); // Fetch current one, because this object can be revalidated.
 
         if (!$this->range) {
@@ -2451,7 +2454,6 @@ class HGVS_DNAPositions extends HGVS
 
             // Before we add more errors or warnings, check if we have multiple errors that are the same.
             // We currently don't handle arrays as error messages.
-            $sVariantPrefix = $VariantPrefix->getCorrectedValue();
             // Get new messages for errors that occurred twice.
             $aDoubleMessages = array_intersect_key(
                 [
@@ -2590,7 +2592,7 @@ class HGVS_DNAPositions extends HGVS
             } else {
                 $this->data['position_end'] = $aPositions[1]->position_sortable;
             }
-            if ($VariantPrefix && $VariantPrefix->molecule_type == 'transcript') {
+            if ($VariantPrefix->molecule_type == 'transcript') {
                 if ($aPositions[0]->offset < $aPositions[0]->position_limits[2]) {
                     $this->data['position_start_intron'] = $aPositions[0]->position_limits[2];
                 } elseif ($aPositions[0]->offset > $aPositions[0]->position_limits[3]) {
@@ -2924,9 +2926,8 @@ class HGVS_DNARepeat extends HGVS
 
             } else {
                 // Full validation of the repeat.
-                $Prefix = $this->getParentProperty('DNAPrefix');
-                $sPrefix = ($Prefix? $Prefix->getCorrectedValue() : 'g');
-                if ($sPrefix == 'c') {
+                $VariantPrefix = ($this->getParentProperty('DNAPrefix') ?: $this->getParentProperty('RNAPrefix'));
+                if ($VariantPrefix && $VariantPrefix->getCorrectedValue() == 'c') {
                     foreach ($aRepeatUnits as $Component) {
                         if ($Component->hasProperty('DNAAlts') && (strlen($Component->DNAAlts->getCorrectedValue()) % 3)) {
                             // Repeat variants on coding DNA should always have a length of a multiple of three bases.
@@ -3147,14 +3148,14 @@ class HGVS_DNASup extends HGVS
         $this->data['type'] = $this->getCorrectedValue();
 
         // We require genomic positions and chromosomal reference sequences.
-        $Prefix = $this->getParentProperty('DNAPrefix');
-        if ($Prefix && !in_array($Prefix->getCorrectedValue(), ['g', 'm'])) {
-            if (isset($Prefix->getMessages()['EPREFIXMISSING']) || isset($Prefix->getMessages()['WPREFIXMISSING'])) {
+        $VariantPrefix = $this->getParentProperty('DNAPrefix');
+        if ($VariantPrefix && !in_array($VariantPrefix->getCorrectedValue(), ['g', 'm'])) {
+            if (isset($VariantPrefix->getMessages()['EPREFIXMISSING']) || isset($VariantPrefix->getMessages()['WPREFIXMISSING'])) {
                 // Actually the prefix is missing completely. In that case, remove all suggestions that aren't g.
                 //  and m. and just leave it.
-                foreach (array_keys($Prefix->corrected_values) as $sPrefix) {
+                foreach (array_keys($VariantPrefix->getCorrected_values()) as $sPrefix) {
                     if (!in_array($sPrefix, ['g', 'm'])) {
-                        unset($Prefix->corrected_values[$sPrefix]);
+                        unset($VariantPrefix->corrected_values[$sPrefix]);
                     }
                 }
             } else {
@@ -3275,10 +3276,10 @@ class HGVS_DNAVariantBody extends HGVS
 
         } elseif (!$this->hasProperty('DNAPositions')) {
             // No allele, but no positions, either. Store something anyway.
-            $Prefix = $this->getParentProperty('DNAPrefix');
+            $VariantPrefix = $this->getParentProperty('DNAPrefix');
             $this->data['position_start'] = 0;
             $this->data['position_end'] = 0;
-            if ($Prefix && in_array($Prefix->getCorrectedValue(), ['c', 'n'])) {
+            if ($VariantPrefix && in_array($VariantPrefix->getCorrectedValue(), ['c', 'n'])) {
                 $this->data['position_start_intron'] = 0;
                 $this->data['position_end_intron'] = 0;
             }
@@ -3316,7 +3317,6 @@ class HGVS_DNAVariantBody extends HGVS
         if ($this->matched_pattern == 'protein-like_subst') {
             // But consider this a match only if we have a prefix OR when there are no unknown nucleotides.
             // Also, the REF and ALT should be both just one nucleotide long.
-            $Prefix = $this->getParentProperty('DNAPrefix');
             if ($this->DNAPositions->range
                 || isset($this->messages['EINVALIDNUCLEOTIDES'])
                 || strlen($this->DNARefs->getCorrectedValue()) > 1
@@ -3694,9 +3694,9 @@ class HGVS_Dot extends HGVS
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->setCorrectedValue('.');
         if ($this->value != $this->getCorrectedValue()) {
-            $Prefix = ($this->getParentProperty('DNAPrefix') ?: ($this->getParentProperty('RNAPrefix') ?: $this->getParentProperty('ProteinPrefix')));
-            $sPrefix = ($Prefix? $Prefix->getCorrectedValue() : 'g');
-            $this->messages['WPREFIXFORMAT'] = 'Molecule types in variant descriptions should be followed by a period (e.g., "' . $sPrefix . '.").';
+            $VariantPrefix = ($this->getParentProperty('DNAPrefix') ?: ($this->getParentProperty('RNAPrefix') ?: $this->getParentProperty('ProteinPrefix')));
+            $sVariantPrefix = ($VariantPrefix? $VariantPrefix->getCorrectedValue() : 'g');
+            $this->messages['WPREFIXFORMAT'] = 'Molecule types in variant descriptions should be followed by a period (e.g., "' . $sVariantPrefix . '.").';
         }
     }
 }
