@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2025-01-17
+ * Modified    : 2025-01-20
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -242,7 +242,7 @@ class HGVS
                         if (trim($sInputToParse) === '') {
                             $this->messages['WWHITESPACE'] = 'This variant description contains one or more whitespace characters (spaces, tabs, etc).';
                         } else {
-                            $this->messages['WINPUTLEFT'] = 'We stopped reading past "' . $this->value . '".';
+                            $this->messages['WINPUTLEFT'] = 'We stopped reading past "' . $this->value . '". We could not interpret "' . $sInputToParse . '".';
                         }
                     }
 
