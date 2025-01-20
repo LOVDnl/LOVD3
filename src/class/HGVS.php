@@ -59,6 +59,7 @@ class HGVS
     public array $properties = [];
     public array $regex = [];
     public bool $caseOK = true;
+    public bool $debugging = false;
     public bool $matched = false;
     public bool $possibly_incomplete = false;
     public bool $tainted = false;
@@ -74,6 +75,7 @@ class HGVS
     {
         $this->input = $sValue;
         $this->parent = $Parent;
+        $this->debugging = $bDebugging;
 
         // Loop through all patterns and match them.
         foreach ($this->patterns as $sPatternName => $aPattern) {
@@ -1385,7 +1387,7 @@ class HGVS_DNAIns extends HGVS
                     //  is that is supports intronic positions since it uses DNAPosition in the backend.
                     // We do need the prefix to assess whether -1 can work as a position.
                     $VariantPrefix = ($this->getParentProperty('DNAPrefix') ?: $this->getParentProperty('RNAPrefix'));
-                    $VCF = new HGVS_VCFBody($Positions->getCorrectedValue() . ':.:A', $this);
+                    $VCF = new HGVS_VCFBody($Positions->getCorrectedValue() . ':.:A', $this, $this->debugging);
                     $aCorrections = [];
                     foreach ($VCF->getCorrectedValues() as $sValue => $nConfidence) {
                         if ($VariantPrefix && !in_array($VariantPrefix->getCorrectedValue(), ['c', 'r'])) {
@@ -2229,10 +2231,10 @@ class HGVS_DNAPositions extends HGVS
     {
         // This function adds a position to the current position, making this position a range.
         if (!$this->range) {
-            $NewPosition = new HGVS_DNAPositionEnd($sValue, $this);
+            $NewPosition = new HGVS_DNAPositionEnd($sValue, $this, $this->debugging);
             if ($NewPosition->hasMatched() && !$NewPosition->getSuffix()) {
                 // All seems well. We'll have to create a new object for the Start as well to prevent errors.
-                $this->DNAPositionStart = new HGVS_DNAPositionStart($this->DNAPosition->getCorrectedValue(), $this);
+                $this->DNAPositionStart = new HGVS_DNAPositionStart($this->DNAPosition->getCorrectedValue(), $this, $this->debugging);
                 $this->DNAPositionEnd = $NewPosition;
                 unset($this->DNAPosition);
                 $this->properties = [
@@ -2519,8 +2521,8 @@ class HGVS_DNAPositions extends HGVS
                         // OK, actually, we can also swap the positions when they are ranges but there are no unknowns.
                         // We do need to do this differently, though. Swapping the variables like above will have side
                         //  effects since DNAPositionStart and DNAPositionEnd handle positions slightly differently.
-                        $DNAPositionStart = new HGVS_DNAPositionStart($this->DNAPositionEnd->getCorrectedValue(), $this);
-                        $DNAPositionEnd = new HGVS_DNAPositionEnd($this->DNAPositionStart->getCorrectedValue(), $this);
+                        $DNAPositionStart = new HGVS_DNAPositionStart($this->DNAPositionEnd->getCorrectedValue(), $this, $this->debugging);
+                        $DNAPositionEnd = new HGVS_DNAPositionEnd($this->DNAPositionStart->getCorrectedValue(), $this, $this->debugging);
                         list($this->DNAPositionStart, $this->DNAPositionEnd) = [$DNAPositionStart, $DNAPositionEnd];
                         $nCorrectionConfidence *= 0.8;
                     }
@@ -2534,14 +2536,14 @@ class HGVS_DNAPositions extends HGVS
                     // g.(?_A)_?del. Should be g.(?_A)_(A_?)del.
                     $this->messages['WPOSITIONFORMAT'] = "This variant description contains uncertain positions described using an incorrect format.";
                     // It's easier to just rebuild the whole thing.
-                    $this->DNAPositionEnd = new HGVS_DNAPositionEnd('(' . $this->DNAPositionStart->DNAPosition[1]->getCorrectedValue() . '_?)', $this);
+                    $this->DNAPositionEnd = new HGVS_DNAPositionEnd('(' . $this->DNAPositionStart->DNAPosition[1]->getCorrectedValue() . '_?)', $this, $this->debugging);
 
                 } elseif (!$this->DNAPositionStart->range && $this->DNAPositionStart->unknown
                     && $this->DNAPositionEnd->range && $this->DNAPositionEnd->unknown) {
                     // g.?_(A_?)del. Should be g.(?_A)_(A_?)del.
                     $this->messages['WPOSITIONFORMAT'] = "This variant description contains uncertain positions described using an incorrect format.";
                     // It's easier to just rebuild the whole thing.
-                    $this->DNAPositionStart = new HGVS_DNAPositionStart('(?_' . $this->DNAPositionEnd->DNAPosition[0]->getCorrectedValue() . ')', $this);
+                    $this->DNAPositionStart = new HGVS_DNAPositionStart('(?_' . $this->DNAPositionEnd->DNAPosition[0]->getCorrectedValue() . ')', $this, $this->debugging);
                 }
 
                 // I earlier removed internal uncertainty, e.g., g.(100_?)_(?_200) to g.(100_200).
@@ -2689,7 +2691,7 @@ class HGVS_DNAPositions extends HGVS
                 // First, check if we haven't already done something to solve the problem.
                 if ($sPositions == $this->getValue()) {
                     // Our current suggestion is unchanged, and therefore, invalid. Try to replace the hyphen.
-                    $PositionsCorrected = new HGVS_DNAPositions(str_replace('-', '_', $sPositions), $this->parent);
+                    $PositionsCorrected = new HGVS_DNAPositions(str_replace('-', '_', $sPositions), $this->parent, $this->debugging);
                     if ($PositionsCorrected->isValid() && !$PositionsCorrected->getSuffix()) {
                         // This is a better option then what we have. Replace this.
                         // Add a higher confidence since the error will reduce the confidence with a factor 0.1.
@@ -3015,13 +3017,13 @@ class HGVS_DNARepeat extends HGVS
 
             // If there is a suffix, check for sequence without a length. We assume they forgot a "[1]".
             if ($this->suffix !== '') {
-                $Suffix = new HGVS_DNAAlts($this->suffix, $this);
+                $Suffix = new HGVS_DNAAlts($this->suffix, $this, $this->debugging);
                 if ($Suffix && $Suffix->isValid()) {
                     $this->messages['WSUFFIXFORMAT'] =
                         'The part after "' . $aRepeatUnits[array_key_last($aRepeatUnits)]->getValue() . '" does not follow HGVS guidelines.' .
                         ' When describing repeats, each unit needs a length.';
                     // Add the sequence to the repeats and try again.
-                    $this->components[] = new HGVS_DNARepeatComponent($this->suffix . '[1]');
+                    $this->components[] = new HGVS_DNARepeatComponent($this->suffix . '[1]', $this, $this->debugging);
                     $this->corrected_values = [];
                     $this->suffix = '';
                     unset($this->messages['EINVALIDREPEATLENGTH']);
@@ -3365,7 +3367,7 @@ class HGVS_DNAVariantBody extends HGVS
         // There is no real guidance on this, but I'm going for a strict set of variants that can have unknown alleles.
         if (in_array($this->matched_pattern, ['allele_trans', 'allele_cis', 'other'])
             && strlen($this->suffix) > 3 && substr($this->suffix, 0, 3) == '(;)') {
-            $this->DNAAlleleUnknownPhase = new HGVS_DNAVariantBody(substr($this->suffix, 3), $this);
+            $this->DNAAlleleUnknownPhase = new HGVS_DNAVariantBody(substr($this->suffix, 3), $this, $this->debugging);
             if ($this->DNAAlleleUnknownPhase->hasMatched()) {
                 $this->data['type'] = ';';
                 $this->messages = array_merge(
@@ -3408,7 +3410,7 @@ class HGVS_DNAVariantBody extends HGVS
             && strlen($this->suffix) > 1 && substr($this->suffix, 0, 1) == ';') {
             // Allele syntax without square brackets? We're not handling alleles and not in one, but there is a ";".
             // If so, try to match what's next and predict whether this was cis or trans.
-            $this->DNAAllele = new HGVS_DNAVariantBody(substr($this->suffix, 1), $this);
+            $this->DNAAllele = new HGVS_DNAVariantBody(substr($this->suffix, 1), $this, $this->debugging);
             if ($this->DNAAllele->hasMatched()) {
                 // When what we matched is also an allele, then abort, because we don't know how to handle that.
                 if ($this->DNAAllele->getInfo()['type'] == ';') {
@@ -3594,7 +3596,8 @@ class HGVS_DNAVariantType extends HGVS
                 $this->VCF = new HGVS_VCFBody(
                     ($Positions->DNAPosition ?? $Positions->DNAPositionStart)->getCorrectedValue() .
                     ':' . $sREF . ':' . $sALT,
-                    $this
+                    $this,
+                    $this->debugging
                 );
                 // Lower the confidence of our prediction when the position was single but the REF was not.
                 // (e.g., c.100AAA>G).
@@ -3623,7 +3626,8 @@ class HGVS_DNAVariantType extends HGVS
                 ($Positions->DNAPosition ?? $Positions->DNAPositionStart)->getCorrectedValue() . ':' .
                 $this->DNADelSuffix->getSequence() . ':' .
                 $this->DNAInsSuffix->getSequence(),
-                $this
+                $this,
+                $this->debugging
             );
             $this->parent->corrected_values = $this->VCF->getCorrectedValues();
 
@@ -4169,7 +4173,7 @@ class HGVS_ReferenceSequence extends HGVS
                     // We also want to be absolutely certain that we are not matching a variant description that has a
                     //  reference sequence further downstream, like c.100_101insNC_...:...
                     // We'll check this by tossing in the description in the variant object and see what we get.
-                    $Variant = new HGVS_Variant($this->input);
+                    $Variant = new HGVS_Variant($this->input, null, $this->debugging);
                     if ($Variant->hasMatched()) {
                         // That doesn't mean that it's valid, but it's more likely to be a variant description
                         //  than a reference sequence, so discard it here.
@@ -4506,7 +4510,7 @@ class HGVS_VCF extends HGVS
 
         // We also need to store the data fields. Yes, this is duplicated work.
         // However, it's much simpler to do it here; everything the VCFBody does is string-based.
-        $HGVSVariant = new HGVS_Variant('g.' . $this->VCFBody->getCorrectedValue());
+        $HGVSVariant = new HGVS_Variant('g.' . $this->VCFBody->getCorrectedValue(), null, $this->debugging);
         $this->data = $HGVSVariant->getInfo();
 
         // We could have triggered a whitespace warning, but that's normal for us.
