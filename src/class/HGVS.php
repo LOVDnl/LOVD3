@@ -1296,11 +1296,11 @@ class HGVS_DNADelSuffix extends HGVS
             // The suffix should be removed.
             // NOTE: This is not true for delAinsG, but we don't know that here yet.
             $this->setCorrectedValue('');
-        } elseif (!isset($this->Lengths)) {
+        } elseif (!$this->hasProperty('Lengths')) {
             $this->corrected_values = $this->DNARefs->getCorrectedValues();
         } else {
             $this->corrected_values = $this->buildCorrectedValues(
-                (isset($this->DNARefs)? $this->DNARefs->getCorrectedValues() : 'N'),
+                ($this->hasProperty('DNARefs')? $this->DNARefs->getCorrectedValues() : 'N'),
                 (!$this->Lengths->getCorrectedValues()? '' :
                     $this->buildCorrectedValues('[', $this->Lengths->getCorrectedValues(), ']'))
             );
@@ -1481,7 +1481,7 @@ class HGVS_DNAInsSuffix extends HGVS
             && $this->getParent('HGVS_DNAVariantType')->getData()['type'] == 'delins'
             && $this->getParentProperty('DNAPositions')->getLengths() == [1,1]
             && !$this->getParentProperty('DNADelSuffix')
-            && isset($this->DNAAlts)
+            && $this->hasProperty('DNAAlts')
             && $this->getLengths() == [1,1]) {
             // Make this an EWRONGTYPE, since I can't fix it without a del suffix.
             $this->messages['EWRONGTYPE'] =
@@ -1499,7 +1499,7 @@ class HGVS_DNAInsSuffix extends HGVS
                 );
             }
 
-        } elseif (isset($this->DNAPositions)) {
+        } elseif ($this->hasProperty('DNAPositions')) {
             // However, some additional checks are needed.
             // Unknown single positions aren't allowed.
             // Numeric single positions are assumed to be lengths.
@@ -1540,12 +1540,12 @@ class HGVS_DNAInsSuffix extends HGVS
                 $this->appendCorrectedValue($this->DNAInv->getCorrectedValue());
             }
 
-        } elseif (isset($this->DNAAlts) && !isset($this->Lengths)) {
+        } elseif ($this->hasProperty('DNAAlts') && !$this->hasProperty('Lengths')) {
             $this->corrected_values = $this->DNAAlts->getCorrectedValues();
 
-        } elseif (isset($this->Lengths)) {
+        } elseif ($this->hasProperty('Lengths')) {
             $this->corrected_values = $this->buildCorrectedValues(
-                (isset($this->DNAAlts)? $this->DNAAlts->getCorrectedValues() : 'N'),
+                ($this->hasProperty('DNAAlts')? $this->DNAAlts->getCorrectedValues() : 'N'),
                 (!$this->Lengths->getCorrectedValues()? '' :
                     $this->buildCorrectedValues('[', $this->Lengths->getCorrectedValues(), ']'))
             );
@@ -2234,6 +2234,10 @@ class HGVS_DNAPositions extends HGVS
                 $this->DNAPositionStart = new HGVS_DNAPositionStart($this->DNAPosition->getCorrectedValue(), $this);
                 $this->DNAPositionEnd = $NewPosition;
                 unset($this->DNAPosition);
+                $this->properties = [
+                    'DNAPositionStart',
+                    'DNAPositionEnd'
+                ];
                 // Re-run the entire validation, so that all internal values will be set correctly.
                 // This may cause issues with errors that don't reflect the user's input.
                 // Trick validate() into thinking we matched a different pattern.
@@ -4422,7 +4426,7 @@ class HGVS_Variant extends HGVS
         // But I want the message to say whether it was a valid HGVS description,
         //  so I need to do that here, once I know whether it was correct or not.
         if ($this->predicted
-            || (isset($this->DNAVariantBody->DNAPositions)
+            || ($this->DNAVariantBody->hasProperty('DNAPositions')
                 && ($this->DNAVariantBody->DNAPositions->uncertain || $this->DNAVariantBody->DNAPositions->unknown || $this->DNAVariantBody->DNAPositions->ISCN))
             || in_array($this->data['type'] ?? '', ['0', '?', ';', 'met', 'repeat', 'sup'])
             || $this->DNAVariantBody->getCorrectedValue() == '=') {
