@@ -1302,7 +1302,7 @@ class HGVS_DNADelSuffix extends HGVS
         } else {
             $this->corrected_values = $this->buildCorrectedValues(
                 ($this->hasProperty('DNARefs')? $this->DNARefs->getCorrectedValues() : 'N'),
-                (!$this->Lengths->getCorrectedValues()? '' :
+                (!$this->Lengths->getCorrectedValue()? '' :
                     $this->buildCorrectedValues('[', $this->Lengths->getCorrectedValues(), ']'))
             );
         }
@@ -1547,7 +1547,7 @@ class HGVS_DNAInsSuffix extends HGVS
         } elseif ($this->hasProperty('Lengths')) {
             $this->corrected_values = $this->buildCorrectedValues(
                 ($this->hasProperty('DNAAlts')? $this->DNAAlts->getCorrectedValues() : 'N'),
-                (!$this->Lengths->getCorrectedValues()? '' :
+                (!$this->Lengths->getCorrectedValue()? '' :
                     $this->buildCorrectedValues('[', $this->Lengths->getCorrectedValues(), ']'))
             );
 
@@ -3841,6 +3841,7 @@ class HGVS_Lengths extends HGVS
             );
         } elseif ($this->lengths[0] == 1 && !$this->getParent('HGVS_DNARepeatComponent')) {
             // Actually, when the length is 1, and we're not a repeat, it's redundant and it shouldn't be given.
+            $this->messages['WLENGTHGIVEN'] = 'A length of "1" is redundant and should be removed.';
             $this->setCorrectedValue('');
         } else {
             $this->corrected_values = $this->buildCorrectedValues(
