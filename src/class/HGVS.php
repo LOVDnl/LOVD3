@@ -1841,6 +1841,7 @@ class HGVS_DNAPipeSuffix extends HGVS
     public array $patterns = [
         'met='    => [ '/met=/', [] ],
         'met'     => [ '/met/', [] ],
+        '='       => [ '/=/', [] ],
         'gom'     => [ '/gom/', [] ],
         'lom'     => [ '/lom/', [] ],
         'invalid' => [ '/[A-Z]+/', [] ],
@@ -1851,7 +1852,7 @@ class HGVS_DNAPipeSuffix extends HGVS
         // Provide additional rules for validation, and stores values for the variant info if needed.
         // If our direct parent is HGVS_DNAPipe, that means the Pipe wasn't actually there.
         // That means we have to be more careful with what we're matching.
-        if ($this->getParent('HGVS_DNAPipe') && $this->matched_pattern == 'invalid']) {
+        if ($this->getParent('HGVS_DNAPipe') && in_array($this->matched_pattern, ['=', 'invalid'])) {
             return false; // Break out of the entire object.
         }
 
@@ -1859,6 +1860,10 @@ class HGVS_DNAPipeSuffix extends HGVS
             // We don't recognize this, but also don't want to make statements about what case would be right.
             $this->setCorrectedValue($this->value);
             $this->messages['ENOTSUPPORTED'] = 'This is not a valid HGVS description, please verify your input after "|".';
+
+        } elseif ($this->matched_pattern == '=') {
+            $this->setCorrectedValue('met=');
+            $this->messages['WMETFORMAT'] = 'To report normal methylation, use "met=".';
 
         } else {
             $this->setCorrectedValue(strtolower($this->value));
