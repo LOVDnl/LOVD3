@@ -1884,8 +1884,8 @@ class HGVS_DNAPosition extends HGVS
 {
     public array $patterns = [
         'unknown'          => [ '?', [] ],
-        'unknown_intronic' => [ '/([-‐*]?([0-9,]+))([+‐-]\?)/u', [] ],
-        'known'            => [ '/([-‐*]?([0-9,]+))([+‐-]([0-9,]+))?/u', [] ],
+        'unknown_intronic' => [ '/([-‐−–—*]?([0-9,]+))([+—–−‐-]\?)/u', [] ],
+        'known'            => [ '/([-‐−–—*]?([0-9,]+))([+—–−‐-]([0-9,]+))?/u', [] ],
         'pter'             => [ '/pter/', [] ],
         'qter'             => [ '/qter/', [] ],
     ];
@@ -1957,13 +1957,14 @@ class HGVS_DNAPosition extends HGVS
             $this->ISCN = true;
 
         } else {
-            // We've seen input from papers that don't use a hyphen-minus (-) but a non-breaking hyphen (‐).
+            // We've seen input from papers that don't use a hyphen-minus (-) but a non-breaking hyphen (‐) or other
+            //  hyphen-like characters (−, –, —).
             // Since the user can't really see the difference, it's not really an error, but we do need to fix it.
-            if (strpos($this->value, '‐') !== false) {
+            if (preg_match('/[‐−–—]/u', $this->value, $aRegs)) {
                 array_walk($this->regex, function (&$sValue) {
-                    $sValue = str_replace('‐', '-', $sValue);
+                    $sValue = str_replace(array('‐', '−', '–', '—'), '-', $sValue);
                 });
-                $this->messages['WPOSITIONFORMAT'] = 'Invalid character "‐" found in variant position; only regular hyphens are allowed to be used in the HGVS nomenclature.';
+                $this->messages['WPOSITIONFORMAT'] = 'Invalid character "' . $aRegs[0] . '" found in variant position; only regular hyphens are allowed to be used in the HGVS nomenclature.';
             }
 
             // Remove grouping separators (thousand separators, commas).
