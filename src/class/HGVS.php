@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2025-01-20
+ * Modified    : 2025-01-22
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1839,20 +1839,34 @@ class HGVS_DNAPipe extends HGVS
 class HGVS_DNAPipeSuffix extends HGVS
 {
     public array $patterns = [
-        'met=' => [ '/met=/', [] ],
-        'met'  => [ '/met/', [] ],
-        'gom'  => [ '/gom/', [] ],
-        'lom'  => [ '/lom/', [] ],
+        'met='    => [ '/met=/', [] ],
+        'met'     => [ '/met/', [] ],
+        'gom'     => [ '/gom/', [] ],
+        'lom'     => [ '/lom/', [] ],
+        'invalid' => [ '/[A-Z]+/', [] ],
     ];
 
     public function validate ()
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
-        $this->setCorrectedValue(strtolower($this->value));
-        $this->caseOK = ($this->value == $this->getCorrectedValue());
-        if ($this->matched_pattern == 'met') {
-            $this->appendCorrectedValue('=');
-            $this->messages['WMETFORMAT'] = 'To report normal methylation, use "met=".';
+        // If our direct parent is HGVS_DNAPipe, that means the Pipe wasn't actually there.
+        // That means we have to be more careful with what we're matching.
+        if ($this->getParent('HGVS_DNAPipe') && $this->matched_pattern == 'invalid']) {
+            return false; // Break out of the entire object.
+        }
+
+        if ($this->matched_pattern == 'invalid') {
+            // We don't recognize this, but also don't want to make statements about what case would be right.
+            $this->setCorrectedValue($this->value);
+            $this->messages['ENOTSUPPORTED'] = 'This is not a valid HGVS description, please verify your input after "|".';
+
+        } else {
+            $this->setCorrectedValue(strtolower($this->value));
+            $this->caseOK = ($this->value == $this->getCorrectedValue());
+            if ($this->matched_pattern == 'met') {
+                $this->appendCorrectedValue('=');
+                $this->messages['WMETFORMAT'] = 'To report normal methylation, use "met=".';
+            }
         }
     }
 }
