@@ -3667,16 +3667,19 @@ class HGVS_DNAVariantType extends HGVS
 
         // Delins variants with a REF deserve some additional attention, too.
         // Based on the REF and ALT info, we may need to shift the variant or change it to a different type.
+        // We only run when there are no errors, OR when the error is ESUFFIXTOOLONG and we're not located on a range.
+        //   (e.g., c.100delAAinsTT -> c.100_101delinsTT).
         if ($this->matched_pattern == 'delXins_with_suffix'
             && !$Positions->unknown && !$Positions->uncertain
             && count(array_unique($this->DNADelSuffix->getLengths())) == 1
             && count(array_unique($this->DNAInsSuffix->getLengths())) == 1
-            && !array_filter(
-                array_keys($this->messages),
-                function ($sKey)
-                {
-                    return ($sKey[0] == 'E' && $sKey != 'EINVALIDNUCLEOTIDES');
-                })) {
+            && ((!$Positions->range && array_keys($this->messages) == ['ESUFFIXTOOLONG'])
+                || !array_filter(
+                    array_keys($this->messages),
+                    function ($sKey)
+                    {
+                        return ($sKey[0] == 'E' && $sKey != 'EINVALIDNUCLEOTIDES');
+                    }))) {
             // Positions are known; REF and ALT are known. Toss it all in a VCF parser.
             $this->VCF = new HGVS_VCFBody(
                 ($Positions->DNAPosition ?? $Positions->DNAPositionStart)->getCorrectedValue() . ':' .
@@ -3694,7 +3697,7 @@ class HGVS_DNAVariantType extends HGVS
             if ($sNewType == 'delins') {
                 // Still a delins. Did it get updated to a different description?
                 if ($this->VCF->REF != $this->DNADelSuffix->getSequence()) {
-                    // Remove the WSUFFIXGIVEN that complained about about the bases following "del".
+                    // Remove the WSUFFIXGIVEN that complained about the bases following "del".
                     unset($this->messages['WSUFFIXGIVEN']);
                     // Then throw a proper warning. The positions MUST have been changed, as the REF got changed.
                     $this->messages['WPOSITIONSCORRECTED'] = "The variant's positions have been corrected.";
@@ -3702,7 +3705,7 @@ class HGVS_DNAVariantType extends HGVS
 
             } else {
                 // This delins is no longer a delins. We'll throw a WWRONGTYPE here.
-                // Remove the WSUFFIXGIVEN that complained about about the bases following "del".
+                // Remove the WSUFFIXGIVEN that complained about the bases following "del".
                 unset($this->messages['WSUFFIXGIVEN']);
                 if ($sNewType == '=') {
                     $this->messages['WWRONGTYPE'] = "This deletion-insertion doesn't change the given sequence.";
