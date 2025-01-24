@@ -3696,10 +3696,12 @@ class HGVS_DNAVariantType extends HGVS
             $sNewType = $this->VCF->getInfo()['type'];
             if ($sNewType == 'delins') {
                 // Still a delins. Did it get updated to a different description?
-                if ($this->VCF->REF != $this->DNADelSuffix->getSequence()) {
+                if ($this->VCF->REF != $this->DNADelSuffix->getSequence()
+                    || (!$Positions->range && $this->DNADelSuffix->getLengths()[0] > 1)) {
                     // Remove the WSUFFIXGIVEN that complained about the bases following "del".
                     unset($this->messages['WSUFFIXGIVEN']);
-                    // Then throw a proper warning. The positions MUST have been changed, as the REF got changed.
+                    // Then throw a proper warning. The positions changed from a single position to a range,
+                    //  or the positions MUST have been changed as the REF got changed.
                     $this->messages['WPOSITIONSCORRECTED'] = "The variant's positions have been corrected.";
                 }
 
@@ -3717,6 +3719,20 @@ class HGVS_DNAVariantType extends HGVS
                                     ($sNewType == 'ins'? 'an insertion.' : 'an inversion.'))));
                 }
             }
+
+        } elseif ($this->matched_pattern == 'del_with_suffix'
+            && !$Positions->unknown && !$Positions->uncertain
+            && count(array_unique($this->DNADelSuffix->getLengths())) == 1
+            && !$Positions->range && array_keys($this->messages) == ['ESUFFIXTOOLONG']) {
+            // E.g., c.100delAA. We'll turn it into c.100_101delAA.
+            // It's, by far, easiest to just dump it into the VCF parser.
+            $this->VCF = new HGVS_VCFBody(
+                $Positions->getCorrectedValue() . ':' . $this->DNADelSuffix->getSequence() . ':.',
+                $this,
+                $this->debugging
+            );
+            $this->parent->corrected_values = $this->VCF->getCorrectedValues();
+            $this->messages['WPOSITIONSCORRECTED'] = "The variant's positions have been corrected.";
         }
     }
 }
