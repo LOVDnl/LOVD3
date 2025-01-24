@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2025-01-22
+ * Modified    : 2025-01-24
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2085,6 +2085,23 @@ class HGVS_DNAPosition extends HGVS
 
 
 
+class HGVS_DNAPositionSeparator extends HGVS
+{
+    public array $patterns = [
+        [ '_', [] ],
+    ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        $this->setCorrectedValue('_');
+    }
+}
+
+
+
+
+
 class HGVS_DNAPositionStart extends HGVS
 {
     public array $patterns = [
@@ -2240,8 +2257,8 @@ class HGVS_DNAPositionEnd extends HGVS_DNAPositionStart {}
 class HGVS_DNAPositions extends HGVS
 {
     public array $patterns = [
-        'range'            => [ 'HGVS_DNAPositionStart', '_', 'HGVS_DNAPositionEnd', [] ],
-        'uncertain_range'  => [ '(', 'HGVS_DNAPositionStart', '_', 'HGVS_DNAPositionEnd', ')', [] ],
+        'range'            => [ 'HGVS_DNAPositionStart', 'HGVS_DNAPositionSeparator', 'HGVS_DNAPositionEnd', [] ],
+        'uncertain_range'  => [ '(', 'HGVS_DNAPositionStart', 'HGVS_DNAPositionSeparator', 'HGVS_DNAPositionEnd', ')', [] ],
         'uncertain_single' => [ '(', 'HGVS_DNAPosition', ')', [ 'WTOOMANYPARENS' => "This variant description contains a position with redundant parentheses." ] ],
         'single'           => [ 'HGVS_DNAPosition', [] ],
     ];
