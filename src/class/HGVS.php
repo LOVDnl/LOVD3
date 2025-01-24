@@ -3211,7 +3211,7 @@ class HGVS_DNASup extends HGVS
             if (isset($VariantPrefix->getMessages()['EPREFIXMISSING']) || isset($VariantPrefix->getMessages()['WPREFIXMISSING'])) {
                 // Actually the prefix is missing completely. In that case, remove all suggestions that aren't g.
                 //  and m. and just leave it.
-                foreach (array_keys($VariantPrefix->getCorrected_values()) as $sPrefix) {
+                foreach (array_keys($VariantPrefix->getCorrectedValues()) as $sPrefix) {
                     if (!in_array($sPrefix, ['g', 'm'])) {
                         unset($VariantPrefix->corrected_values[$sPrefix]);
                     }
