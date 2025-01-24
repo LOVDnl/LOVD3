@@ -1938,7 +1938,8 @@ class HGVS_DNAPosition extends HGVS
             $this->intronic = false;
             $this->offset = 0;
             if ($this->matched_pattern == 'pter') {
-                $this->position = $this->position_limits[0];
+                $this->position = 1;
+                $this->position_limits[0] = $this->position;
                 $this->position_limits[1] = $this->position;
             } else {
                 $this->position = $this->position_limits[1];
