@@ -2095,6 +2095,25 @@ class HGVS_DNAPositionSeparator extends HGVS
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->setCorrectedValue('_');
+
+        // We created a class for this, just so we can do a suffix check.
+        // We have seen variants like "c.100_c.120del". We have to make sure that if a prefix is given, we remove it.
+        if ($this->suffix !== '' && !preg_match('/^[?(0-9*-]/', $this->suffix)) {
+            // There is a suffix (should actually always be the case), but it doesn't look like a position.
+            $VariantPrefix = ($this->getParentProperty('DNAPrefix') ?: $this->getParentProperty('RNAPrefix'));
+            $sVariantPrefix = (!$VariantPrefix? '' : $VariantPrefix->getCorrectedValue() . '.');
+            // We can do this in a more complex way, but matching anything else than the already used prefix is weird.
+            // E.g., we could use our own classes and match "r." when we're using "c.", but then what will we say?
+            // Let's keep things simple and just look for the prefix we already are using.
+            if ($sVariantPrefix && strtolower(substr($this->suffix, 0, 2)) == $sVariantPrefix) {
+                // Add warning, and remove this additional suffix.
+                $this->messages['WPREFIXREPEATED'] =
+                    'The molecule type ("' . $sVariantPrefix . '") should only be used once, prefixing the first given position.';
+                // Pull this out of the suffix.
+                $this->value .= substr($this->suffix, 0, 2);
+                $this->suffix = substr($this->suffix, 2);
+            }
+        }
     }
 }
 
