@@ -1931,13 +1931,13 @@ class HGVS_DNAPosition extends HGVS
                     }
                 } else {
                     // There really was a prefix, so complain that they used the wrong one.
-                    $this->messages['EWRONGPREFIX'] = 'Chromosomal positions pter, cen, and qter can only be reported using "g." or "m." genomic prefixes.';
+                    $this->messages['EWRONGPREFIX'] = 'Chromosomal positions pter and qter can only be reported using "g." or "m." genomic prefixes.';
                 }
             }
             $RefSeq = $this->getParentProperty('ReferenceSequence');
             if ($RefSeq && $RefSeq->molecule_type != 'chromosome') {
                 $this->messages['EWRONGREFERENCE'] =
-                    'A chromosomal reference sequence is required for pter, cen, or qter positions.';
+                    'A chromosomal reference sequence is required for pter or qter positions.';
             }
             $this->setCorrectedValue(strtolower($this->value));
             $this->caseOK = ($this->value == $this->getCorrectedValue());
