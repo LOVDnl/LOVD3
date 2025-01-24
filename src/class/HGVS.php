@@ -3152,7 +3152,7 @@ class HGVS_DNASub extends HGVS
         // Special characters arising from copying variants from PDFs. Some journals decided to use specialized fonts to
         //  create markup for normal characters, such as the ">" in a substitution. This is a terrible idea, as
         //  text-recognition then completely fails and copying the variant from the PDF results in a broken format.
-        // " " seen in AIPL1_20702822_Jacobson-2011.pdf ("c.216G A")
+        // "⬎" seen in AIPL1_20702822_Jacobson-2011.pdf ("c.216G⬎A")
         // "®" seen in CACNA1F_9662399_Strom-1998.pdf ("1106G®A")
         // "?" seen in CACNA1F_12111638_Wutz-2002.pdf ("220T?C")
         // "!" seen in CRB1_32351147_Liu-2020.pdf ("C!T")
@@ -3161,7 +3161,7 @@ class HGVS_DNASub extends HGVS
         // "→" seen in NYX_11062472_Pusch-2000.pdf ("1040T→C")
         // Because " " has already been trimmed to "", make pattern optional.
         // Note the "u" modifier to allow for UTF-8 characters.
-        'invalid' => [ '/[®?!.4→]?/u', [] ],
+        'invalid' => [ '/[⬎®?!.4→]?/u', [] ],
     ];
 
     public function validate ()
