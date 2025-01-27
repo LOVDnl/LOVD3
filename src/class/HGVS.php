@@ -295,7 +295,7 @@ class HGVS
 
         // If we have not matched, fail completely.
         if (!$this->matched) {
-            $this->messages['EFAIL'] = 'Failed to recognize a HGVS nomenclature-compliant variant description in your input.';
+            $this->messages = ['EFAIL' => 'Failed to recognize a HGVS nomenclature-compliant variant description in your input.'];
         }
     }
 
