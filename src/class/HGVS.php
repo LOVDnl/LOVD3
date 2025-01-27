@@ -2783,8 +2783,8 @@ class HGVS_DNAPositions extends HGVS
 class HGVS_DNAPrefix extends HGVS
 {
     public array $patterns = [
-        'coding'        => [ '/c(?![A-Z])/', [] ],
-        'genomic'       => [ '/g(?![A-Z])/', [] ],
+        'coding'        => [ '/c(?!([A-Z]|[0-9]+[ACGT]+$))/', [] ],
+        'genomic'       => [ '/g(?!([A-Z]|[0-9]+[ACGT]+$))/', [] ],
         'mitochondrial' => [ '/m(?![A-Z])/', [] ],
         'non-coding'    => [ '/n(?![A-Z])/', [] ],
         'circular'      => [ '/o(?![A-Z])/', [] ],
