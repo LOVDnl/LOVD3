@@ -264,9 +264,15 @@ class HGVS
                 $b = $this->validate();
                 if ($b === 0) {
                     // This is a request to just skip this pattern.
+                    if ($bDebugging) {
+                        print("$sClassString matched but was told to abandon matching this pattern during validation.\n");
+                    }
                     $this->matched = false;
                 } elseif ($b === false) {
                     // This is a request to break this entire object.
+                    if ($bDebugging) {
+                        print("$sClassString matched but was told to abandon matching this whole class during validation.\n");
+                    }
                     $this->matched = false;
                     break;
                 }
