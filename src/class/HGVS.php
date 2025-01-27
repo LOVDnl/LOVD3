@@ -2805,6 +2805,7 @@ class HGVS_DNAPrefix extends HGVS
                     array_fill(0, count($RefSeq->allowed_prefixes), $nConfidence)
                 );
                 $this->suffix = $this->input; // Reset the suffix in case HGVS_Dot took something.
+                unset($this->messages['WPREFIXFORMAT']); // Remove the warning in case HGVS_Dot is missing, too.
                 $this->messages['WPREFIXMISSING'] = 'This variant description seems incomplete. Variant descriptions should start with a molecule type (e.g., "' . $this->getCorrectedValue() . '.").';
 
             } elseif (!in_array($this->getCorrectedValue(), $RefSeq->allowed_prefixes)) {
@@ -2836,6 +2837,7 @@ class HGVS_DNAPrefix extends HGVS
                 ];
             }
             $this->suffix = $this->input; // Reset the suffix in case HGVS_Dot took something.
+            unset($this->messages['WPREFIXFORMAT']); // Remove the warning in case HGVS_Dot is missing, too.
             $this->messages['EPREFIXMISSING'] = 'This variant description seems incomplete. Variant descriptions should start with a molecule type (e.g., "' . $this->getCorrectedValue() . '.").';
         }
     }
@@ -3776,8 +3778,11 @@ class HGVS_Dot extends HGVS
         $this->setCorrectedValue('.');
         if ($this->value != $this->getCorrectedValue()) {
             $VariantPrefix = ($this->getParentProperty('DNAPrefix') ?: ($this->getParentProperty('RNAPrefix') ?: $this->getParentProperty('ProteinPrefix')));
-            $sVariantPrefix = ($VariantPrefix? $VariantPrefix->getCorrectedValue() : 'g');
-            $this->messages['WPREFIXFORMAT'] = 'Molecule types in variant descriptions should be followed by a period (e.g., "' . $sVariantPrefix . '.").';
+            if ($VariantPrefix && empty($VariantPrefix->getMessages())) {
+                // Only when we have a prefix and when the prefix itself isn't already complaining,
+                //  will we complain about the period missing.
+                $this->messages['WPREFIXFORMAT'] = 'Molecule types in variant descriptions should be followed by a period (e.g., "' . $VariantPrefix->getCorrectedValue() . '.").';
+            }
         }
     }
 }
@@ -4498,11 +4503,6 @@ class HGVS_Variant extends HGVS
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->predicted = (substr($this->matched_pattern, -9) == 'predicted'
             || !empty($this->DNAVariantBody->predicted)); // NOTE: This is due to c.0? being predicted.
-
-        // Clean up the messages a bit.
-        if (isset($this->messages['EPREFIXMISSING']) || isset($this->messages['WPREFIXMISSING'])) {
-            unset($this->messages['WPREFIXFORMAT']);
-        }
 
         // Some variant types aren't supported for validation and mapping.
         // But I want the message to say whether it was a valid HGVS description,
