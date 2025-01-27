@@ -2777,11 +2777,11 @@ class HGVS_DNAPositions extends HGVS
 class HGVS_DNAPrefix extends HGVS
 {
     public array $patterns = [
-        'coding'        => [ '/c/', [] ],
-        'genomic'       => [ '/g/', [] ],
-        'mitochondrial' => [ '/m/', [] ],
-        'non-coding'    => [ '/n/', [] ],
-        'circular'      => [ '/o/', [] ],
+        'coding'        => [ '/c(?![A-Z])/', [] ],
+        'genomic'       => [ '/g(?![A-Z])/', [] ],
+        'mitochondrial' => [ '/m(?![A-Z])/', [] ],
+        'non-coding'    => [ '/n(?![A-Z])/', [] ],
+        'circular'      => [ '/o(?![A-Z])/', [] ],
         'nothing'       => [ 'HGVS_Dot', [] ],
     ];
 
@@ -4287,7 +4287,7 @@ class HGVS_RNAAlts extends HGVS_DNAAlts
 class HGVS_RNAPrefix extends HGVS
 {
     public array $patterns = [
-        'RNA'     => [ '/r/', [] ],
+        'RNA'     => [ '/r(?![A-Z])/', [] ],
         'nothing' => [ 'HGVS_Dot', [] ],
     ];
 
@@ -4410,7 +4410,7 @@ class HGVS_ProteinPositionPosition extends HGVS
 class HGVS_ProteinPrefix extends HGVS
 {
     public array $patterns = [
-        'protein' => [ '/p/', [] ],
+        'protein' => [ '/p(?![A-Z])/', [] ],
         'nothing' => [ 'HGVS_Dot', [] ],
     ];
 
