@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2025-01-24
+ * Modified    : 2025-01-27
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1097,7 +1097,8 @@ class HGVS_DNAAlts extends HGVS
         // Check for invalid nucleotides.
         $sUnknownBases = preg_replace($this->patterns['valid'][0] . 'i', '', $this->getCorrectedValue());
         if ($sUnknownBases) {
-            $this->messages['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
+            $sCode = (preg_match('/^[Ut]+$/', $sUnknownBases)? 'WINVALIDNUCLEOTIDES' : 'EINVALIDNUCLEOTIDES');
+            $this->messages[$sCode] = 'This variant description contains one or more invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
             // Then, replace the 'U's with 'T's or the other way around.
             if (get_class($this) == 'HGVS_RNAAlts') {
                 $this->setCorrectedValue(str_replace('t', 'u', $this->getCorrectedValue()));
@@ -2888,7 +2889,8 @@ class HGVS_DNARefs extends HGVS
         // OK, with that out of the way, we can check for invalid nucleotides.
         $sUnknownBases = preg_replace($this->patterns['valid'][0] . 'i', '', $this->getCorrectedValue());
         if ($sUnknownBases) {
-            $this->messages['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
+            $sCode = (preg_match('/^[Ut]+$/', $sUnknownBases)? 'WINVALIDNUCLEOTIDES' : 'EINVALIDNUCLEOTIDES');
+            $this->messages[$sCode] = 'This variant description contains one or more invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
             // Then, replace the 'U's with 'T's or the other way around.
             if (get_class($this) == 'HGVS_RNARefs') {
                 $this->setCorrectedValue(str_replace('t', 'u', $this->getCorrectedValue()));
@@ -3646,7 +3648,7 @@ class HGVS_DNAVariantType extends HGVS
                     array_keys($this->messages),
                     function ($sKey)
                     {
-                        return ($sKey[0] == 'E' && $sKey != 'EINVALIDNUCLEOTIDES');
+                        return ($sKey[0] == 'E');
                     })) {
                 // Calculate the corrected value. Toss it all in a VCF parser.
                 $this->VCF = new HGVS_VCFBody(
@@ -3678,7 +3680,7 @@ class HGVS_DNAVariantType extends HGVS
                     array_keys($this->messages),
                     function ($sKey)
                     {
-                        return ($sKey[0] == 'E' && $sKey != 'EINVALIDNUCLEOTIDES');
+                        return ($sKey[0] == 'E');
                     }))) {
             // Positions are known; REF and ALT are known. Toss it all in a VCF parser.
             $this->VCF = new HGVS_VCFBody(
