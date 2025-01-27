@@ -618,7 +618,7 @@ class HGVS
         } else {
             $o = $this->parent;
             // Let's keep the code simple by using recursion.
-            if (get_class($o) == $sClassName) {
+            if (in_array(get_class($o), [$sClassName, 'HGVS_' . $sClassName])) {
                 return $o;
             } else {
                 return $o->getParent($sClassName);
@@ -1485,8 +1485,8 @@ class HGVS_DNAInsSuffix extends HGVS
         // A deletion-insertion of one base to one base, is a substitution.
         // This check is purely done on the position, and any delXins variant is ignored; they will be handled later.
         if (get_class($this) == 'HGVS_DNAInsSuffix' // Don't run when we're in a complex insertion.
-            && $this->getParent('HGVS_DNAVariantType')
-            && $this->getParent('HGVS_DNAVariantType')->getData()['type'] == 'delins'
+            && $this->getParent('DNAVariantType')
+            && $this->getParent('DNAVariantType')->getData()['type'] == 'delins'
             && $this->getParentProperty('DNAPositions')->getLengths() == [1,1]
             && !$this->getParentProperty('DNADelSuffix')
             && $this->hasProperty('DNAAlts')
@@ -1704,7 +1704,7 @@ class HGVS_DNAInv extends HGVS
     {
         // Provide additional rules for validation, and stores values for the variant info if needed.
         $this->setCorrectedValue(strtolower($this->value));
-        if (!$this->getParent('HGVS_DNAInsSuffix')) {
+        if (!$this->getParent('DNAInsSuffix')) {
             // We are *not* in an insertion, set the variant type.
             $this->data['type'] = $this->getCorrectedValue();
         }
@@ -1859,7 +1859,7 @@ class HGVS_DNAPipeSuffix extends HGVS
         // Provide additional rules for validation, and stores values for the variant info if needed.
         // If our direct parent is HGVS_DNAPipe, that means the Pipe wasn't actually there.
         // That means we have to be more careful with what we're matching.
-        if ($this->getParent('HGVS_DNAPipe') && in_array($this->matched_pattern, ['=', 'invalid'])) {
+        if ($this->getParent('DNAPipe') && in_array($this->matched_pattern, ['=', 'invalid'])) {
             return false; // Break out of the entire object.
         }
 
@@ -3315,7 +3315,7 @@ class HGVS_DNAVariantBody extends HGVS
                 } else {
                     // The VariantBody that found the (;) suggested changing this to ; or leaving it. The suggestion of
                     //  leaving it should have its square brackets removed, but only if we're not nested.
-                    if ($this->getParent('HGVS_DNAAllele')) {
+                    if ($this->getParent('DNAAllele')) {
                         // We're nested. Remove the suggestion that kept the (;).
                         foreach (array_keys($this->DNAAllele->getCorrectedValues()) as $sValue) {
                             if (strpos($sValue, '(;)') !== false) {
@@ -3437,7 +3437,7 @@ class HGVS_DNAVariantBody extends HGVS
         // Another check: for variants like c.(100)A>G, we're not sure whether we mean c.100A>G or perhaps c.(100A>G).
         if ($this->hasProperty('DNAPositions') && isset($this->DNAPositions->messages['WTOOMANYPARENS'])
             && !$this->DNAPositions->range
-            && (!$this->getParent('HGVS_Variant') || $this->getParent('HGVS_Variant')->current_pattern != 'DNA_predicted')) {
+            && (!$this->getParent('Variant') || $this->getParent('Variant')->current_pattern != 'DNA_predicted')) {
             // Reduce the current prediction(s) with 50%.
             $this->corrected_values = $this->buildCorrectedValues(
                 ['' => 0.5],
@@ -3476,7 +3476,7 @@ class HGVS_DNAVariantBody extends HGVS
                 // Since we handled the "(;)" here, the allele object will never see it. As such, when (;) is used within
                 //  square brackets, the Allele object will see only one VariantBody. We need to handle that intelligently.
                 // If we're given within an Allele, complain.
-                $Allele = $this->getParent('HGVS_DNAAllele');
+                $Allele = $this->getParent('DNAAllele');
                 if ($Allele) {
                     // Unknown phasing shouldn't have used square brackets.
                     $this->messages['WALLELEUNKNOWNPHASING'] = 'For unknown phasing indicated with parentheses around the semicolon, like "(;)", the allele syntax does not use square brackets.';
@@ -3503,7 +3503,7 @@ class HGVS_DNAVariantBody extends HGVS
             }
 
         } elseif (!in_array($this->matched_pattern, ['allele_trans', 'allele_cis'])
-            && !$this->getParent('HGVS_DNAAllele')
+            && !$this->getParent('DNAAllele')
             && strlen($this->suffix) > 1 && substr($this->suffix, 0, 1) == ';') {
             // Allele syntax without square brackets? We're not handling alleles and not in one, but there is a ";".
             // If so, try to match what's next and predict whether this was cis or trans.
@@ -3606,7 +3606,7 @@ class HGVS_DNAVariantType extends HGVS
             // Have "2 A C" sent to the VCF code, instead of having it handled here.
             // We'll have WWHITESPACE and WSUBSTFORMAT, while I rather have a WVCF.
             // Therefore, bail out when the variant body already has a WWHITESPACE and when DNASub is a whitespace.
-            if (!$this->DNASub->getValue() && $this->getParent('HGVS_DNAVariantBody') && isset($this->getParent('HGVS_DNAVariantBody')->getMessages()['WWHITESPACE'])) {
+            if (!$this->DNASub->getValue() && $this->getParent('DNAVariantBody') && isset($this->getParent('DNAVariantBody')->getMessages()['WWHITESPACE'])) {
                 // Let the VCF handle this.
                 return false; // Break out of the entire object.
             }
@@ -3958,7 +3958,7 @@ class HGVS_Lengths extends HGVS
                 ['' => $nCorrectionConfidence],
                 '(', $this->Length[0]->getCorrectedValues(), '_', $this->Length[1]->getCorrectedValues(), ')'
             );
-        } elseif ($this->lengths[0] == 1 && !$this->getParent('HGVS_DNARepeatComponent')) {
+        } elseif ($this->lengths[0] == 1 && !$this->getParent('DNARepeatComponent')) {
             // Actually, when the length is 1, and we're not a repeat, it's redundant and it shouldn't be given.
             $this->messages['WLENGTHGIVEN'] = 'A length of "1" is redundant and should be removed.';
             $this->setCorrectedValue('');
