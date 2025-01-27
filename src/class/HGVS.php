@@ -3287,6 +3287,7 @@ class HGVS_DNAVariantBody extends HGVS
         } else {
             $this->predicted = false;
         }
+        $VariantPrefix = $this->getParentProperty('DNAPrefix');
 
         // We need to handle alleles a bit differently to make sure we have the data set correctly.
         if ($this->matched_pattern == 'allele_trans') {
@@ -3344,7 +3345,6 @@ class HGVS_DNAVariantBody extends HGVS
 
         } elseif (!$this->hasProperty('DNAPositions')) {
             // No allele, but no positions, either. Store something anyway.
-            $VariantPrefix = $this->getParentProperty('DNAPrefix');
             $this->data['position_start'] = 0;
             $this->data['position_end'] = 0;
             if ($VariantPrefix && in_array($VariantPrefix->getCorrectedValue(), ['c', 'n'])) {
@@ -3383,24 +3383,55 @@ class HGVS_DNAVariantBody extends HGVS
 
         // Handle protein-like substitutions.
         if ($this->matched_pattern == 'protein-like_subst') {
-            // But consider this a match only if we have a prefix OR when there are no unknown nucleotides.
-            // Also, the REF and ALT should be both just one nucleotide long.
+            // But consider this a match only if we have a single position only,
+            //  only the canonical nucleotides (ACGT) are used, and when the REFs or ALTs are more than one nucleotide,
+            //  a variant prefix is required to make sure we're not matching gene symbols.
             if ($this->DNAPositions->range
-                || isset($this->messages['EINVALIDNUCLEOTIDES'])
-                || strlen($this->DNARefs->getCorrectedValue()) > 1
-                || strlen($this->DNAAlts->getCorrectedValue()) > 1) {
+                || !preg_match('/^[ACGT]+$/', $this->DNARefs->getCorrectedValue())
+                || !preg_match('/^[ACGT]+$/', $this->DNAAlts->getCorrectedValue())
+                || ($VariantPrefix && !empty($VariantPrefix->getMessages()
+                    && (strlen($this->DNARefs->getCorrectedValue()) > 1
+                        || strlen($this->DNAAlts->getCorrectedValue()) > 1)))) {
                 // Likely a protein description, instead, or something else entirely.
                 return 0; // Break out of this pattern only.
             }
 
-            // A warning has already been thrown. Just set the corrected value.
-            $this->corrected_values = $this->buildCorrectedValues(
-                $this->DNAPositions->getCorrectedValues(),
-                $this->DNARefs->getCorrectedValues(),
-                '>',
-                $this->DNAAlts->getCorrectedValues(),
-            );
-            $this->data['type'] = '>';
+            // Keep it simple if both REF and ALT are just one nucleotide.
+            if (strlen($this->DNARefs->getCorrectedValue()) == 1 && strlen($this->DNAAlts->getCorrectedValue()) == 1) {
+                // A warning has already been thrown. Just set the corrected value.
+                $this->corrected_values = $this->buildCorrectedValues(
+                    $this->DNAPositions->getCorrectedValues(),
+                    $this->DNARefs->getCorrectedValues(),
+                    '>',
+                    $this->DNAAlts->getCorrectedValues(),
+                );
+                $this->data['type'] = '>';
+
+            } else {
+                // Toss it all in a VCF parser.
+                $this->VCF = new HGVS_VCFBody(
+                    $this->DNAPositions->DNAPosition->getCorrectedValue() . ':' .
+                    $this->DNARefs->getCorrectedValue() . ':' .
+                    $this->DNAAlts->getCorrectedValue(),
+                    $this,
+                    $this->debugging
+                );
+                $this->corrected_values = $this->VCF->getCorrectedValues();
+
+                // The VCF object stores the new variant type, so we can easily see if it's changed.
+                $sNewType = $this->VCF->getInfo()['type'];
+                $this->data['type'] = $sNewType;
+                if ($sNewType == '=') {
+                    $this->messages['WINVALID'] = 'This is not a valid HGVS description. Did you mean to indicate that the sequence at this position did not change?';
+                } else {
+                    $this->messages['WINVALID'] = 'This is not a valid HGVS description. Based on the given sequences, this should be described as ' .
+                        ($sNewType == '>'? 'a substitution.' :
+                            ($sNewType == 'del'? 'a deletion.' :
+                                ($sNewType == 'delins'? 'a deletion-insertion.' :
+                                    ($sNewType == 'dup'? 'a duplication.' :
+                                        ($sNewType == 'ins'? 'an insertion.' : 'an inversion.')))));
+                }
+            }
         }
 
         // Another check: for variants like c.(100)A>G, we're not sure whether we mean c.100A>G or perhaps c.(100A>G).
