@@ -4888,6 +4888,12 @@ class HGVS_VCFRefs extends HGVS_DNARefs
         // Provide additional rules for validation, and stores values for the variant info if needed.
         if ($this->matched_pattern == 'nothing') {
             $this->value = '.';
+        } else {
+            // To prevent "30N." to match anything, make sure the REF is followed by a separator.
+            if (!preg_match('/[>: -]/', $this->getSuffix())) {
+                // Followed by something else than a separator, nope.
+                return false; // Break out of the entire object.
+            }
         }
         return parent::validate();
     }
