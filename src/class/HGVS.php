@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2025-01-27
+ * Modified    : 2025-01-28
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -941,8 +941,14 @@ class HGVS_Chr extends HGVS
 class HGVS_Chromosome extends HGVS
 {
     public array $patterns = [
-        'with_prefix'    => [ 'HGVS_Chr', 'HGVS_ChromosomeNumber', [] ],
-        'without_prefix' => [ 'HGVS_ChromosomeNumber', [] ],
+        'chr#(Genome)' => [ 'HGVS_Chr', 'HGVS_ChromosomeNumber', '(', 'HGVS_Genome', ')', [] ],
+        'chr#{Genome}' => [ 'HGVS_Chr', 'HGVS_ChromosomeNumber', '{', 'HGVS_Genome', '}', [] ],
+        'chr#[Genome]' => [ 'HGVS_Chr', 'HGVS_ChromosomeNumber', '[', 'HGVS_Genome', ']', [] ],
+        'chr#'         => [ 'HGVS_Chr', 'HGVS_ChromosomeNumber', [] ],
+        '#(Genome)'    => [ 'HGVS_ChromosomeNumber', '(', 'HGVS_Genome', ')', [] ],
+        '#{Genome}'    => [ 'HGVS_ChromosomeNumber', '{', 'HGVS_Genome', '}', [] ],
+        '#[Genome]'    => [ 'HGVS_ChromosomeNumber', '[', 'HGVS_Genome', ']', [] ],
+        '#'            => [ 'HGVS_ChromosomeNumber', [] ],
     ];
     public array $refseqs = [
         'hg18' => [
@@ -1037,9 +1043,23 @@ class HGVS_Chromosome extends HGVS
         if (!$this->ChromosomeNumber->isValid()) {
             // We received an invalid chromosome number that we won't be able to handle.
             $this->setCorrectedValue('chr' . $sChr);
+
+        } elseif ($this->hasProperty('Genome')) {
+            // We received a genome build as a selector, choose the right NC.
+            // However, complain when we received multiple and they differ.
+            if ($this->getParentProperty('Genome')
+                && $this->getParentProperty('Genome')->getCorrectedValue() != $this->Genome->getCorrectedValue()) {
+                $this->messages['EREFERENCEFORMAT'] = 'Found multiple genome build indicators that conflict.';
+                $this->setCorrectedValue($this->refseqs[$this->getParentProperty('Genome')->getCorrectedValue()][$sChr], 0.5);
+                $this->addCorrectedValue($this->refseqs[$this->Genome->getCorrectedValue()][$sChr], 0.5);
+            } else {
+                $this->setCorrectedValue($this->refseqs[$this->Genome->getCorrectedValue()][$sChr]);
+            }
+
         } elseif ($this->getParentProperty('Genome')) {
             // We received a genome build, choose the right NC.
             $this->setCorrectedValue($this->refseqs[$this->getParentProperty('Genome')->getCorrectedValue()][$sChr]);
+
         } else {
             // We didn't receive a genome build. We'll suggest them all.
             // Note that we don't have very reliable information about how much data each genome build has.
@@ -4017,6 +4037,7 @@ class HGVS_ReferenceSequence extends HGVS
         'LRG_genomic'                 => [ '/(LRG)([_-]?)([0-9]+)/', [] ],
         'build_and_chr'               => [ 'HGVS_Genome', 'HGVS_VCFSeparator', 'HGVS_Chromosome', [] ],
         'build(chr)'                  => [ 'HGVS_Genome', '(', 'HGVS_Chromosome', ')', [] ],
+        // NOTE: The HGVS_Chromosome class also handles the chr(build) syntax.
         'chr'                         => [ 'HGVS_Chromosome', [] ],
         // Because I do actually want to match something so we can validate the variant itself, match anything.
         'other'                       => [ '/([^:;\[\]]{2,})?(?=:)/', ['EREFERENCEFORMAT' => 'The reference sequence could not be recognised. Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.'] ],
