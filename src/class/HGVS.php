@@ -107,17 +107,6 @@ class HGVS
                     $this->messages['WWHITESPACE'] = 'This variant description contains one or more whitespace characters (spaces, tabs, etc).';
                 }
 
-                // Quick check: do we still have something left?
-                if ($sInputToParse === '') {
-                    if ($bDebugging) {
-                        print("$sClassString('$sInputToParse') ran out of input, but expecting more. aborting.\n");
-                    }
-                    $bMatching = false;
-                    // This can be a sign that a variant wasn't submitted completely, and we should try to get more input.
-                    $this->possibly_incomplete = true;
-                    break;
-                }
-
                 if (substr($sPattern, 0, 5) == 'HGVS_') {
                     // This is a class.
                     // Have we seen this before? Ran it already? But not modified it afterward?
@@ -187,6 +176,16 @@ class HGVS
                         $this->possibly_incomplete = ($this->possibly_incomplete || $aPattern[$i]->isPossiblyIncomplete());
                         break;
                     }
+
+                } elseif ($sInputToParse === '' && $sPatternName != 'nothing') {
+                    // Quick check: do we still have something left?
+                    if ($bDebugging) {
+                        print("$sClassString('$sInputToParse') ran out of input, but expecting more. aborting.\n");
+                    }
+                    $bMatching = false;
+                    // This can be a sign that a variant wasn't submitted completely, and we should try to get more input.
+                    $this->possibly_incomplete = true;
+                    break;
 
                 } elseif (strlen($sPattern) >= 3 && substr($sPattern, 0, 1) == '/') {
                     // Regex. Make sure it matches the start of the string. Make sure it's case-insensitive.
