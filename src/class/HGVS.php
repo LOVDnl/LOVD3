@@ -1479,6 +1479,8 @@ class HGVS_DNAInsSuffix extends HGVS
         'complex_in_brackets'              => [ '[', 'HGVS_DNAInsSuffixComplex', ']', [] ],
         'positions_inverted'               => [ 'HGVS_DNAPositions', 'HGVS_DNAInv', [] ],
         'positions'                        => [ 'HGVS_DNAPositions', [] ],
+        // NOTE: This one only gets matched with "bp" is used, like "100_200bp". Positions refuse to match when "bp" follows the input.
+        'length'                           => [ 'HGVS_Lengths', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
         'length_in_brackets'               => [ '[', 'HGVS_Lengths', ']', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
         'sequence_with_number'             => [ 'HGVS_DNAAlts', 'HGVS_Lengths', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
         'sequence_with_length'             => [ 'HGVS_DNAAlts', '[', 'HGVS_Lengths', ']', [] ],
@@ -1540,11 +1542,9 @@ class HGVS_DNAInsSuffix extends HGVS
                 unset($this->messages['WTOOMANYPARENS']);
 
             } elseif (!$this->DNAPositions->intronic && !$this->DNAPositions->UTR && !$this->DNAPositions->range) {
-                // E.g., ins10 or ins(10). We will only interpret this as a length.
-                $this->setCorrectedValue('N[' . $this->DNAPositions->getCorrectedValue() . ']');
-                $this->messages['WSUFFIXFORMAT'] = 'The part after "ins" does not follow HGVS guidelines.';
-                // Also remove the possible warning given by the Positions object. It doesn't like "(10)".
-                unset($this->messages['WTOOMANYPARENS']);
+                // E.g., ins10 or ins(10). However, it can also happen when we have "ins50_60bp", since the Positions
+                //  class refuses to match "60bp". Just fail here, so the object will try the next pattern.
+                return 0; // Break out of this pattern only.
 
             } elseif ($this->DNAPositions->uncertain && !$this->DNAPositions->intronic && !$this->DNAPositions->UTR
                 && !$this->DNAPositions->DNAPositionStart->range && !$this->DNAPositions->DNAPositionEnd->range) {
