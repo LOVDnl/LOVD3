@@ -4675,7 +4675,17 @@ class HGVS_VCFAlts extends HGVS_DNAAlts
     public array $patterns = [
         'invalid' => [ '/[A-Z]+/', [] ],
         'valid'   => [ '/(\.|[ACGTMRWSYKVHDBN]+)/', [] ],
+        'nothing' => [ '/$/', [] ],
     ];
+
+    public function validate ()
+    {
+        // Provide additional rules for validation, and stores values for the variant info if needed.
+        if ($this->matched_pattern == 'nothing') {
+            $this->value = '.';
+        }
+        return parent::validate();
+    }
 }
 
 
