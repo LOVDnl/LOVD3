@@ -1911,7 +1911,7 @@ class HGVS_DNAPosition extends HGVS
     public array $patterns = [
         'unknown'          => [ '?', [] ],
         'unknown_intronic' => [ '/([-‐−–—*]?([0-9,]+))([+—–−‐-]\?)/u', [] ],
-        'known'            => [ '/([-‐−–—*]?([0-9,]+))([+—–−‐-]([0-9,]+))?/u', [] ],
+        'known'            => [ '/([-‐−–—*]?([0-9,]+))([+—–−‐-]([0-9,]+))?(?![0-9]*bp)/u', [] ],
         'pter'             => [ '/pter/', [] ],
         'qter'             => [ '/qter/', [] ],
     ];
@@ -3877,8 +3877,9 @@ class HGVS_Genome extends HGVS
 class HGVS_Length extends HGVS
 {
     public array $patterns = [
-        'unknown' => [ '?', [] ],
-        'known'   => [ '/([0-9]+)/', [] ],
+        'unknown'  => [ '?', [] ],
+        'known_bp' => [ '/([0-9]+)bp/', [] ],
+        'known'    => [ '/([0-9]+)/', [] ],
     ];
 
     public function validate ()
@@ -3893,9 +3894,11 @@ class HGVS_Length extends HGVS
         } else {
             $this->length = (int) $this->value;
 
-            // Check for values with zeros.
+            // Check for values with zeros or a "bp" suffix.
             if (!$this->length) {
                 $this->messages['ELENGTHFORMAT'] = 'This variant description contains an invalid sequence length: "' . $this->value . '".';
+            } elseif ($this->matched_pattern == 'known_bp') {
+                $this->messages['WLENGTHFORMAT'] = 'In the HGVS nomenclature, sequence lengths are not indicated using "bp".';
             } elseif ((string) $this->length !== $this->regex[1]) {
                 $this->messages['WLENGTHWITHZERO'] = 'Sequence lengths should not be prefixed by a 0.';
                 $nCorrectionConfidence *= 0.9;
