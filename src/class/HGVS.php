@@ -1304,6 +1304,17 @@ class HGVS_DNADelSuffix extends HGVS
                     $this->messages['ESUFFIXTOOSHORT'] =
                         "The variant's positions indicate a sequence that's longer than the given deleted sequence." .
                         " Please adjust either the variant's positions or the given deleted sequence.";
+                    if ($bPositionLengthIsCertain && $bSuffixLengthIsCertain) {
+                        // Do this only when there are no uncertainties at all.
+                        // Otherwise, c.100_200delN[(10_1000)] also gets here.
+                        // Now, what's left, is stuff like c.100_200delA.
+                        // Johan mentioned that sometimes people do c.1_4delAA when they mean c.2_3 was deleted.
+                        // I don't know how often this happens, but I don't want to make too many assumptions.
+                        // Also, it's impossible here to make complex predictions since we're deep into the objects.
+                        // Just simplify by running makeUncertain().
+                        // We're throwing an error, so the predicted values have a low confidence.
+                        $Positions->makeUncertain();
+                    }
                 }
                 if ($nMaxLengthVariant && $nMaxLengthSuffix > $nMaxLengthVariant) {
                     $this->messages['ESUFFIXTOOLONG'] =
