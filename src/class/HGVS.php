@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2025-01-28
+ * Modified    : 2025-01-29
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1474,8 +1474,8 @@ class HGVS_DNAInsSuffix extends HGVS
 {
     use HGVS_DNASequence; // Gets us getSequence() and getLengths().
     public array $patterns = [
-        'positions_with_refseq_inv'        => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAPositions', 'HGVS_DNAInv', [ 'WSUFFIXFORMATISCOMPLEX' => 'Use square brackets for complex insertions.' ] ],
-        'positions_with_refseq'            => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAPositions', [ 'WSUFFIXFORMATISCOMPLEX' => 'Use square brackets for complex insertions.' ] ],
+        'refseq_with_positions_inv'        => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAPositions', 'HGVS_DNAInv', [ 'WSUFFIXFORMATISCOMPLEX' => 'Use square brackets for complex insertions.' ] ],
+        'refseq_with_positions'            => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAPositions', [ 'WSUFFIXFORMATISCOMPLEX' => 'Use square brackets for complex insertions.' ] ],
         'complex_in_brackets'              => [ '[', 'HGVS_DNAInsSuffixComplex', ']', [] ],
         'positions_inverted'               => [ 'HGVS_DNAPositions', 'HGVS_DNAInv', [] ],
         'positions'                        => [ 'HGVS_DNAPositions', [] ],
@@ -1518,7 +1518,7 @@ class HGVS_DNAInsSuffix extends HGVS
         }
 
         // Store the corrected value.
-        if (substr($this->matched_pattern, 0, 21) == 'positions_with_refseq') {
+        if ($this->hasProperty('ReferenceSequence')) {
             if (get_class($this) == 'HGVS_DNAInsSuffix') {
                 // This required square brackets. I threw the warning already.
                 $this->corrected_values = $this->buildCorrectedValues(
@@ -1700,8 +1700,8 @@ class HGVS_DNAInsSuffixComplex extends HGVS
 class HGVS_DNAInsSuffixComplexComponent extends HGVS_DNAInsSuffix
 {
     public array $patterns = [
-        'positions_with_refseq_inv' => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAPositions', 'HGVS_DNAInv', [] ],
-        'positions_with_refseq'     => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAPositions', [] ],
+        'refseq_with_positions_inv' => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAPositions', 'HGVS_DNAInv', [] ],
+        'refseq_with_positions'     => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAPositions', [] ],
         'sequence_with_length'      => [ 'HGVS_DNAAlts', '[', 'HGVS_Lengths', ']', [] ],
         'sequence'                  => [ 'HGVS_DNAAlts', [] ],
         'positions_inverted'        => [ 'HGVS_DNAPositions', 'HGVS_DNAInv', [] ],
