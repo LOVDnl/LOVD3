@@ -1520,7 +1520,14 @@ class HGVS_DNAInsSuffix extends HGVS
 
         // Store the corrected value.
         if ($this->hasProperty('ReferenceSequence')) {
-            if ($this->matched_pattern == 'refseq_only') {
+            // Do some additional checks. The problem is that "ins10" can match "10" as "chr10",
+            //  and obviously, that makes no sense.
+            if ($this->ReferenceSequence->getProperties() == ['Chromosome']
+                && $this->ReferenceSequence->Chromosome->getProperties() == ['ChromosomeNumber']) {
+                // Just a number got interpreted as a chromosome. Block.
+                return 0; // Break out of this pattern only.
+
+            } elseif ($this->matched_pattern == 'refseq_only') {
                 // Try to reconstruct what's needed.
                 // Analyze the reference sequence to predict the prefixes.
                 $this->DNAPrefix = new HGVS_DNAPrefix(':', $this, $this->debugging);
