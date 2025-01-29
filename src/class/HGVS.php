@@ -1476,6 +1476,7 @@ class HGVS_DNAInsSuffix extends HGVS
     public array $patterns = [
         'refseq_with_positions_inv'        => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAPositions', 'HGVS_DNAInv', [ 'WSUFFIXFORMATISCOMPLEX' => 'Use square brackets for complex insertions.' ] ],
         'refseq_with_positions'            => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAPositions', [ 'WSUFFIXFORMATISCOMPLEX' => 'Use square brackets for complex insertions.' ] ],
+        'refseq_only'                      => [ 'HGVS_ReferenceSequence', [ 'WSUFFIXFORMATISCOMPLEX' => 'Use square brackets for complex insertions.', 'EPOSITIONSMISSING' => 'The insertion of a reference sequence also requires the positions of the sequence taken from this reference sequence.' ] ],
         'complex_in_brackets'              => [ '[', 'HGVS_DNAInsSuffixComplex', ']', [] ],
         'positions_inverted'               => [ 'HGVS_DNAPositions', 'HGVS_DNAInv', [] ],
         'positions'                        => [ 'HGVS_DNAPositions', [] ],
@@ -1519,6 +1520,19 @@ class HGVS_DNAInsSuffix extends HGVS
 
         // Store the corrected value.
         if ($this->hasProperty('ReferenceSequence')) {
+            if ($this->matched_pattern == 'refseq_only') {
+                // Try to reconstruct what's needed.
+                // Analyze the reference sequence to predict the prefixes.
+                $this->DNAPrefix = new HGVS_DNAPrefix(':', $this, $this->debugging);
+                $this->corrected_values = $this->buildCorrectedValues(
+                    ['' => 0.1], // Make sure the confidence is only 1% (10% here times 10% for having an error).
+                    $this->ReferenceSequence->getCorrectedValues(),
+                    ':',
+                    $this->DNAPrefix->getCorrectedValues(),
+                    '.1_1000' // Just a random range, as an example.
+                );
+            }
+
             if (get_class($this) == 'HGVS_DNAInsSuffix') {
                 // This required square brackets. I threw the warning already.
                 $this->corrected_values = $this->buildCorrectedValues(
