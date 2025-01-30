@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2025-01-29   // When modified, also change the library_version.
+ * Modified    : 2025-01-30   // When modified, also change the library_version.
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -690,7 +690,7 @@ class HGVS
     public static function getVersions ()
     {
         return [
-            'library_version' => '2025-01-29',
+            'library_version' => '2025-01-30',
             'HGVS_nomenclature_versions' => [
                 'input' => [
                     'minimum' => '15.11',
@@ -2925,8 +2925,11 @@ class HGVS_DNAPrefix extends HGVS
 class HGVS_DNARefs extends HGVS
 {
     public array $patterns = [
-        'invalid' => [ '/[A-Z]+/', [] ],
-        'valid'   => [ '/[ACGTN]+/', [] ],
+        // NOTE: I could merge the top two into  '/[A-Z]+(?=(con|del|dup|ins|inv))?/', an optional positive look-ahead.
+        //       However, for some reason, since the whole pattern is made to match ignoring the case, A-Z takes it all.
+        'invalid_with_keyword' => [ '/[A-Z]+(?=(con|del|dup|ins|inv))/', [] ],
+        'invalid'              => [ '/[A-Z]+/', [] ],
+        'valid'                => [ '/[ACGTN]+/', [] ],
     ];
 
     public function validate ()
@@ -2938,32 +2941,7 @@ class HGVS_DNARefs extends HGVS
 
         // If we had checked the 'valid' rule first, we would not support recognizing invalid nucleotides after valid
         //  nucleotides. The valid ones would match, and we would return the invalid nucleotides as a suffix. That's a
-        //  problem, so we're first just matching everything.
-
-        // First, we need to prevent that we're matching HGVS reserved terms, like "ins".
-        // If we do, we need to pretend that we never matched that part and what follows.
-        $nReservedWord = false;
-        foreach (['con', 'del', 'dup', 'ins', 'inv'] as $sKeyword) {
-            $n = strpos($this->getCorrectedValue(), $caseCorrection($sKeyword));
-            if ($n !== false && ($nReservedWord === false || $n < $nReservedWord)) {
-                $nReservedWord = $n;
-            }
-        }
-        if ($nReservedWord !== false) {
-            // OK, we can't match this part. We can match anything that came before, though.
-            if (!$nReservedWord) {
-                // The string starts with a reserved keyword. Pretend that didn't match anything.
-                return false; // Break out of the entire object.
-            } else {
-                // Register that we matched up to the reserved keyword.
-                $this->suffix = substr($this->value, $nReservedWord) . $this->suffix;
-                $this->value = substr($this->value, 0, $nReservedWord);
-                $this->setCorrectedValue($caseCorrection($this->value));
-                $this->caseOK = ($this->value == $this->getCorrectedValue());
-            }
-        }
-
-        // OK, with that out of the way, we can check for invalid nucleotides.
+        //  problem, so we're first just matching everything. Now, let's check for invalid nucleotides.
         $sUnknownBases = preg_replace($this->patterns['valid'][0] . 'i', '', $this->getCorrectedValue());
         if ($sUnknownBases) {
             $sCode = (preg_match('/^[Ut]+$/', $sUnknownBases)? 'WINVALIDNUCLEOTIDES' : 'EINVALIDNUCLEOTIDES');
@@ -4458,8 +4436,11 @@ class HGVS_RNAPrefix extends HGVS
 class HGVS_RNARefs extends HGVS_DNARefs
 {
     public array $patterns = [
-        'invalid' => [ '/[A-Z]+/', [] ],
-        'valid'   => [ '/[ACGUN]+/', [] ],
+        // NOTE: I could merge the top two into  '/[A-Z]+(?=(con|del|dup|ins|inv))?/', an optional positive look-ahead.
+        //       However, for some reason, since the whole pattern is made to match ignoring the case, A-Z takes it all.
+        'invalid_with_keyword' => [ '/[A-Z]+(?=(con|del|dup|ins|inv))/', [] ],
+        'invalid'              => [ '/[A-Z]+/', [] ],
+        'valid'                => [ '/[ACGUN]+/', [] ],
     ];
 }
 
