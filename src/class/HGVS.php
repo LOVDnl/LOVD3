@@ -3844,7 +3844,7 @@ class HGVS_DNAVariantType extends HGVS
             // But not A>A.
             unset($this->corrected_values[$this->value . '>' . $this->value]);
             // Also inform the user properly.
-            $this->messages['WINVALID'] = 'This variant description seems incomplete. Did you mean to write a substitution?' .
+            $this->messages['EINVALID'] = 'This variant description seems incomplete. Did you mean to write a substitution?' .
                 ' Substitutions are written like "' . $Positions->getCorrectedValue() . $this->getCorrectedValue() . '".' .
                 ' Alternatively, did you mean to indicate this position was unchanged?' .
                 ' That is written like "' . $Positions->getCorrectedValue() . '=".';
