@@ -3851,6 +3851,25 @@ class HGVS_DNAVariantType extends HGVS
                     ' Substitutions are written like "' . $Positions->getCorrectedValue() . $this->getCorrectedValue() . '".' .
                     ' Alternatively, did you mean to indicate this position was unchanged?' .
                     ' That is written like "' . $Positions->getCorrectedValue() . '=".';
+
+            } else {
+                // For sure, suggest a deletion-insertion.
+                $this->corrected_values = $this->buildCorrectedValues(
+                    'delins',
+                    $this->value
+                );
+                // Also inform the user properly.
+                $this->messages['EINVALID'] = 'This variant description seems incomplete. Did you mean to write a deletion-insertion?' .
+                    ' They are written like "' . $Positions->getCorrectedValue() . $this->getCorrectedValue() . '".';
+
+                // Only when the lengths match, suggest a reference call.
+                if ($Positions->getLengths()[0] == strlen($this->value)) {
+                    // Lower the confidence a bit, first.
+                    $this->appendCorrectedValue('', 0.5);
+                    $this->addCorrectedValue('=', 0.5);
+                    $this->messages['EINVALID'] .= ' Alternatively, did you mean to indicate this position was unchanged?' .
+                        ' That is written like "' . $Positions->getCorrectedValue() . '=".';
+                }
             }
         }
     }
