@@ -3852,7 +3852,7 @@ class HGVS_DNAVariantType extends HGVS
                     ' Alternatively, did you mean to indicate this position was unchanged?' .
                     ' That is written like "' . $Positions->getCorrectedValue() . '=".';
 
-            } else {
+            } elseif (!$Positions->uncertain) {
                 // For sure, suggest a deletion-insertion.
                 $this->corrected_values = $this->buildCorrectedValues(
                     'delins',
@@ -3870,6 +3870,10 @@ class HGVS_DNAVariantType extends HGVS
                     $this->messages['EINVALID'] .= ' Alternatively, did you mean to indicate this position was unchanged?' .
                         ' That is written like "' . $Positions->getCorrectedValue() . '=".';
                 }
+
+            } else {
+                // Uncertain positions? Nah, reject the match.
+                return 0; // Break out of this pattern only.
             }
         }
     }
