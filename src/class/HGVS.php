@@ -3630,7 +3630,7 @@ class HGVS_DNAVariantType extends HGVS
         'unknown'             => [ 'HGVS_DNAUnknown', [ 'EINVALID' => 'This variant description seems incomplete.' ] ],
         'wildtype_with_refs'  => [ 'HGVS_DNARefs', 'HGVS_DNAWildType', [] ],
         'wildtype'            => [ 'HGVS_DNAWildType', [] ],
-        'refs'                => [ '/[ACGTN]$/', [] ], // We only want to match valid nucleotides to prevent false positives.
+        'refs'                => [ '/[ACGTN]+(?=([^A-Z]|$))/', [] ], // We only want to match valid nucleotides to prevent false positives.
     ];
 
     public function validate ()
@@ -3828,26 +3828,30 @@ class HGVS_DNAVariantType extends HGVS
             // E.g., c.100A. Assuming this is some kind of allele statement, but we don't have the original base.
             $this->caseOK = ($this->value == strtoupper($this->value));
             $this->value = strtoupper($this->value);
-            // This could be a substitution...
-            $this->corrected_values = $this->buildCorrectedValues(
-                [
-                    'A' => 0.25,
-                    'C' => 0.25,
-                    'G' => 0.25,
-                    'T' => 0.25,
-                ],
-                '>',
-                $this->value
-            );
-            // Or a reference call.
-            $this->addCorrectedValue('=', 0.25);
-            // But not A>A.
-            unset($this->corrected_values[$this->value . '>' . $this->value]);
-            // Also inform the user properly.
-            $this->messages['EINVALID'] = 'This variant description seems incomplete. Did you mean to write a substitution?' .
-                ' Substitutions are written like "' . $Positions->getCorrectedValue() . $this->getCorrectedValue() . '".' .
-                ' Alternatively, did you mean to indicate this position was unchanged?' .
-                ' That is written like "' . $Positions->getCorrectedValue() . '=".';
+
+            // Compare positions and bases.
+            if (!$Positions->range && strlen($this->value) == 1) {
+                // This could be a substitution...
+                $this->corrected_values = $this->buildCorrectedValues(
+                    [
+                        'A' => 0.25,
+                        'C' => 0.25,
+                        'G' => 0.25,
+                        'T' => 0.25,
+                    ],
+                    '>',
+                    $this->value
+                );
+                // Or a reference call.
+                $this->addCorrectedValue('=', 0.25);
+                // But not A>A.
+                unset($this->corrected_values[$this->value . '>' . $this->value]);
+                // Also inform the user properly.
+                $this->messages['EINVALID'] = 'This variant description seems incomplete. Did you mean to write a substitution?' .
+                    ' Substitutions are written like "' . $Positions->getCorrectedValue() . $this->getCorrectedValue() . '".' .
+                    ' Alternatively, did you mean to indicate this position was unchanged?' .
+                    ' That is written like "' . $Positions->getCorrectedValue() . '=".';
+            }
         }
     }
 }
