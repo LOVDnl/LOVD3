@@ -1096,9 +1096,9 @@ class HGVS_ChromosomeNumber extends HGVS
 {
     public array $patterns = [
         'number' => [ '/[0-9]{1,2}(?![0-9])/', [] ],
-        'X'      => [ '/X/', [] ],
-        'Y'      => [ '/Y/', [] ],
-        'M'      => [ '/M/', [] ],
+        'X'      => [ '/X(?![A-Z])/', [] ],
+        'Y'      => [ '/Y(?![A-Z])/', [] ],
+        'M'      => [ '/M(?![A-Z])/', [] ],
     ];
 
     public function validate ()
@@ -3905,8 +3905,8 @@ class HGVS_Dot extends HGVS
 class HGVS_Genome extends HGVS
 {
     public array $patterns = [
-        'ucsc' => [ '/hg(18|19|38)/', [] ],
-        'ncbi' => [ '/GRCh3(6|7|8)/', [] ],
+        'ucsc' => [ '/hg(18|19|38)(?![0-9])/', [] ],
+        'ncbi' => [ '/GRCh3(6|7|8)(?![0-9])/', [] ],
     ];
 
     public function validate ()
