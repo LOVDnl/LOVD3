@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-11-05
- * Modified    : 2025-01-30   // When modified, also change the library_version.
+ * Modified    : 2025-01-31   // When modified, also change the library_version.
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -44,12 +44,12 @@ class HGVS
     //        you should create an object. The reason for this is that we can't deduce from a regular expression what it
     //        matched. An object holds its value, a string has a fixed value by itself, but a regex can't store a value.
     public array $patterns = [
-        'full_variant'       => [ 'HGVS_ReferenceSequence', ':', 'HGVS_Variant', [] ],
-        'variant'            => [ 'HGVS_Variant', ['EREFSEQMISSING' => 'This variant is missing a reference sequence.'] ],
-        'VCF'                => [ 'HGVS_VCF', ['WVCF' => 'Recognized a VCF-like format; converting this format to HGVS nomenclature.'] ],
-        'reference_sequence' => [ 'HGVS_ReferenceSequence', [] ],
-        'genome_build'       => [ 'HGVS_Genome', [] ],
-        'variant_identifier' => [ 'HGVS_VariantIdentifier', [] ],
+        'full_variant'       => ['HGVS_ReferenceSequence', ':', 'HGVS_Variant', []],
+        'variant'            => ['HGVS_Variant', ['EREFSEQMISSING' => 'This variant is missing a reference sequence.']],
+        'VCF'                => ['HGVS_VCF', ['WVCF' => 'Recognized a VCF-like format; converting this format to HGVS nomenclature.']],
+        'reference_sequence' => ['HGVS_ReferenceSequence', []],
+        'genome_build'       => ['HGVS_Genome', []],
+        'variant_identifier' => ['HGVS_VariantIdentifier', []],
     ];
     public array $corrected_values = [];
     public array $data = [];
@@ -156,7 +156,7 @@ class HGVS
                         // Sometimes we have multiple values. E.g., positions. Store them in an array.
                         if (isset($this->$sName)) {
                             if (!is_array($this->$sName)) {
-                                $this->$sName = [ $this->$sName ];
+                                $this->$sName = [$this->$sName];
                             }
                             $this->$sName[] = $aPattern[$i];
                         } else {
@@ -690,7 +690,7 @@ class HGVS
     public static function getVersions ()
     {
         return [
-            'library_version' => '2025-01-30',
+            'library_version' => '2025-01-31',
             'HGVS_nomenclature_versions' => [
                 'input' => [
                     'minimum' => '15.11',
@@ -850,7 +850,7 @@ class HGVS_Caret extends HGVS
     public array $patterns = [
         // NOTE: The HGVS nomenclature hasn't clarified the "or" syntax well. It's likely a "moving target" and needs
         //        clarification and an improved definition in the HGVS nomenclature. Until then, we won't support it.
-        'anything' => [ '/.*\^.+/', [] ],
+        'anything' => ['/.*\^.+/', []],
     ];
 
     public function validate ()
@@ -879,9 +879,9 @@ class HGVS_DNAAllele extends HGVS
 {
     public array $components = [];
     public array $patterns = [
-        'multiple_cis'     => [ 'HGVS_DNAVariantBody', ';', 'HGVS_DNAAllele', [] ],
-        'multiple_comma'   => [ 'HGVS_DNAVariantBody', ',', 'HGVS_DNAAllele', [ 'WALLELEFORMAT' => 'The allele syntax uses semicolons (;) to separate variants, not commas.' ] ],
-        'single'           => [ 'HGVS_DNAVariantBody', [] ],
+        'multiple_cis'     => ['HGVS_DNAVariantBody', ';', 'HGVS_DNAAllele', []],
+        'multiple_comma'   => ['HGVS_DNAVariantBody', ',', 'HGVS_DNAAllele', ['WALLELEFORMAT' => 'The allele syntax uses semicolons (;) to separate variants, not commas.']],
+        'single'           => ['HGVS_DNAVariantBody', []],
     ];
 
     public function getComponents ()
@@ -940,7 +940,7 @@ class HGVS_DNAAllele extends HGVS
 class HGVS_Chr extends HGVS
 {
     public array $patterns = [
-        [ '/chr(omosome)?/', [] ],
+        ['/chr(omosome)?/', []],
     ];
 
     public function validate ()
@@ -958,14 +958,14 @@ class HGVS_Chr extends HGVS
 class HGVS_Chromosome extends HGVS
 {
     public array $patterns = [
-        'chr#(Genome)' => [ 'HGVS_Chr', 'HGVS_ChromosomeNumber', '(', 'HGVS_Genome', ')', [] ],
-        'chr#{Genome}' => [ 'HGVS_Chr', 'HGVS_ChromosomeNumber', '{', 'HGVS_Genome', '}', [] ],
-        'chr#[Genome]' => [ 'HGVS_Chr', 'HGVS_ChromosomeNumber', '[', 'HGVS_Genome', ']', [] ],
-        'chr#'         => [ 'HGVS_Chr', 'HGVS_ChromosomeNumber', [] ],
-        '#(Genome)'    => [ 'HGVS_ChromosomeNumber', '(', 'HGVS_Genome', ')', [] ],
-        '#{Genome}'    => [ 'HGVS_ChromosomeNumber', '{', 'HGVS_Genome', '}', [] ],
-        '#[Genome]'    => [ 'HGVS_ChromosomeNumber', '[', 'HGVS_Genome', ']', [] ],
-        '#'            => [ 'HGVS_ChromosomeNumber', [] ],
+        'chr#(Genome)' => ['HGVS_Chr', 'HGVS_ChromosomeNumber', '(', 'HGVS_Genome', ')', []],
+        'chr#{Genome}' => ['HGVS_Chr', 'HGVS_ChromosomeNumber', '{', 'HGVS_Genome', '}', []],
+        'chr#[Genome]' => ['HGVS_Chr', 'HGVS_ChromosomeNumber', '[', 'HGVS_Genome', ']', []],
+        'chr#'         => ['HGVS_Chr', 'HGVS_ChromosomeNumber', []],
+        '#(Genome)'    => ['HGVS_ChromosomeNumber', '(', 'HGVS_Genome', ')', []],
+        '#{Genome}'    => ['HGVS_ChromosomeNumber', '{', 'HGVS_Genome', '}', []],
+        '#[Genome]'    => ['HGVS_ChromosomeNumber', '[', 'HGVS_Genome', ']', []],
+        '#'            => ['HGVS_ChromosomeNumber', []],
     ];
     public array $refseqs = [
         'hg18' => [
@@ -1095,10 +1095,10 @@ class HGVS_Chromosome extends HGVS
 class HGVS_ChromosomeNumber extends HGVS
 {
     public array $patterns = [
-        'number' => [ '/[0-9]{1,2}(?![0-9])/', [] ],
-        'X'      => [ '/X(?![A-Z])/', [] ],
-        'Y'      => [ '/Y(?![A-Z])/', [] ],
-        'M'      => [ '/M(?![A-Z])/', [] ],
+        'number' => ['/[0-9]{1,2}(?![0-9])/', []],
+        'X'      => ['/X(?![A-Z])/', []],
+        'Y'      => ['/Y(?![A-Z])/', []],
+        'M'      => ['/M(?![A-Z])/', []],
     ];
 
     public function validate ()
@@ -1122,8 +1122,8 @@ class HGVS_ChromosomeNumber extends HGVS
 class HGVS_DNAAlts extends HGVS
 {
     public array $patterns = [
-        'invalid' => [ '/[A-Z]+/', [] ],
-        'valid'   => [ '/[ACGTMRWSYKVHDBN]+/', [] ],
+        'invalid' => ['/[A-Z]+/', []],
+        'valid'   => ['/[ACGTMRWSYKVHDBN]+/', []],
     ];
 
     public function validate ()
@@ -1159,7 +1159,7 @@ class HGVS_DNAAlts extends HGVS
 class HGVS_DNACNV extends HGVS
 {
     public array $patterns = [
-        [ '[', 'HGVS_Lengths', ']', [] ],
+        ['[', 'HGVS_Lengths', ']', []],
     ];
 
     public function validate ()
@@ -1197,7 +1197,7 @@ class HGVS_DNACNV extends HGVS
 class HGVS_DNACon extends HGVS
 {
     public array $patterns = [
-        [ '/con/', [] ],
+        ['/con/', []],
     ];
 
     public function validate ()
@@ -1231,7 +1231,7 @@ class HGVS_DNACon extends HGVS
 class HGVS_DNADel extends HGVS
 {
     public array $patterns = [
-        [ '/del/', [] ],
+        ['/del/', []],
     ];
 
     public function validate ()
@@ -1254,17 +1254,17 @@ class HGVS_DNADelSuffix extends HGVS
     use HGVS_DNASequence; // Gets us getSequence() and getLengths().
     public array $patterns = [
         // Since none of these match "ins", a "delAinsC" won't ever pass here.
-        [ 'HGVS_Lengths', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
-        [ '[', 'HGVS_Lengths', ']', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
-        [ 'HGVS_DNARefs', 'HGVS_Lengths', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
-        [ 'HGVS_DNARefs', '[', 'HGVS_Lengths', ']', [] ],
-        [ 'HGVS_DNARefs', [] ],
-        [ '(', 'HGVS_DNARefs', ')', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
-        [ '(', 'HGVS_DNARefs', 'HGVS_Lengths', ')', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
-        [ '(', 'HGVS_DNARefs', '[', 'HGVS_Lengths', '])', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
-        [ '[', 'HGVS_DNARefs', ']', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
-        [ '[', 'HGVS_DNARefs', 'HGVS_Lengths', ']', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
-        [ '[', 'HGVS_DNARefs', '[', 'HGVS_Lengths', ']]', [ 'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.' ] ],
+        ['HGVS_Lengths', ['WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.']],
+        ['[', 'HGVS_Lengths', ']', ['WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.']],
+        ['HGVS_DNARefs', 'HGVS_Lengths', ['WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.']],
+        ['HGVS_DNARefs', '[', 'HGVS_Lengths', ']', []],
+        ['HGVS_DNARefs', []],
+        ['(', 'HGVS_DNARefs', ')', ['WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.']],
+        ['(', 'HGVS_DNARefs', 'HGVS_Lengths', ')', ['WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.']],
+        ['(', 'HGVS_DNARefs', '[', 'HGVS_Lengths', '])', ['WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.']],
+        ['[', 'HGVS_DNARefs', ']', ['WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.']],
+        ['[', 'HGVS_DNARefs', 'HGVS_Lengths', ']', ['WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.']],
+        ['[', 'HGVS_DNARefs', '[', 'HGVS_Lengths', ']]', ['WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.']],
     ];
 
     public function validate ()
@@ -1371,7 +1371,7 @@ class HGVS_DNADelSuffix extends HGVS
 class HGVS_DNADup extends HGVS_DNADel
 {
     public array $patterns = [
-        [ '/dup/', [] ],
+        ['/dup/', []],
     ];
 }
 
@@ -1413,7 +1413,7 @@ class HGVS_DNADupSuffix extends HGVS_DNADelSuffix
 class HGVS_DNAIns extends HGVS
 {
     public array $patterns = [
-        [ '/ins/', [] ],
+        ['/ins/', []],
     ];
 
     public function validate ()
@@ -1503,24 +1503,24 @@ class HGVS_DNAInsSuffix extends HGVS
 {
     use HGVS_DNASequence; // Gets us getSequence() and getLengths().
     public array $patterns = [
-        'refseq_with_positions_inv'        => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAPositions', 'HGVS_DNAInv', [ 'WSUFFIXFORMATISCOMPLEX' => 'Use square brackets for complex insertions.' ] ],
-        'refseq_with_positions'            => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAPositions', [ 'WSUFFIXFORMATISCOMPLEX' => 'Use square brackets for complex insertions.' ] ],
-        'refseq_only'                      => [ 'HGVS_ReferenceSequence', [ 'WSUFFIXFORMATISCOMPLEX' => 'Use square brackets for complex insertions.', 'EPOSITIONSMISSING' => 'The insertion of a reference sequence also requires the positions of the sequence taken from this reference sequence.' ] ],
-        'complex_in_brackets'              => [ '[', 'HGVS_DNAInsSuffixComplex', ']', [] ],
-        'positions_inverted'               => [ 'HGVS_DNAPositions', 'HGVS_DNAInv', [] ],
-        'positions'                        => [ 'HGVS_DNAPositions', [] ],
+        'refseq_with_positions_inv'        => ['HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAPositions', 'HGVS_DNAInv', ['WSUFFIXFORMATISCOMPLEX' => 'Use square brackets for complex insertions.']],
+        'refseq_with_positions'            => ['HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAPositions', ['WSUFFIXFORMATISCOMPLEX' => 'Use square brackets for complex insertions.']],
+        'refseq_only'                      => ['HGVS_ReferenceSequence', ['WSUFFIXFORMATISCOMPLEX' => 'Use square brackets for complex insertions.', 'EPOSITIONSMISSING' => 'The insertion of a reference sequence also requires the positions of the sequence taken from this reference sequence.']],
+        'complex_in_brackets'              => ['[', 'HGVS_DNAInsSuffixComplex', ']', []],
+        'positions_inverted'               => ['HGVS_DNAPositions', 'HGVS_DNAInv', []],
+        'positions'                        => ['HGVS_DNAPositions', []],
         // NOTE: This one only gets matched with "bp" is used, like "100_200bp". Positions refuse to match when "bp" follows the input.
-        'length'                           => [ 'HGVS_Lengths', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
-        'length_in_brackets'               => [ '[', 'HGVS_Lengths', ']', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
-        'sequence_with_number'             => [ 'HGVS_DNAAlts', 'HGVS_Lengths', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
-        'sequence_with_length'             => [ 'HGVS_DNAAlts', '[', 'HGVS_Lengths', ']', [] ],
-        'sequence'                         => [ 'HGVS_DNAAlts', [] ],
-        'sequence_in_parens'               => [ '(', 'HGVS_DNAAlts', ')', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
-        'sequence_with_number_in_parens'   => [ '(', 'HGVS_DNAAlts', 'HGVS_Lengths', ')', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
-        'sequence_with_length_in_parens'   => [ '(', 'HGVS_DNAAlts', '[', 'HGVS_Lengths', '])', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
-        'sequence_in_brackets'             => [ '[', 'HGVS_DNAAlts', ']', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
-        'sequence_with_number_in_brackets' => [ '[', 'HGVS_DNAAlts', 'HGVS_Lengths', ']', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
-        'sequence_with_length_in_brackets' => [ '[', 'HGVS_DNAAlts', '[', 'HGVS_Lengths', ']]', [ 'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.' ] ],
+        'length'                           => ['HGVS_Lengths', ['WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.']],
+        'length_in_brackets'               => ['[', 'HGVS_Lengths', ']', ['WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.']],
+        'sequence_with_number'             => ['HGVS_DNAAlts', 'HGVS_Lengths', ['WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.']],
+        'sequence_with_length'             => ['HGVS_DNAAlts', '[', 'HGVS_Lengths', ']', []],
+        'sequence'                         => ['HGVS_DNAAlts', []],
+        'sequence_in_parens'               => ['(', 'HGVS_DNAAlts', ')', ['WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.']],
+        'sequence_with_number_in_parens'   => ['(', 'HGVS_DNAAlts', 'HGVS_Lengths', ')', ['WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.']],
+        'sequence_with_length_in_parens'   => ['(', 'HGVS_DNAAlts', '[', 'HGVS_Lengths', '])', ['WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.']],
+        'sequence_in_brackets'             => ['[', 'HGVS_DNAAlts', ']', ['WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.']],
+        'sequence_with_number_in_brackets' => ['[', 'HGVS_DNAAlts', 'HGVS_Lengths', ']', ['WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.']],
+        'sequence_with_length_in_brackets' => ['[', 'HGVS_DNAAlts', '[', 'HGVS_Lengths', ']]', ['WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.']],
     ];
 
     public function validate ()
@@ -1655,8 +1655,8 @@ class HGVS_DNAInsSuffixComplex extends HGVS
 {
     public array $components = [];
     public array $patterns = [
-        'multiple' => [ 'HGVS_DNAInsSuffixComplexComponent', ';', 'HGVS_DNAInsSuffixComplex', [] ],
-        'single'   => [ 'HGVS_DNAInsSuffixComplexComponent', [] ],
+        'multiple' => ['HGVS_DNAInsSuffixComplexComponent', ';', 'HGVS_DNAInsSuffixComplex', []],
+        'single'   => ['HGVS_DNAInsSuffixComplexComponent', []],
     ];
 
     public function getComponents ()
@@ -1750,12 +1750,12 @@ class HGVS_DNAInsSuffixComplex extends HGVS
 class HGVS_DNAInsSuffixComplexComponent extends HGVS_DNAInsSuffix
 {
     public array $patterns = [
-        'refseq_with_positions_inv' => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAPositions', 'HGVS_DNAInv', [] ],
-        'refseq_with_positions'     => [ 'HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAPositions', [] ],
-        'sequence_with_length'      => [ 'HGVS_DNAAlts', '[', 'HGVS_Lengths', ']', [] ],
-        'sequence'                  => [ 'HGVS_DNAAlts', [] ],
-        'positions_inverted'        => [ 'HGVS_DNAPositions', 'HGVS_DNAInv', [] ],
-        'positions'                 => [ 'HGVS_DNAPositions', [] ],
+        'refseq_with_positions_inv' => ['HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAPositions', 'HGVS_DNAInv', []],
+        'refseq_with_positions'     => ['HGVS_ReferenceSequence', ':', 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAPositions', []],
+        'sequence_with_length'      => ['HGVS_DNAAlts', '[', 'HGVS_Lengths', ']', []],
+        'sequence'                  => ['HGVS_DNAAlts', []],
+        'positions_inverted'        => ['HGVS_DNAPositions', 'HGVS_DNAInv', []],
+        'positions'                 => ['HGVS_DNAPositions', []],
     ];
 }
 
@@ -1766,7 +1766,7 @@ class HGVS_DNAInsSuffixComplexComponent extends HGVS_DNAInsSuffix
 class HGVS_DNAInv extends HGVS
 {
     public array $patterns = [
-        [ '/inv/', [] ],
+        ['/inv/', []],
     ];
 
     public function validate ()
@@ -1848,8 +1848,8 @@ class HGVS_DNAInvSuffix extends HGVS_DNADelSuffix
 class HGVS_DNANull extends HGVS
 {
     public array $patterns = [
-        'predicted' => [ '0?', [] ],
-        'observed'  => [ '0', [] ],
+        'predicted' => ['0?', []],
+        'observed'  => ['0', []],
     ];
 
     public function validate ()
@@ -1883,8 +1883,8 @@ class HGVS_DNAPipe extends HGVS
 {
     use HGVS_CheckBasesGiven; // Gives us checkBasesGiven().
     public array $patterns = [
-        'pipe(s)' => [ '/\|+/', [] ],
-        'nothing' => [ 'HGVS_DNAPipeSuffix', [] ],
+        'pipe(s)' => ['/\|+/', []],
+        'nothing' => ['HGVS_DNAPipeSuffix', []],
     ];
 
     public function validate ()
@@ -1915,12 +1915,12 @@ class HGVS_DNAPipe extends HGVS
 class HGVS_DNAPipeSuffix extends HGVS
 {
     public array $patterns = [
-        'met='    => [ '/met=/', [] ],
-        'met'     => [ '/met/', [] ],
-        '='       => [ '/=/', [] ],
-        'gom'     => [ '/gom/', [] ],
-        'lom'     => [ '/lom/', [] ],
-        'invalid' => [ '/[A-Z]+/', [] ],
+        'met='    => ['/met=/', []],
+        'met'     => ['/met/', []],
+        '='       => ['/=/', []],
+        'gom'     => ['/gom/', []],
+        'lom'     => ['/lom/', []],
+        'invalid' => ['/[A-Z]+/', []],
     ];
 
     public function validate ()
@@ -1959,11 +1959,11 @@ class HGVS_DNAPipeSuffix extends HGVS
 class HGVS_DNAPosition extends HGVS
 {
     public array $patterns = [
-        'unknown'          => [ '?', [] ],
-        'unknown_intronic' => [ '/([-‐−–—*]?([0-9,]+))([+—–−‐-]\?)/u', [] ],
-        'known'            => [ '/([-‐−–—*]?([0-9,]+))([+—–−‐-]([0-9,]+))?(?![0-9]*bp)/u', [] ],
-        'pter'             => [ '/pter/', [] ],
-        'qter'             => [ '/qter/', [] ],
+        'unknown'          => ['?', []],
+        'unknown_intronic' => ['/([-‐−–—*]?([0-9,]+))([+—–−‐-]\?)/u', []],
+        'known'            => ['/([-‐−–—*]?([0-9,]+))([+—–−‐-]([0-9,]+))?(?![0-9]*bp)/u', []],
+        'pter'             => ['/pter/', []],
+        'qter'             => ['/qter/', []],
     ];
     public array $position_limits = [
         'g' => [1, 4294967295, 0, 0], // position min, position max, offset min, offset max.
@@ -2158,7 +2158,7 @@ class HGVS_DNAPosition extends HGVS
 class HGVS_DNAPositionSeparator extends HGVS
 {
     public array $patterns = [
-        [ '_', [] ],
+        ['_', []],
     ];
 
     public function validate ()
@@ -2194,9 +2194,9 @@ class HGVS_DNAPositionSeparator extends HGVS
 class HGVS_DNAPositionStart extends HGVS
 {
     public array $patterns = [
-        'uncertain_range'  => [ '(', 'HGVS_DNAPosition', '_', 'HGVS_DNAPosition', ')', [] ],
-        'uncertain_single' => [ '(', 'HGVS_DNAPosition', ')', [ 'WTOOMANYPARENS' => "The variant's positions contain redundant parentheses." ] ],
-        'single'           => [ 'HGVS_DNAPosition', [] ],
+        'uncertain_range'  => ['(', 'HGVS_DNAPosition', '_', 'HGVS_DNAPosition', ')', []],
+        'uncertain_single' => ['(', 'HGVS_DNAPosition', ')', ['WTOOMANYPARENS' => "The variant's positions contain redundant parentheses."]],
+        'single'           => ['HGVS_DNAPosition', []],
     ];
 
     public function validate ()
@@ -2346,10 +2346,10 @@ class HGVS_DNAPositionEnd extends HGVS_DNAPositionStart {}
 class HGVS_DNAPositions extends HGVS
 {
     public array $patterns = [
-        'range'            => [ 'HGVS_DNAPositionStart', 'HGVS_DNAPositionSeparator', 'HGVS_DNAPositionEnd', [] ],
-        'uncertain_range'  => [ '(', 'HGVS_DNAPositionStart', 'HGVS_DNAPositionSeparator', 'HGVS_DNAPositionEnd', ')', [] ],
-        'uncertain_single' => [ '(', 'HGVS_DNAPosition', ')', [ 'WTOOMANYPARENS' => "This variant description contains a position with redundant parentheses." ] ],
-        'single'           => [ 'HGVS_DNAPosition', [] ],
+        'range'            => ['HGVS_DNAPositionStart', 'HGVS_DNAPositionSeparator', 'HGVS_DNAPositionEnd', []],
+        'uncertain_range'  => ['(', 'HGVS_DNAPositionStart', 'HGVS_DNAPositionSeparator', 'HGVS_DNAPositionEnd', ')', []],
+        'uncertain_single' => ['(', 'HGVS_DNAPosition', ')', ['WTOOMANYPARENS' => "This variant description contains a position with redundant parentheses."]],
+        'single'           => ['HGVS_DNAPosition', []],
     ];
     public array $lengths = [];
 
@@ -2852,12 +2852,12 @@ class HGVS_DNAPositions extends HGVS
 class HGVS_DNAPrefix extends HGVS
 {
     public array $patterns = [
-        'coding'        => [ '/c(?!([A-Z]|[0-9]+[ACGT]+$))/', [] ],
-        'genomic'       => [ '/g(?!([A-Z]|[0-9]+[ACGT]+$))/', [] ],
-        'mitochondrial' => [ '/m(?![A-Z])/', [] ],
-        'non-coding'    => [ '/n(?![A-Z])/', [] ],
-        'circular'      => [ '/o(?![A-Z])/', [] ],
-        'nothing'       => [ 'HGVS_Dot', [] ],
+        'coding'        => ['/c(?!([A-Z]|[0-9]+[ACGT]+$))/', []],
+        'genomic'       => ['/g(?!([A-Z]|[0-9]+[ACGT]+$))/', []],
+        'mitochondrial' => ['/m(?![A-Z])/', []],
+        'non-coding'    => ['/n(?![A-Z])/', []],
+        'circular'      => ['/o(?![A-Z])/', []],
+        'nothing'       => ['HGVS_Dot', []],
     ];
 
     public function validate ()
@@ -2927,9 +2927,9 @@ class HGVS_DNARefs extends HGVS
     public array $patterns = [
         // NOTE: I could merge the top two into  '/[A-Z]+(?=(con|del|dup|ins|inv))?/', an optional positive look-ahead.
         //       However, for some reason, since the whole pattern is made to match ignoring the case, A-Z takes it all.
-        'invalid_with_keyword' => [ '/[A-Z]+(?=(con|del|dup|ins|inv))/', [] ],
-        'invalid'              => [ '/[A-Z]+/', [] ],
-        'valid'                => [ '/[ACGTN]+/', [] ],
+        'invalid_with_keyword' => ['/[A-Z]+(?=(con|del|dup|ins|inv))/', []],
+        'invalid'              => ['/[A-Z]+/', []],
+        'valid'                => ['/[ACGTN]+/', []],
     ];
 
     public function validate ()
@@ -2964,8 +2964,8 @@ class HGVS_DNARepeat extends HGVS
 {
     public array $components = [];
     public array $patterns = [
-        'multiple' => [ 'HGVS_DNARepeatComponent', 'HGVS_DNARepeat', [] ],
-        'single'   => [ 'HGVS_DNARepeatComponent', [] ],
+        'multiple' => ['HGVS_DNARepeatComponent', 'HGVS_DNARepeat', []],
+        'single'   => ['HGVS_DNARepeatComponent', []],
     ];
 
     public function getComponents ()
@@ -3150,7 +3150,7 @@ class HGVS_DNARepeatComponent extends HGVS
     use HGVS_DNASequence;
     public array $patterns = [
         // NOTE: We're using DNAAlts, because mixed repeats can be described using IUPAC codes other than A, C, G, or T.
-        'sequence_with_length'      => [ 'HGVS_DNAAlts', '[', 'HGVS_Lengths', ']', [] ],
+        'sequence_with_length'      => ['HGVS_DNAAlts', '[', 'HGVS_Lengths', ']', []],
     ];
 }
 
@@ -3161,7 +3161,7 @@ class HGVS_DNARepeatComponent extends HGVS
 class HGVS_DNASomatic extends HGVS
 {
     public array $patterns = [
-        [ '/\/+/', [] ],
+        ['/\/+/', []],
     ];
 
     public function validate ()
@@ -3187,7 +3187,7 @@ class HGVS_DNASomatic extends HGVS
 class HGVS_DNASomaticVariant extends HGVS
 {
     public array $patterns = [
-        [ 'HGVS_DNASomatic', 'HGVS_DNAVariantType', [] ],
+        ['HGVS_DNASomatic', 'HGVS_DNAVariantType', []],
     ];
 }
 
@@ -3198,8 +3198,8 @@ class HGVS_DNASomaticVariant extends HGVS
 class HGVS_DNASub extends HGVS
 {
     public array $patterns = [
-        'valid'   => [ '>', [] ],
-        'slash'   => [ '/', [] ],
+        'valid'   => ['>', []],
+        'slash'   => ['/', []],
         // Special characters arising from copying variants from PDFs. Some journals decided to use specialized fonts to
         //  create markup for normal characters, such as the ">" in a substitution. This is a terrible idea, as
         //  text-recognition then completely fails and copying the variant from the PDF results in a broken format.
@@ -3212,7 +3212,7 @@ class HGVS_DNASub extends HGVS
         // "→" seen in NYX_11062472_Pusch-2000.pdf ("1040T→C")
         // Because " " has already been trimmed to "", make pattern optional.
         // Note the "u" modifier to allow for UTF-8 characters.
-        'invalid' => [ '/[⬎®?!.4→]?/u', [] ],
+        'invalid' => ['/[⬎®?!.4→]?/u', []],
     ];
 
     public function validate ()
@@ -3246,7 +3246,7 @@ class HGVS_DNASub extends HGVS
 class HGVS_DNASup extends HGVS
 {
     public array $patterns = [
-        [ '/sup/', [] ],
+        ['/sup/', []],
     ];
 
     public function validate ()
@@ -3294,7 +3294,7 @@ class HGVS_DNAUnknown extends HGVS
 {
     use HGVS_CheckBasesGiven; // Gives us checkBasesGiven().
     public array $patterns = [
-        [ '?', [] ],
+        ['?', []],
     ];
 
     public function validate ()
@@ -3315,15 +3315,15 @@ class HGVS_DNAVariantBody extends HGVS
     public array $patterns = [
         // NOTE: The allele syntax with unknown phasing ("variant(;)variant") is handled outside of these patterns.
         //       Otherwise, many patterns will need to be repeated here as we don't support optional patterns (yet).
-        'null'                => [ 'HGVS_DNANull', [] ],
-        'allele_trans'        => [ '[', 'HGVS_DNAAllele', '];[', 'HGVS_DNAAllele', ']', [] ],
-        'allele_cis'          => [ '[', 'HGVS_DNAAllele', ']', [] ],
-        'or'                  => [ 'HGVS_DNAPositions', 'HGVS_Caret', [] ],
-        'somatic'             => [ 'HGVS_DNAPositions', 'HGVS_DNAVariantType', 'HGVS_DNASomaticVariant', [] ],
-        'other'               => [ 'HGVS_DNAPositions', 'HGVS_DNAVariantType', [] ],
-        'protein-like_subst'  => [ 'HGVS_DNARefs', 'HGVS_DNAPositions', 'HGVS_DNAAlts', [ 'WINVALID' => 'This is not a valid HGVS description. Did you mean to write a substitution?' ] ],
-        'unknown'             => [ 'HGVS_DNAUnknown', [] ],
-        'wildtype'            => [ 'HGVS_DNAWildType', [] ],
+        'null'                => ['HGVS_DNANull', []],
+        'allele_trans'        => ['[', 'HGVS_DNAAllele', '];[', 'HGVS_DNAAllele', ']', []],
+        'allele_cis'          => ['[', 'HGVS_DNAAllele', ']', []],
+        'or'                  => ['HGVS_DNAPositions', 'HGVS_Caret', []],
+        'somatic'             => ['HGVS_DNAPositions', 'HGVS_DNAVariantType', 'HGVS_DNASomaticVariant', []],
+        'other'               => ['HGVS_DNAPositions', 'HGVS_DNAVariantType', []],
+        'protein-like_subst'  => ['HGVS_DNARefs', 'HGVS_DNAPositions', 'HGVS_DNAAlts', ['WINVALID' => 'This is not a valid HGVS description. Did you mean to write a substitution?']],
+        'unknown'             => ['HGVS_DNAUnknown', []],
+        'wildtype'            => ['HGVS_DNAWildType', []],
     ];
 
     public function validate ()
@@ -3605,32 +3605,32 @@ class HGVS_DNAVariantBody extends HGVS
 class HGVS_DNAVariantType extends HGVS
 {
     public array $patterns = [
-        'substitution'        => [ 'HGVS_DNARefs', 'HGVS_DNASub', 'HGVS_DNAAlts', [] ],
-        'substitution_VCF'    => [ 'HGVS_VCFRefs', 'HGVS_DNASub', 'HGVS_VCFAlts', [] ],
-        'delXins_with_suffix' => [ 'HGVS_DNADel', 'HGVS_DNADelSuffix', 'HGVS_DNAIns', 'HGVS_DNAInsSuffix', [] ],
-        'delXins'             => [ 'HGVS_DNADel', 'HGVS_DNADelSuffix', 'HGVS_DNAIns', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
-        'delins_with_suffix'  => [ 'HGVS_DNADel', 'HGVS_DNAIns', 'HGVS_DNAInsSuffix', [] ],
-        'delins'              => [ 'HGVS_DNADel', 'HGVS_DNAIns', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
-        'del_with_suffix'     => [ 'HGVS_DNADel', 'HGVS_DNADelSuffix', [] ],
-        'del'                 => [ 'HGVS_DNADel', [] ],
-        'ins_with_suffix'     => [ 'HGVS_DNAIns', 'HGVS_DNAInsSuffix', [] ],
-        'ins'                 => [ 'HGVS_DNAIns', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for insertions.' ] ],
-        'dup_with_suffix'     => [ 'HGVS_DNADup', 'HGVS_DNADupSuffix', [] ],
-        'dup'                 => [ 'HGVS_DNADup', [] ],
-        'inv_with_suffix'     => [ 'HGVS_DNAInv', 'HGVS_DNAInvSuffix', [] ],
-        'inv'                 => [ 'HGVS_DNAInv', [] ],
-        'con_with_suffix'     => [ 'HGVS_DNACon', 'HGVS_DNAInsSuffix', [] ],
-        'con'                 => [ 'HGVS_DNACon', [ 'ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.' ] ],
-        'cnv'                 => [ 'HGVS_DNACNV', [] ],
-        'sup'                 => [ 'HGVS_DNASup', [] ],
-        'repeat'              => [ 'HGVS_DNARepeat', [] ],
-        'pipe_with_refs'      => [ 'HGVS_DNARefs', 'HGVS_DNAPipe', 'HGVS_DNAPipeSuffix', [] ],
-        'pipe'                => [ 'HGVS_DNAPipe', 'HGVS_DNAPipeSuffix', [] ],
-        'unknown_with_refs'   => [ 'HGVS_DNARefs', 'HGVS_DNAUnknown', [ 'EINVALID' => 'This variant description seems incomplete.' ] ],
-        'unknown'             => [ 'HGVS_DNAUnknown', [ 'EINVALID' => 'This variant description seems incomplete.' ] ],
-        'wildtype_with_refs'  => [ 'HGVS_DNARefs', 'HGVS_DNAWildType', [] ],
-        'wildtype'            => [ 'HGVS_DNAWildType', [] ],
-        'refs'                => [ '/[ACGTN]+(?=([^A-Z]|$))/', [] ], // We only want to match valid nucleotides to prevent false positives.
+        'substitution'        => ['HGVS_DNARefs', 'HGVS_DNASub', 'HGVS_DNAAlts', []],
+        'substitution_VCF'    => ['HGVS_VCFRefs', 'HGVS_DNASub', 'HGVS_VCFAlts', []],
+        'delXins_with_suffix' => ['HGVS_DNADel', 'HGVS_DNADelSuffix', 'HGVS_DNAIns', 'HGVS_DNAInsSuffix', []],
+        'delXins'             => ['HGVS_DNADel', 'HGVS_DNADelSuffix', 'HGVS_DNAIns', ['ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.']],
+        'delins_with_suffix'  => ['HGVS_DNADel', 'HGVS_DNAIns', 'HGVS_DNAInsSuffix', []],
+        'delins'              => ['HGVS_DNADel', 'HGVS_DNAIns', ['ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.']],
+        'del_with_suffix'     => ['HGVS_DNADel', 'HGVS_DNADelSuffix', []],
+        'del'                 => ['HGVS_DNADel', []],
+        'ins_with_suffix'     => ['HGVS_DNAIns', 'HGVS_DNAInsSuffix', []],
+        'ins'                 => ['HGVS_DNAIns', ['ESUFFIXMISSING' => 'The inserted sequence must be provided for insertions.']],
+        'dup_with_suffix'     => ['HGVS_DNADup', 'HGVS_DNADupSuffix', []],
+        'dup'                 => ['HGVS_DNADup', []],
+        'inv_with_suffix'     => ['HGVS_DNAInv', 'HGVS_DNAInvSuffix', []],
+        'inv'                 => ['HGVS_DNAInv', []],
+        'con_with_suffix'     => ['HGVS_DNACon', 'HGVS_DNAInsSuffix', []],
+        'con'                 => ['HGVS_DNACon', ['ESUFFIXMISSING' => 'The inserted sequence must be provided for deletion-insertions.']],
+        'cnv'                 => ['HGVS_DNACNV', []],
+        'sup'                 => ['HGVS_DNASup', []],
+        'repeat'              => ['HGVS_DNARepeat', []],
+        'pipe_with_refs'      => ['HGVS_DNARefs', 'HGVS_DNAPipe', 'HGVS_DNAPipeSuffix', []],
+        'pipe'                => ['HGVS_DNAPipe', 'HGVS_DNAPipeSuffix', []],
+        'unknown_with_refs'   => ['HGVS_DNARefs', 'HGVS_DNAUnknown', ['EINVALID' => 'This variant description seems incomplete.']],
+        'unknown'             => ['HGVS_DNAUnknown', ['EINVALID' => 'This variant description seems incomplete.']],
+        'wildtype_with_refs'  => ['HGVS_DNARefs', 'HGVS_DNAWildType', []],
+        'wildtype'            => ['HGVS_DNAWildType', []],
+        'refs'                => ['/[ACGTN]+(?=([^A-Z]|$))/', []], // We only want to match valid nucleotides to prevent false positives.
     ];
 
     public function validate ()
@@ -3887,7 +3887,7 @@ class HGVS_DNAWildType extends HGVS
 {
     use HGVS_CheckBasesGiven; // Gives us checkBasesGiven().
     public array $patterns = [
-        [ '=', [] ],
+        ['=', []],
     ];
 
     public function validate ()
@@ -3906,8 +3906,8 @@ class HGVS_DNAWildType extends HGVS
 class HGVS_Dot extends HGVS
 {
     public array $patterns = [
-        'something' => [ '/[:.,]+/', [] ],
-        'nothing'   => [ '/(?=[[(A-Z0-9*-])/', [] ],
+        'something' => ['/[:.,]+/', []],
+        'nothing'   => ['/(?=[[(A-Z0-9*-])/', []],
     ];
 
     public function validate ()
@@ -3932,8 +3932,8 @@ class HGVS_Dot extends HGVS
 class HGVS_Genome extends HGVS
 {
     public array $patterns = [
-        'ucsc' => [ '/hg(18|19|38)(?![0-9])/', [] ],
-        'ncbi' => [ '/GRCh3(6|7|8)(?![0-9])/', [] ],
+        'ucsc' => ['/hg(18|19|38)(?![0-9])/', []],
+        'ncbi' => ['/GRCh3(6|7|8)(?![0-9])/', []],
     ];
 
     public function validate ()
@@ -3959,9 +3959,9 @@ class HGVS_Genome extends HGVS
 class HGVS_Length extends HGVS
 {
     public array $patterns = [
-        'unknown'  => [ '?', [] ],
-        'known_bp' => [ '/([0-9]+)bp/', [] ],
-        'known'    => [ '/([0-9]+)/', [] ],
+        'unknown'  => ['?', []],
+        'known_bp' => ['/([0-9]+)bp/', []],
+        'known'    => ['/([0-9]+)/', []],
     ];
 
     public function validate ()
@@ -4002,10 +4002,10 @@ class HGVS_Length extends HGVS
 class HGVS_Lengths extends HGVS
 {
     public array $patterns = [
-        'range'              => [ 'HGVS_Length', '_', 'HGVS_Length', [] ],
-        'range_with_parens'  => [ '(', 'HGVS_Length', '_', 'HGVS_Length', ')', [] ],
-        'single'             => [ 'HGVS_Length', [] ],
-        'single_with_parens' => [ '(', 'HGVS_Length', ')', [ 'WTOOMANYPARENS' => 'This variant description contains a sequence length with redundant parentheses.' ] ],
+        'range'              => ['HGVS_Length', '_', 'HGVS_Length', []],
+        'range_with_parens'  => ['(', 'HGVS_Length', '_', 'HGVS_Length', ')', []],
+        'single'             => ['HGVS_Length', []],
+        'single_with_parens' => ['(', 'HGVS_Length', ')', ['WTOOMANYPARENS' => 'This variant description contains a sequence length with redundant parentheses.']],
     ];
     public array $lengths = [];
 
@@ -4100,31 +4100,31 @@ class HGVS_Lengths extends HGVS
 class HGVS_ReferenceSequence extends HGVS
 {
     public array $patterns = [
-        'refseq_genomic_coding'       => [ '/(N[CG])([_-]?)([0-9]+)(\.[0-9]+)?[({]([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', [] ],
-        'refseq_genomic_non-coding'   => [ '/(N[CG])([_-]?)([0-9]+)(\.[0-9]+)?[({]([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', [] ],
-        'refseq_genomic_with_gene'    => [ '/(N[CG])([_-]?)([0-9]+)(\.[0-9]+)?[({]([A-Z][A-Za-z0-9#@-]*(_v[0-9]+)?)[)}]/', [] ],
-        'refseq_genomic'              => [ '/(N[CG])([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
-        'refseq_coding_genomic'       => [ '/([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?[({](N[CG])([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', [] ],
-        'refseq_coding_with_gene'     => [ '/([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?[({]([A-Z][A-Za-z0-9#@-]*(_v[0-9]+)?)[)}]/', [] ],
-        'refseq_coding'               => [ '/([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
-        'refseq_non-coding_genomic'   => [ '/([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?[({](N[CG])([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', [] ],
-        'refseq_non-coding_with_gene' => [ '/([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?[({]([A-Z][A-Za-z0-9#@-]*(_v[0-9]+)?)[)}]/', [] ],
-        'refseq_non-coding'           => [ '/([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
-        'refseq_gene_with_genomic'    => [ '/([A-Z][A-Za-z0-9#@-]*)[({](N[CG])([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', [] ],
-        'refseq_gene_with_coding'     => [ '/(?:[A-Z][A-Za-z0-9#@-]*)[({]([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', [] ],
-        'refseq_gene_with_non-coding' => [ '/(?:[A-Z][A-Za-z0-9#@-]*)[({]([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', [] ],
-        'refseq_protein'              => [ '/([NXY]P)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
-        'refseq_other'                => [ '/^(N[TW]_([0-9]{6})|[A-Z][0-9]{5}|[A-Z]{2}[0-9]{6})(\.[0-9]+)/', [] ],
-        'ensembl_genomic'             => [ '/(ENSG)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
-        'ensembl_transcript'          => [ '/(ENST)([_-]?)([0-9]+)(\.[0-9]+)?/', [] ],
-        'LRG_transcript'              => [ '/(LRG)([_-]?)([0-9]+)([({[]?)(t)([0-9]+)([)}\]]?)/', [] ],
-        'LRG_genomic'                 => [ '/(LRG)([_-]?)([0-9]+)/', [] ],
-        'build_and_chr'               => [ 'HGVS_Genome', 'HGVS_VCFSeparator', 'HGVS_Chromosome', [] ],
-        'build(chr)'                  => [ 'HGVS_Genome', '(', 'HGVS_Chromosome', ')', [] ],
+        'refseq_genomic_coding'       => ['/(N[CG])([_-]?)([0-9]+)(\.[0-9]+)?[({]([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', []],
+        'refseq_genomic_non-coding'   => ['/(N[CG])([_-]?)([0-9]+)(\.[0-9]+)?[({]([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', []],
+        'refseq_genomic_with_gene'    => ['/(N[CG])([_-]?)([0-9]+)(\.[0-9]+)?[({]([A-Z][A-Za-z0-9#@-]*(_v[0-9]+)?)[)}]/', []],
+        'refseq_genomic'              => ['/(N[CG])([_-]?)([0-9]+)(\.[0-9]+)?/', []],
+        'refseq_coding_genomic'       => ['/([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?[({](N[CG])([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', []],
+        'refseq_coding_with_gene'     => ['/([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?[({]([A-Z][A-Za-z0-9#@-]*(_v[0-9]+)?)[)}]/', []],
+        'refseq_coding'               => ['/([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?/', []],
+        'refseq_non-coding_genomic'   => ['/([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?[({](N[CG])([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', []],
+        'refseq_non-coding_with_gene' => ['/([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?[({]([A-Z][A-Za-z0-9#@-]*(_v[0-9]+)?)[)}]/', []],
+        'refseq_non-coding'           => ['/([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?/', []],
+        'refseq_gene_with_genomic'    => ['/([A-Z][A-Za-z0-9#@-]*)[({](N[CG])([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', []],
+        'refseq_gene_with_coding'     => ['/(?:[A-Z][A-Za-z0-9#@-]*)[({]([NX]M)([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', []],
+        'refseq_gene_with_non-coding' => ['/(?:[A-Z][A-Za-z0-9#@-]*)[({]([NX]R)([_-]?)([0-9]+)(\.[0-9]+)?[)}]/', []],
+        'refseq_protein'              => ['/([NXY]P)([_-]?)([0-9]+)(\.[0-9]+)?/', []],
+        'refseq_other'                => ['/^(N[TW]_([0-9]{6})|[A-Z][0-9]{5}|[A-Z]{2}[0-9]{6})(\.[0-9]+)/', []],
+        'ensembl_genomic'             => ['/(ENSG)([_-]?)([0-9]+)(\.[0-9]+)?/', []],
+        'ensembl_transcript'          => ['/(ENST)([_-]?)([0-9]+)(\.[0-9]+)?/', []],
+        'LRG_transcript'              => ['/(LRG)([_-]?)([0-9]+)([({[]?)(t)([0-9]+)([)}\]]?)/', []],
+        'LRG_genomic'                 => ['/(LRG)([_-]?)([0-9]+)/', []],
+        'build_and_chr'               => ['HGVS_Genome', 'HGVS_VCFSeparator', 'HGVS_Chromosome', []],
+        'build(chr)'                  => ['HGVS_Genome', '(', 'HGVS_Chromosome', ')', []],
         // NOTE: The HGVS_Chromosome class also handles the chr(build) syntax.
-        'chr'                         => [ 'HGVS_Chromosome', [] ],
+        'chr'                         => ['HGVS_Chromosome', []],
         // Because I do actually want to match something so we can validate the variant itself, match anything.
-        'other'                       => [ '/([^:;\[\]]{2,})?(?=:)/', ['EREFERENCEFORMAT' => 'The reference sequence could not be recognised. Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.'] ],
+        'other'                       => ['/([^:;\[\]]{2,})?(?=:)/', ['EREFERENCEFORMAT' => 'The reference sequence could not be recognised. Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.']],
     ];
 
     public function validate ()
@@ -4417,8 +4417,8 @@ class HGVS_ReferenceSequence extends HGVS
 class HGVS_RNAAlts extends HGVS_DNAAlts
 {
     public array $patterns = [
-        'invalid' => [ '/[A-Z]+/', [] ],
-        'valid'   => [ '/[ACGUMRWSYKVHDBN]+/', [] ],
+        'invalid' => ['/[A-Z]+/', []],
+        'valid'   => ['/[ACGUMRWSYKVHDBN]+/', []],
     ];
 }
 
@@ -4429,8 +4429,8 @@ class HGVS_RNAAlts extends HGVS_DNAAlts
 class HGVS_RNAPrefix extends HGVS
 {
     public array $patterns = [
-        'RNA'     => [ '/r(?![A-Z])/', [] ],
-        'nothing' => [ 'HGVS_Dot', [] ],
+        'RNA'     => ['/r(?![A-Z])/', []],
+        'nothing' => ['HGVS_Dot', []],
     ];
 
     public function validate ()
@@ -4465,9 +4465,9 @@ class HGVS_RNARefs extends HGVS_DNARefs
     public array $patterns = [
         // NOTE: I could merge the top two into  '/[A-Z]+(?=(con|del|dup|ins|inv))?/', an optional positive look-ahead.
         //       However, for some reason, since the whole pattern is made to match ignoring the case, A-Z takes it all.
-        'invalid_with_keyword' => [ '/[A-Z]+(?=(con|del|dup|ins|inv))/', [] ],
-        'invalid'              => [ '/[A-Z]+/', [] ],
-        'valid'                => [ '/[ACGUN]+/', [] ],
+        'invalid_with_keyword' => ['/[A-Z]+(?=(con|del|dup|ins|inv))/', []],
+        'invalid'              => ['/[A-Z]+/', []],
+        'valid'                => ['/[ACGUN]+/', []],
     ];
 }
 
@@ -4480,7 +4480,7 @@ class HGVS_ProteinPosition extends HGVS
     public array $patterns = [
         // NOTE: The HGVS nomenclature doesn't state that unknown protein positions can't be used in a description.
         //       However, the nomenclature doesn't explain how to use it, and therefore, we will not define it.
-        [ 'HGVS_ProteinRef', 'HGVS_ProteinPositionPosition', [] ],
+        ['HGVS_ProteinRef', 'HGVS_ProteinPositionPosition', []],
     ];
 
     public function validate ()
@@ -4499,7 +4499,7 @@ class HGVS_ProteinPosition extends HGVS
 class HGVS_ProteinPositionPosition extends HGVS
 {
     public array $patterns = [
-        [ '/([0-9]+)/', [] ],
+        ['/([0-9]+)/', []],
     ];
     public array $position_limits = [
         'p' => [1, 65535], // position min, position max.
@@ -4555,8 +4555,8 @@ class HGVS_ProteinPositionPosition extends HGVS
 class HGVS_ProteinPrefix extends HGVS
 {
     public array $patterns = [
-        'protein' => [ '/p(?![A-Z])/', [] ],
-        'nothing' => [ 'HGVS_Dot', [] ],
+        'protein' => ['/p(?![A-Z])/', []],
+        'nothing' => ['HGVS_Dot', []],
     ];
 
     public function validate ()
@@ -4589,9 +4589,9 @@ class HGVS_ProteinPrefix extends HGVS
 class HGVS_ProteinRef extends HGVS
 {
     public array $patterns = [
-        'valid_long'   => [ '/(Ala|Cys|Asp|Glu|Phe|Gly|His|Ile|Lys|Leu|Met|Asn|Pro|Gln|Arg|Ser|Thr|Sec|Val|Trp|Xaa|Tyr|Ter)/', [] ],
-        'invalid_long' => [ '/[A-Z][a-z]{2}/', [] ],
-        'valid_short'  => [ '/[AC-IK-NP-Y*]/', [] ],
+        'valid_long'   => ['/(Ala|Cys|Asp|Glu|Phe|Gly|His|Ile|Lys|Leu|Met|Asn|Pro|Gln|Arg|Ser|Thr|Sec|Val|Trp|Xaa|Tyr|Ter)/', []],
+        'invalid_long' => ['/[A-Z][a-z]{2}/', []],
+        'valid_short'  => ['/[AC-IK-NP-Y*]/', []],
     ];
 
     public function validate ()
@@ -4639,8 +4639,8 @@ class HGVS_ProteinRef extends HGVS
 class HGVS_Variant extends HGVS
 {
     public array $patterns = [
-        'DNA_predicted' => [ 'HGVS_DNAPrefix', 'HGVS_Dot', '(', 'HGVS_DNAVariantBody', ')', [] ],
-        'DNA'           => [ 'HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAVariantBody', [] ],
+        'DNA_predicted' => ['HGVS_DNAPrefix', 'HGVS_Dot', '(', 'HGVS_DNAVariantBody', ')', []],
+        'DNA'           => ['HGVS_DNAPrefix', 'HGVS_Dot', 'HGVS_DNAVariantBody', []],
     ];
 
     public function validate ()
@@ -4677,10 +4677,10 @@ class HGVS_Variant extends HGVS
 class HGVS_VariantIdentifier extends HGVS
 {
     public array $patterns = [
-        'dbSNP'              => [ '/rs[0-9]+/', [] ],
-        'ClinVar_reference'  => [ '/RCV[0-9]+(\.[0-9]+)?/', [] ],
-        'ClinVar_submission' => [ '/SCV[0-9]+(\.[0-9]+)?/', [] ],
-        'ClinVar_variation'  => [ '/VCV[0-9]+(\.[0-9]+)?/', [] ],
+        'dbSNP'              => ['/rs[0-9]+/', []],
+        'ClinVar_reference'  => ['/RCV[0-9]+(\.[0-9]+)?/', []],
+        'ClinVar_submission' => ['/SCV[0-9]+(\.[0-9]+)?/', []],
+        'ClinVar_variation'  => ['/VCV[0-9]+(\.[0-9]+)?/', []],
     ];
 
     public function validate ()
@@ -4712,10 +4712,10 @@ class HGVS_VariantIdentifier extends HGVS
 class HGVS_VCF extends HGVS
 {
     public array $patterns = [
-        'with_build' => [ 'HGVS_Genome', 'HGVS_VCFSeparator', 'HGVS_Chromosome', 'HGVS_VCFSeparator', 'HGVS_VCFBody', [] ],
-        'with_chr'   => [ 'HGVS_Chromosome', 'HGVS_VCFSeparator', 'HGVS_VCFBody', ['WREFSEQMISSING' => 'This VCF variant is missing a genome build, which is required to determine the reference sequence used.'] ],
-        'basic'      => [ 'HGVS_VCFBody', ['EREFSEQMISSING' => 'This VCF variant is missing a genome build and chromosome, which is required to determine the reference sequence used.'] ],
-        'full_SPDI'  => [ 'HGVS_ReferenceSequence', 'HGVS_VCFSeparator', 'HGVS_VCFBody', [] ],
+        'with_build' => ['HGVS_Genome', 'HGVS_VCFSeparator', 'HGVS_Chromosome', 'HGVS_VCFSeparator', 'HGVS_VCFBody', []],
+        'with_chr'   => ['HGVS_Chromosome', 'HGVS_VCFSeparator', 'HGVS_VCFBody', ['WREFSEQMISSING' => 'This VCF variant is missing a genome build, which is required to determine the reference sequence used.']],
+        'basic'      => ['HGVS_VCFBody', ['EREFSEQMISSING' => 'This VCF variant is missing a genome build and chromosome, which is required to determine the reference sequence used.']],
+        'full_SPDI'  => ['HGVS_ReferenceSequence', 'HGVS_VCFSeparator', 'HGVS_VCFBody', []],
     ];
 
     public function validate ()
@@ -4761,9 +4761,9 @@ class HGVS_VCF extends HGVS
 class HGVS_VCFAlts extends HGVS_DNAAlts
 {
     public array $patterns = [
-        'invalid' => [ '/[A-Z]+/', [] ],
-        'valid'   => [ '/(\.|[ACGTMRWSYKVHDBN]+)/', [] ],
-        'nothing' => [ '/$/', [] ],
+        'invalid' => ['/[A-Z]+/', []],
+        'valid'   => ['/(\.|[ACGTMRWSYKVHDBN]+)/', []],
+        'nothing' => ['/$/', []],
     ];
 
     public function validate ()
@@ -4783,7 +4783,7 @@ class HGVS_VCFAlts extends HGVS_DNAAlts
 class HGVS_VCFBody extends HGVS
 {
     public array $patterns = [
-        [ 'HGVS_VCFPosition', 'HGVS_VCFSeparator', 'HGVS_VCFRefs', 'HGVS_VCFSeparator', 'HGVS_VCFAlts', [] ],
+        ['HGVS_VCFPosition', 'HGVS_VCFSeparator', 'HGVS_VCFRefs', 'HGVS_VCFSeparator', 'HGVS_VCFAlts', []],
     ];
 
     function getPositionString ($sPosition, $nIntronOffset, $nOffset, $nLength = 1)
@@ -4964,7 +4964,7 @@ class HGVS_VCFPosition extends HGVS_DNAPositions
     // We use VCFPosition to enforce a single position
     //  while at the same time inheriting the helper methods from DNAPositions.
     public array $patterns = [
-        'single' => [ 'HGVS_DNAPosition', [] ],
+        'single' => ['HGVS_DNAPosition', []],
     ];
 }
 
@@ -4975,9 +4975,9 @@ class HGVS_VCFPosition extends HGVS_DNAPositions
 class HGVS_VCFRefs extends HGVS_DNARefs
 {
     public array $patterns = [
-        'invalid' => [ '/[A-Z]+/', [] ],
-        'valid'   => [ '/(\.|[ACGTN]+)/', [] ],
-        'nothing' => [ '/(?=[: -])/', [] ],
+        'invalid' => ['/[A-Z]+/', []],
+        'valid'   => ['/(\.|[ACGTN]+)/', []],
+        'nothing' => ['/(?=[: -])/', []],
     ];
 
     public function validate ()
@@ -5003,7 +5003,7 @@ class HGVS_VCFRefs extends HGVS_DNARefs
 class HGVS_VCFSeparator extends HGVS
 {
     public array $patterns = [
-        [ '/[: -]?/', [] ],
+        ['/[: -]?/', []],
     ];
 }
 
