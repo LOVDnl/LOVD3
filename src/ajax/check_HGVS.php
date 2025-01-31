@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-06
- * Modified    : 2023-06-23
- * For LOVD    : 3.0-30
+ * Modified    : 2024-11-01
+ * For LOVD    : 3.0-31
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               L. Werkman <L.Werkman@LUMC.nl>
  *
@@ -121,7 +121,7 @@ foreach ($aVariants as $sVariant => $aVariant) {
         (
             empty($aVariant['variant_info']['warnings'])
             ||
-            array_keys($aVariant['variant_info']['warnings']) == array('WNOTSUPPORTED')
+            empty(array_diff(array_keys($aVariant['variant_info']['warnings']), ['WNOTSUPPORTED', 'WREFERENCENOTSUPPORTED']))
         )
     );
     // But compensate for ENOTSUPPORTED.
@@ -182,7 +182,7 @@ foreach ($aVariants as $sVariant => $aVariant) {
             (
                 empty($aVariant['fixed_variant_variant_info']['warnings'])
                 ||
-                array_keys($aVariant['fixed_variant_variant_info']['warnings']) == array('WNOTSUPPORTED')
+                empty(array_diff(array_keys($aVariant['fixed_variant_variant_info']['warnings']), ['WNOTSUPPORTED', 'WREFERENCENOTSUPPORTED']))
             )
         );
 
@@ -198,12 +198,12 @@ foreach ($aVariants as $sVariant => $aVariant) {
 
     $aVariant['VV'] = array();
     if ($bVV) {
-        if (!empty($aVariant['variant_info'])
-            && !empty($aVariant['variant_info']['errors']['ENOTSUPPORTED'])) {
+        if (!empty($aVariant['variant_info']['errors']['ENOTSUPPORTED'])) {
             $aVariant['VV']['ENOTSUPPORTED'] = 'This variant description is not currently supported by VariantValidator.';
-        } elseif (!empty($aVariant['variant_info'])
-            && !empty($aVariant['variant_info']['warnings']['WNOTSUPPORTED'])) {
+        } elseif (!empty($aVariant['variant_info']['warnings']['WNOTSUPPORTED'])) {
             $aVariant['VV']['WNOTSUPPORTED'] = 'This variant description is not currently supported by VariantValidator.';
+        } elseif (!empty($aVariant['variant_info']['warnings']['WREFERENCENOTSUPPORTED'])) {
+            $aVariant['VV']['WNOTSUPPORTED'] = 'This reference sequence type is not currently supported by VariantValidator.';
         } elseif (!$aVariant['is_hgvs']) {
             $aVariant['VV']['EFAIL'] = 'Please first correct the variant description to run VariantValidator.';
         } elseif (!$aVariant['has_refseq']) {
@@ -244,17 +244,26 @@ foreach ($aVariants as $sVariant => $aVariant) {
 
             if ($aVV && ($aVV['errors'] || $aVV['warnings'])) {
                 // Warnings or errors have occurred.
-                $aVariant['is_hgvs'] = false;
-                $aVariant['VV'] = array_merge(
-                    $aVariant['VV'],
-                    array_map(
-                        function ($sValue)
-                        {
-                            return 'VariantValidator: ' . htmlspecialchars($sValue);
-                        },
-                        array_merge($aVV['errors'], $aVV['warnings'])
-                    )
-                );
+                // If all we got was a WNOTSUPPORTED, handle it differently. It looked HGVS, VV can't validate, let's accept it.
+                if (empty($aVV['errors']) && array_keys($aVV['warnings']) == array('WNOTSUPPORTED')) {
+                    // All good, actually. VV can't be used.
+                    $aVariant['VV']['WNOTSUPPORTED'] = $aVV['warnings']['WNOTSUPPORTED'];
+                } elseif (empty($aVV['warnings']) && array_keys($aVV['errors']) == array('EREFSEQ')) {
+                    // The RefSeq threw an error, but that doesn't necessarily mean that it's invalid. VV can't be used.
+                    $aVariant['VV']['WNOTSUPPORTED'] = "VariantValidator couldn't find the reference sequence used. This does not necessarily mean the variant description is invalid, but we can't validate it to be sure. Please double-check the used reference sequence.";
+                } else {
+                    $aVariant['is_hgvs'] = false;
+                    $aVariant['VV'] = array_merge(
+                        $aVariant['VV'],
+                        array_map(
+                            function ($sValue)
+                            {
+                                return 'VariantValidator: ' . htmlspecialchars($sValue);
+                            },
+                            array_merge($aVV['errors'], $aVV['warnings'])
+                        )
+                    );
+                }
             }
         }
 

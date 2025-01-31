@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2024-05-01
- * For LOVD    : 3.0-30
+ * Modified    : 2024-11-04
+ * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
@@ -60,7 +60,7 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
             && (empty($aOutput['warnings'])
                 || empty(array_diff(
                         array_keys($aOutput['warnings']),
-                        array('WNOTSUPPORTED', 'WPOSITIONLIMIT', 'WTRANSCRIPTFOUND', 'WDIFFERENTREFSEQ')))
+                        array('WDIFFERENTREFSEQ', 'WNOTSUPPORTED', 'WPOSITIONLIMIT', 'WREFERENCENOTSUPPORTED', 'WTRANSCRIPTFOUND')))
             )) {
             $bHGVS = true;
         } else {
@@ -387,6 +387,17 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.1dela', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "dela" to "delA".',
+                    'WSUFFIXGIVEN' => 'Nothing should follow "del".',
+                ),
+                'errors' => array(),
+            )),
             array('g.1DELA', array(
                 'position_start' => 1,
                 'position_end' => 1,
@@ -397,6 +408,18 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                     'WSUFFIXGIVEN' => 'Nothing should follow "del".',
                 ),
                 'errors' => array(),
+            )),
+            array('g.1delZ', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WSUFFIXGIVEN' => 'Nothing should follow "del".',
+                ),
+                'errors' => array(
+                    'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "Z".',
+                ),
             )),
             array('g.1del<unknown>', array(
                 'position_start' => 1,
@@ -470,6 +493,16 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'type' => 'ins',
                 'range' => true,
                 'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('g.1_2insN[(10)]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Please rewrite "N[(10)]" to "N[10]".',
+                ),
                 'errors' => array(),
             )),
             array('g.1_2ins(50)', array(
@@ -871,7 +904,7 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'range' => false,
                 'warnings' => array(
                     'WWRONGTYPE' => 'A conversion should be described as a deletion-insertion. Please rewrite "con" to "delins".',
-                    'WSUFFIXFORMAT' => 'The part after "con" does not follow HGVS guidelines. Failed to recognize a valid sequence or position in "NC_000001.10:100_200".',
+                    'WSUFFIXFORMAT' => 'The part after "con" does not follow HGVS guidelines. Please rewrite "100_200" to "g.100_200".',
                 ),
                 'errors' => array(),
             )),
@@ -1150,7 +1183,9 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'position_end' => 0,
                 'type' => '=',
                 'range' => false,
-                'warnings' => array(),
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
+                ),
                 'errors' => array(
                     'EMISSINGPOSITIONS' => 'When using "=", please provide the position(s) that are unchanged.',
                 ),
@@ -1160,6 +1195,14 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'position_end' => 123,
                 'type' => '=',
                 'range' => false,
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('g.123_125=', array(
+                'position_start' => 123,
+                'position_end' => 125,
+                'type' => '=',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -1217,7 +1260,9 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'position_end_intron' => 0,
                 'type' => NULL,
                 'range' => false,
-                'warnings' => array(),
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
+                ),
                 'errors' => array(),
             )),
             array('c.123?', array(
@@ -1227,7 +1272,9 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'position_end_intron' => 0,
                 'type' => NULL,
                 'range' => false,
-                'warnings' => array(),
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'This syntax is currently not supported for mapping and validation.',
+                ),
                 'errors' => array(),
             )),
 
@@ -1997,7 +2044,7 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'type' => 'ins',
                 'range' => true,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Failed to recognize a valid sequence or position in "NC123456.1:g.1_10".',
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Please rewrite "NC123456" to "NC_123456".',
                 ),
                 'errors' => array(),
             )),
@@ -2113,6 +2160,32 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
             )),
+            array('g.(1_100)del(A)', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "(A)" to "A".',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(1_100)del[A]', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "[A]" to "A".',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
             array('g.(1_100)delA[50]', array(
                 'position_start' => 1,
                 'position_end' => 100,
@@ -2169,6 +2242,19 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'type' => 'del',
                 'range' => true,
                 'warnings' => array(),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(1_100)delN[(10)]', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "N[(10)]" to "N[10]".',
+                ),
                 'errors' => array(),
                 'messages' => array(
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
@@ -2625,6 +2711,18 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                     'ENOTSUPPORTED' => 'Currently, variant descriptions of combined variants are not yet supported. This does not necessarily mean the description is not valid HGVS. Please submit your variants separately.',
                 ),
             )),
+            array('g.[123A>C,124A>C]', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => ';',
+                'range' => false,
+                'warnings' => array(
+                    'WALLELEFORMAT' => 'The allele syntax uses semicolons (;) to separate variants, not commas. Please rewrite "g.[123A>C,124A>C]" to "g.[123A>C;124A>C]".',
+                ),
+                'errors' => array(
+                    'ENOTSUPPORTED' => 'Currently, variant descriptions of combined variants are not yet supported. This does not necessarily mean the description is not valid HGVS. Please submit your variants separately.',
+                ),
+            )),
             array('g.1_qterdel', array(
                 'position_start' => 0,
                 'position_end' => 0,
@@ -2722,6 +2820,18 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'errors' => array(
                     'EWRONGREFERENCE' => 'The given reference sequence (NC_123456.1(NM_123456.1)) does not match the DNA type (g). For variants on NC_123456.1(NM_123456.1), please use the c. prefix. For g. variants, please use a genomic reference sequence.',
                 ),
+            )),
+            array('NC_123456.1(NM_123456.1):1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WPREFIXMISSING' => 'This variant description seems incomplete. Variant descriptions should start with a molecule type (e.g., "c."). Please rewrite "1del" to "c.1del".',
+                ),
+                'errors' => array(),
             )),
             array('NC_123456.1(NM_123456.1):c.1-1del', array(
                 'position_start' => 1,
@@ -2913,6 +3023,18 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                     'EREFERENCEFORMAT' => 'The reference sequence could not be recognised. Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.',
                 ),
             )),
+            array('NP_123456.1:c.1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(
+                    'EREFERENCEFORMAT' => 'Protein reference sequences are not supported. Please submit a DNA variant using a DNA reference sequence.',
+                ),
+            )),
             array('NM_123456.1(NC_123456.1):c.100del', array(
                 'position_start' => 100,
                 'position_end' => 100,
@@ -2922,6 +3044,42 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 'range' => false,
                 'warnings' => array(
                     'WREFERENCEFORMAT' => 'The genomic and transcript reference sequence IDs have been swapped. Please rewrite "NM_123456.1(NC_123456.1)" to "NC_123456.1(NM_123456.1)".',
+                ),
+                'errors' => array(),
+            )),
+            array('NM_123456.1(GENE):c.100del', array(
+                'position_start' => 100,
+                'position_end' => 100,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WREFERENCEFORMAT' => 'The reference sequence ID should not include a gene symbol. Please rewrite "NM_123456.1(GENE)" to "NM_123456.1".',
+                ),
+                'errors' => array(),
+            )),
+            array('NM_123456.1(GENE_v001):c.100del', array(
+                'position_start' => 100,
+                'position_end' => 100,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WREFERENCEFORMAT' => 'The reference sequence ID should not include a gene symbol. Please rewrite "NM_123456.1(GENE_v001)" to "NM_123456.1".',
+                ),
+                'errors' => array(),
+            )),
+            array('GENE(NM_123456.1):c.100del', array(
+                'position_start' => 100,
+                'position_end' => 100,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WREFERENCEFORMAT' => 'The reference sequence ID should not include a gene symbol. Please rewrite "GENE(NM_123456.1)" to "NM_123456.1".',
                 ),
                 'errors' => array(),
             )),
@@ -3017,8 +3175,117 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                 ),
                 'errors' => array(),
             )),
+            array('AA123456.1:g.1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WREFERENCENOTSUPPORTED' => 'Currently, variant descriptions using "AA123456.1" are not yet supported. This does not necessarily mean the description is not valid HGVS. Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1_2ins[AA123456.1:g.1_100]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(
+                    'WREFERENCENOTSUPPORTED' => 'Currently, variant descriptions using "AA123456.1" are not yet supported. This does not necessarily mean the description is not valid HGVS. Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1_2ins[AA123456.1:1_100]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(
+                    'WREFERENCENOTSUPPORTED' => 'Currently, variant descriptions using "AA123456.1" are not yet supported. This does not necessarily mean the description is not valid HGVS. Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.',
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Please rewrite "1_100" to "g.1_100".',
+                ),
+                'errors' => array(),
+            )),
+
+            // Non-DNA input.
+            array('R123L', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'subst',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(
+                    'EINVALID' => 'This variant description looks like a protein description, while we are expecting DNA input. Please double-check your input.',
+                ),
+            )),
+            array('p.R123L', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'subst',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(
+                    'EINVALID' => 'This variant description looks like a protein description, while we are expecting DNA input. Please double-check your input.',
+                ),
+            )),
+            array('Arg123Leu', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'subst',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(
+                    'EINVALID' => 'This variant description looks like a protein description, while we are expecting DNA input. Please double-check your input.',
+                ),
+            )),
+            array('p.Arg123Leu', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'subst',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(
+                    'EINVALID' => 'This variant description looks like a protein description, while we are expecting DNA input. Please double-check your input.',
+                ),
+            )),
 
             // Other errors or problems.
+            array('c.0', array( // Although mostly undocumented on the HGVS site, this indicates no transcript was generated.
+                'position_start' => 0,
+                'position_end' => 0,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => '0',
+                'range' => false,
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
+                ),
+                'errors' => array(),
+            )),
+            array('c.0?', array( // Although mostly undocumented on the HGVS site, this indicates probably no transcript was generated.
+                'position_start' => 0,
+                'position_end' => 0,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => '0',
+                'range' => false,
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
+                ),
+                'errors' => array(),
+            )),
+            array('g.0', array(
+                'position_start' => 0,
+                'position_end' => 0,
+                'type' => '0',
+                'range' => false,
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
+                ),
+                'errors' => array(
+                    'EWRONGTYPE' => 'The 0-allele is used to indicate there is no expression of a given transcript. This can not be used for genomic variants.',
+                ),
+            )),
             array('G.123dup', array(
                 'position_start' => 123,
                 'position_end' => 123,
@@ -3143,6 +3410,147 @@ class GetVariantInfoTest extends PHPUnit\Framework\TestCase
                     'WWHITESPACE' => 'This variant description contains one or more whitespace characters (spaces, tabs, etc). Please remove these.',
                 ),
                 'errors' => array(),
+            )),
+            array('g.[123del]', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WWRONGTYPE' => 'The allele syntax with square brackets is meant for multiple variants. Please rewrite "g.[123del]" to "g.123del".',
+                ),
+                'errors' => array(),
+            )),
+            array('123A', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => '',
+                'range' => false,
+                'warnings' => array(
+                    'WPREFIXMISSING' => 'This variant description seems incomplete. Variant descriptions should start with a molecule type (e.g., "c."). Please rewrite "123A" to "c.123A".',
+                ),
+                'errors' => array(
+                    'EINVALID' => 'This variant description seems incomplete. Did you mean to write a substitution? Substitutions are written like "c.123T>A".',
+                ),
+            )),
+            array('g.123A', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => '',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(
+                    'EINVALID' => 'This variant description seems incomplete. Did you mean to write a substitution? Substitutions are written like "g.123T>A".',
+                ),
+            )),
+            array('C123A', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'subst',
+                'range' => false,
+                'warnings' => array(
+                    'WPREFIXMISSING' => 'This variant description seems incomplete. Variant descriptions should start with a molecule type (e.g., "c."). Please rewrite "C123A" to "c.C123A".',
+                    'WINVALID' => 'This is not a valid HGVS description. Did you mean to write a substitution? Please rewrite "c.C123A" to "c.123C>A".',
+                ),
+                'errors' => array(),
+            )),
+            array('c.C123A', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'subst',
+                'range' => false,
+                'warnings' => array(
+                    'WINVALID' => 'This is not a valid HGVS description. Did you mean to write a substitution? Please rewrite "c.C123A" to "c.123C>A".',
+                ),
+                'errors' => array(),
+            )),
+            array('c:123A>C', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'subst',
+                'range' => false,
+                'warnings' => array(
+                    'WPREFIXFORMAT' => 'This is not a valid HGVS description. Molecule types in variant descriptions should be followed by a period (e.g., "c."). Please rewrite "c:123A>C" to "c.123A>C".',
+                ),
+                'errors' => array(),
+            )),
+            array('c123A>C', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'subst',
+                'range' => false,
+                'warnings' => array(
+                    'WPREFIXFORMAT' => 'This variant description seems incomplete. Molecule types in variant descriptions should be followed by a period (e.g., "c."). Please rewrite "c123A>C" to "c.123A>C".',
+                ),
+                'errors' => array(),
+            )),
+
+            // Support some common non-HGVS descriptions.
+            array('1:1234567:A:C', array(
+                'position_start' => 1234567,
+                'position_end' => 1234567,
+                'type' => 'subst',
+                'range' => false,
+                'warnings' => array(
+                    'WINVALID' => 'This is not a valid HGVS description; it looks like a VCF-based description. Please rewrite "1:1234567:A:C" to "g.1234567A>C".',
+                ),
+                'errors' => array(
+                    'EREFSEQMISSING' => 'You indicated this variant is located on chromosome 1. However, the HGVS nomenclature does not include chromosomes in variant descriptions, they are represented by reference sequences. Therefore, please provide a reference sequence for this chromosome.',
+                ),
+            )),
+            array('1:1234567:AA:CC', array(
+                'position_start' => 1234567,
+                'position_end' => 1234568,
+                'type' => 'delins',
+                'range' => true,
+                'warnings' => array(
+                    'WINVALID' => 'This is not a valid HGVS description; it looks like a VCF-based description. Please rewrite "1:1234567:AA:CC" to "g.1234567_1234568delinsCC".',
+                ),
+                'errors' => array(
+                    'EREFSEQMISSING' => 'You indicated this variant is located on chromosome 1. However, the HGVS nomenclature does not include chromosomes in variant descriptions, they are represented by reference sequences. Therefore, please provide a reference sequence for this chromosome.',
+                ),
+            )),
+            array('X-1234567-AA-ATA', array(
+                'position_start' => 1234567,
+                'position_end' => 1234568,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(
+                    'WINVALID' => 'This is not a valid HGVS description; it looks like a VCF-based description. Please rewrite "X-1234567-AA-ATA" to "g.1234567_1234568insT".',
+                ),
+                'errors' => array(
+                    'EREFSEQMISSING' => 'You indicated this variant is located on chromosome X. However, the HGVS nomenclature does not include chromosomes in variant descriptions, they are represented by reference sequences. Therefore, please provide a reference sequence for this chromosome.',
+                ),
+            )),
+            array('rs123456', array(
+                'position_start' => 0,
+                'position_end' => 0,
+                'type' => '',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(
+                    'EINVALID' => 'This is not a valid HGVS description; it looks like a dbSNP identifier. Please provide a variant description following the HGVS nomenclature.',
+                ),
+            )),
+            array('VCV000009325.130', array(
+                'position_start' => 0,
+                'position_end' => 0,
+                'type' => '',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(
+                    'EINVALID' => 'This is not a valid HGVS description; it looks like a ClinVar variation identifier. Please provide a variant description following the HGVS nomenclature.',
+                ),
             )),
         );
     }

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2024-07-03
+ * Modified    : 2024-10-30
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -91,7 +91,11 @@ class LOVD_VV
         //  cleaning of the error message to compensate.
         $sFault = str_replace(
             array(
+                // Prefixed by an untouched variant...
                 $sVariant . ': ',
+                // Prefixed by the variant with parentheses removed and an = appended...
+                str_replace(array('(', ')'), '', $sVariant) . '=: ', // Seen with NM_004006.2:c.(123del).
+                // Prefixed by a short version of the variant with everything outside the parentheses removed.
                 str_replace(array(strstr($sVariant, '(', true), '(', ')'), '', $sVariant) . ': '), '', $sFault);
 
         // VV has declared their error messages are stable.
@@ -134,12 +138,21 @@ class LOVD_VV
             || strpos($sFault, 'No transcript definition for') !== false
             || strpos($sFault, 'is not in our database. Please check the transcript') !== false) {
             // EREFSEQ error.
-            $aData['errors']['EREFSEQ'] = $sFault;
+            $aData['errors']['EREFSEQ'] = rtrim($sFault, '.') . '.';
         } elseif (substr($sFault, 0, 5) == 'char '
             || $sFault == 'insertion length must be 1'
             || strpos($sFault, ' must be provided ') !== false) {
             // ESYNTAX error.
-            $aData['errors']['ESYNTAX'] = $sFault;
+            // But, hang on. It's very possible that we do support this variant, but VV does not.
+            // This doesn't mean the description is bad. If we have valid variant info, we think it's good.
+            // E.g.: "NM_000088.3:c.589?: char 17: expected one of =, _, con, copy, del, dup, ins, inv, or a digit".
+            if ($aVariantInfo && empty($aVariantInfo['errors'])
+                && (empty($aVariantInfo['warnings']) || !array_diff(array_keys($aVariantInfo['warnings']), ['WNOTSUPPORTED']))) {
+                $aData['warnings']['WNOTSUPPORTED'] =
+                    'Although this variant seems to be a valid HGVS description, this syntax is currently not supported for mapping and validation.';
+            } else {
+                $aData['errors']['ESYNTAX'] = $sFault;
+            }
         } elseif ($sFault == 'Uncertain positions are not currently supported') {
             // EUNCERTAIN error.
             $aData['errors']['EUNCERTAIN'] = $sFault;
@@ -149,10 +162,15 @@ class LOVD_VV
             // EUNCERTAINPOSITIONS error.
             $aData['errors']['EUNCERTAINPOSITIONS'] = 'VariantValidator does not currently support variant descriptions with uncertain positions.';
         } elseif (preg_match(
-            '/^A more recent version of the selected reference sequence (.+) is available \((.+)\):/',
-            $sFault, $aRegs)) {
+            '/^(?:TranscriptVersionWarning: )?A more recent version of the selected reference sequence (.+) is available(?: for genome build .+)? \((.+)\)/',
+            $sFault, $aRegs) || strpos($sFault, 'TranscriptVersionWarning:') === 0) {
             // This is not that important, but we won't completely discard it, either.
-            $aData['messages']['IREFSEQUPDATED'] = 'Reference sequence ' . $aRegs[1] . ' can be updated to ' . $aRegs[2] . '.';
+            if ($aRegs) {
+                $aData['messages']['IREFSEQUPDATED'] = 'Reference sequence ' . $aRegs[1] . ' can be updated to ' . $aRegs[2] . '.';
+            } else {
+                // The description changed again, but we found the warning code at least.
+                $aData['messages']['IREFSEQUPDATED'] = 'The reference sequence used can be updated.';
+            }
         } elseif (preg_match(
             '/^The following versions of the requested transcript are available in our database: (.+)$/',
             $sFault, $aRegs)) {

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2024-09-05
+ * Modified    : 2024-11-04
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -40,7 +40,7 @@ $_LIBRARIES = array(
             'alt' => '[ACGTMRWSYKVHDBN]',
         ),
         'refseq' => array(
-            'basic' => '/^[A-Z_.t0-9()-]+$/',
+            'basic' => '/^[A-Z_.tv0-9()-]+$/',
             'strict'  =>
                 '/^([NX][CGMRTW]_[0-9]{6}\.[0-9]+' .
                 '|[NX][MR]_[0-9]{9}\.[0-9]+' .
@@ -56,6 +56,7 @@ $_LIBRARIES = array(
             '/^ENSG/'                     => array('g', 'm'),
             '/^NC_(001807\.|012920\.).$/' => array('m'),
             '/^(N[CGTW]_[0-9]+\.[0-9]+$|LRG_[0-9]+$)/' => array('g'),
+            '/^([A-Z][0-9]{5}|[A-Z]{2}[0-9]{6})(\.[0-9]+)$/' => array('g'),
         ),
     ),
 );
@@ -1413,20 +1414,22 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 if ($bCheckHGVS) {
                     return false;
                 }
-                $aResponse['errors']['EWRONGREFERENCE'] =
-                    'The given reference sequence (' . $sReferenceSequence . ') does not match the DNA type (' . $sVariant[0] . ').' .
-                    ' For variants on ' . $sReferenceSequence . ', please use the ' . implode('. or ', $aPrefixesByRefSeq) . '. prefix.';
-                switch ($sVariant[0]) {
-                    case 'c':
-                    case 'n':
-                        $aResponse['errors']['EWRONGREFERENCE'] .=
-                            ' For ' . $sVariant[0] . '. variants, please use a ' . ($sVariant[0] == 'c'? '' : 'non-') . 'coding transcript reference sequence.';
-                        break;
-                    case 'g':
-                    case 'm':
-                        $aResponse['errors']['EWRONGREFERENCE'] .=
-                            ' For ' . $sVariant[0] . '. variants, please use a ' . ($sVariant[0] == 'g'? 'genomic' : 'mitochondrial') . ' reference sequence.';
-                        break;
+                if ($sVariant[1] == '.' && !ctype_digit($sVariant[0])) {
+                    $aResponse['errors']['EWRONGREFERENCE'] =
+                        'The given reference sequence (' . $sReferenceSequence . ') does not match the DNA type (' . $sVariant[0] . ').' .
+                        ' For variants on ' . $sReferenceSequence . ', please use the ' . implode('. or ', $aPrefixesByRefSeq) . '. prefix.';
+                    switch ($sVariant[0]) {
+                        case 'c':
+                        case 'n':
+                            $aResponse['errors']['EWRONGREFERENCE'] .=
+                                ' For ' . $sVariant[0] . '. variants, please use a ' . ($sVariant[0] == 'c'? '' : 'non-') . 'coding transcript reference sequence.';
+                            break;
+                        case 'g':
+                        case 'm':
+                            $aResponse['errors']['EWRONGREFERENCE'] .=
+                                ' For ' . $sVariant[0] . '. variants, please use a ' . ($sVariant[0] == 'g'? 'genomic' : 'mitochondrial') . ' reference sequence.';
+                            break;
+                    }
                 }
 
             } elseif (!preg_match('/^(N[CGTW]|LRG)/', $sReferenceSequence)
@@ -1443,9 +1446,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         } else {
             // The user seems to have tried to add a reference sequence, but it
             //  was not formatted correctly. We will return errors or warnings accordingly.
-            if ($bCheckHGVS) {
-                return false;
-            }
+
             // Check for missing version. We don't want to yet define another pattern.
             // Just check if it helps to add a version number.
             if (lovd_isValidRefSeq(preg_replace('/([0-9]{6})([()]|$)/', '$1.1$2', $sReferenceSequence))) {
@@ -1455,9 +1456,22 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     ' NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.';
 
             } elseif (preg_match('/^([NX][MR]_[0-9]{6,9}\.[0-9]+)\((N[CGTW]_[0-9]{6}\.[0-9]+)\)$/', $sReferenceSequence, $aRegs)) {
+                // NM(NC) that should be swapped.
                 $aResponse['warnings']['WREFERENCEFORMAT'] =
                     'The genomic and transcript reference sequence IDs have been swapped.' .
                     ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[2] . '(' . $aRegs[1] . ')".';
+
+            } elseif (preg_match('/^([NX][MR]_[0-9]{6,9}\.[0-9]+)\(([A-Z][A-Za-z0-9#@-]*(_v[0-9]+)?)\)$/', $sReferenceSequence, $aRegs)) {
+                // NM(GENE) that should lose the gene.
+                $aResponse['warnings']['WREFERENCEFORMAT'] =
+                    'The reference sequence ID should not include a gene symbol.' .
+                    ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . '".';
+
+            } elseif (preg_match('/^([A-Z][A-Za-z0-9#@-]*)\(([NX][MR]_[0-9]{6,9}\.[0-9]+)\)$/', $sReferenceSequence, $aRegs)) {
+                // GENE(NM) that should be just NM.
+                $aResponse['warnings']['WREFERENCEFORMAT'] =
+                    'The reference sequence ID should not include a gene symbol.' .
+                    ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[2] . '".';
 
             } elseif (preg_match('/([NX][CGMRTW])-?([0-9]+)/', $sReferenceSequence, $aRegs)) {
                 // The user forgot the underscore or used a hyphen.
@@ -1502,10 +1516,27 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     'Ensembl reference sequence IDs require 11 digits.' .
                     ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . str_pad($aRegs[2], 11, '0', STR_PAD_LEFT) . '.' . $aRegs[3] . '".';
 
+            } elseif (preg_match('/^NP_[0-9]+/', $sReferenceSequence)) {
+                $aResponse['errors']['EREFERENCEFORMAT'] =
+                    'Protein reference sequences are not supported.' .
+                    ' Please submit a DNA variant using a DNA reference sequence.';
+
+            } elseif (preg_match('/^([A-Z][0-9]{5}|[A-Z]{2}[0-9]{6})(\.[0-9]+)$/', $sReferenceSequence)) {
+                // These are valid GenBank identifiers, but these are not supported by VV.
+                // It's too early to tell if the rest of the syntax is OK, though.
+                $aResponse['warnings']['WREFERENCENOTSUPPORTED'] =
+                    'Currently, variant descriptions using "' . $sReferenceSequence . '" are not yet supported.' .
+                    ' This does not necessarily mean the description is not valid HGVS.' .
+                    ' Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.';
+
             } else {
                 $aResponse['errors']['EREFERENCEFORMAT'] =
                     'The reference sequence could not be recognised.' .
                     ' Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.';
+            }
+
+            if ($bCheckHGVS && !isset($aResponse['warnings']['WREFERENCENOTSUPPORTED'])) {
+                return false;
             }
         }
     }
@@ -1519,7 +1550,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     preg_match(
         '/^([cgmn])\.' .                         // 1.  Prefix.
 
-        '([?=]$|(' .                             // 2. '?' or '=' (e.g. c.=).
+        '((?:[?=0]|0\?)$|(' .                    // 2. '?', '=', '0', or '0?' (e.g., c.0?).
         '(\({1,2})?' .              // 4=(       // 4.  Opening parentheses.
         '([-*]?[0-9]+|\?)' .                     // 5.  (Earliest) start position.
         '([-+]([0-9]+|\?))?' .                   // 6.  (Earliest) intronic start position.
@@ -1681,6 +1712,36 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 'Please place a "|" between the positions and the variant type (' . $aRegs[1] . ').';
             return $aResponse;
         }
+
+        // Here, we will try to recognize all those other non-standard formats
+        //  that we don't want to include in the regex.
+        // Some may still be somewhat salvageable, e.g. C100G.
+        // We have lovd_fixHGVS() for fixing descriptions, but we don't want to fix the description here.
+        // We want to have some information, if possible, on the position and the type, and get a proper error message.
+        // This code should *NOT* duplicate functionality in lovd_fixHGVS(). If I wish to support something here that
+        //  lovd_fixHGVS() currently handles, I should MOVE that code here and let lovd_fixHGVS() use the given rewrite.
+        $aVariant = lovd_guessVariantInfo($sReferenceSequence, $sVariant);
+        // Merge the data we got back with what we already have (may include feedback on refseqs).
+        if ($aVariant) {
+            foreach ($aVariant as $sKey => $Value) {
+                if (is_array($Value)) {
+                    $aResponse[$sKey] = array_merge(($aResponse[$sKey] ?? []), $Value);
+                } else {
+                    $aResponse[$sKey] = $Value;
+                }
+            }
+
+            // This hack is a bit sad, but so be it. To support the format 1:123456:G:A,
+            //  we have to "forgive" using "1" as a reference sequence.
+            // lovd_guessVariantInfo() added EREFSEQMISSING, but we just added EREFERENCEFORMAT.
+            if (isset($aResponse['errors']['EREFSEQMISSING']) && isset($aResponse['errors']['EREFERENCEFORMAT'])) {
+                unset($aResponse['errors']['EREFERENCEFORMAT']);
+            }
+
+            return $aResponse;
+        }
+
+        // No other special formats defined, nothing left to do but to return false.
         return false;
     }
 
@@ -1715,7 +1776,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     // Storing the variant type.
     if (!$aVariant['type']) {
         // If no type was matched, we can be sure that the variant is either
-        //  a full wild type or a full unknown variant; so either g.= or g.? .
+        //  a full wild type, a full unknown variant, or a 0-allele;
+        //  so g.=, g.?, or g.0.
         // In this case, we do not need to go over all tests, since there is
         //  simply a lot less information to test. We will do a few tests
         //  and add all necessary information, and then return our response
@@ -1725,13 +1787,28 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             $aResponse['position_end_intron'] = 0;
             $aResponse['position_start_intron'] = 0;
         }
-        // For unknown variants (c.?), the type is set to NULL.
-        $aResponse['type'] = (substr($aVariant['complete'], -1) == '='? '=' : NULL);
 
-        if ($aResponse['type'] == '=') {
+        // None of these can be handled by VV. If we add that information here, LOVD won't try.
+        $aResponse['warnings']['WNOTSUPPORTED'] =
+            'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.';
+
+        // For unknown variants (c.?), the type is set to NULL.
+        // Otherwise, the type is ether '=' or '0'.
+        $aResponse['type'] = substr(rtrim($aVariant['complete'], '?'), -1);
+        if ($aResponse['type'] == '.') {
+            // 'c.?' etc, I trimmed the '?' off to recognize 'c.0?'.
+            $aResponse['type'] = NULL;
+
+        } elseif ($aResponse['type'] == '=') {
             // HGVS requires unchanged sequence ("=") to always give positions.
             $aResponse['errors']['EMISSINGPOSITIONS'] =
                 'When using "=", please provide the position(s) that are unchanged.';
+            return ($bCheckHGVS? false : $aResponse);
+
+        } elseif ($aResponse['type'] == '0' && in_array($aVariant['prefix'], array('g', 'm'))) {
+            // This is only allowed for transcript-based reference sequences, as it's a consequence of a genomic change (deletion or so).
+            // It indicates the lack of expression of the transcript.
+            $aResponse['errors']['EWRONGTYPE'] = 'The 0-allele is used to indicate there is no expression of a given transcript. This can not be used for genomic variants.';
             return ($bCheckHGVS? false : $aResponse);
         }
         return ($bCheckHGVS? true : $aResponse);
@@ -1880,6 +1957,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
     } elseif ($aVariant['type'] == '?') {
         $aResponse['type'] = NULL;
+        // Throw a WNOTSUPPORTED. We are currently not sure if this variant is valid, as the refseq or the positions can still be a problem.
+        $aResponse['warnings']['WNOTSUPPORTED'] =
+            'This syntax is currently not supported for mapping and validation.';
 
     } else {
         $aResponse['type'] = $aVariant['type'];
@@ -2605,6 +2685,24 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                                     '(' . $nSuffixMinLength . '_' . $nSuffixMaxLength . ')') . ']")?';
                         }
 
+                    } elseif (preg_match('/^([A-Z]+)\[\(([0-9]+|\?)\)\]$/', strtoupper($sInsertion), $aRegs)) {
+                        // c.1_2insN[(10)].
+                        $bCaseOK = ($sInsertion == strtoupper($sInsertion));
+                        list(, $sSequence, $nSuffixLength) = $aRegs;
+
+                        // Check if only correct bases have been used.
+                        $sUnknownBases = preg_replace(
+                            '/' . $_LIBRARIES['regex_patterns']['bases']['alt'] . '+/',
+                            '',
+                            $sSequence
+                        );
+                        if ($sUnknownBases) {
+                            $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', str_split($sUnknownBases)) . '".';
+                        }
+                        $aResponse['warnings']['WSUFFIXFORMAT'] =
+                            'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
+                            ' Please rewrite "' . $sInsertion . '" to "' . $sSequence . '[' . $nSuffixLength . ']".';
+
                     } elseif (preg_match('/^([A-Z]+)\[(([0-9]+|\?)_([0-9]+|\?))\]$/', strtoupper($sInsertion), $aRegs)) {
                         // c.1_2insN[10_20].
                         $bCaseOK = ($sInsertion == strtoupper($sInsertion));
@@ -2660,12 +2758,35 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         // This part has a refseq?
                         // Require brackets around the insertion and either a valid position or a valid inversion.
                         $sVariantInInsertion = (substr($sInsertion, -3) == 'inv'? $sInsertion : $sInsertion . 'del');
-                        if (!lovd_getVariantInfo($sVariantInInsertion, false, true)) {
+                        $aVariantInInsertion = lovd_getVariantInfo($sVariantInInsertion, false);
+                        if (!is_array($aVariantInInsertion) || !empty($aVariantInInsertion['errors'])
+                            || !empty(array_diff(array_keys($aVariantInInsertion['warnings']), ['WREFERENCENOTSUPPORTED']))) {
                             // Not a valid description. We might still be able to fix this, but we don't know right now.
                             // We could try to tell the difference, but in this case, we'll just store a warning.
                             $aResponse['warnings']['WSUFFIXFORMAT'] =
-                                'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
-                                ' Failed to recognize a valid sequence or position in "' . $sInsertion . '".';
+                                'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.';
+                            $bSuggestions = false;
+                            foreach ($aVariantInInsertion['warnings'] ?? [] as $sWarning) {
+                                if (preg_match('/Please rewrite "([^"]+)" to "([^"]+)"\.$/', $sWarning, $aRegs)) {
+                                    $bSuggestions = true;
+                                    $aResponse['warnings']['WSUFFIXFORMAT'] .=
+                                        ' Please rewrite "' . str_replace('del', '', $aRegs[1]) . '" to "' . str_replace('del', '', $aRegs[2]) . '".';
+                                }
+                            }
+                            if (!$bSuggestions) {
+                                $aResponse['warnings']['WSUFFIXFORMAT'] .= ' Failed to recognize a valid sequence or position in "' . $sInsertion . '".';
+                            }
+                            // If also a WREFERENCENOTSUPPORTED was thrown, include that, too.
+                            if (!isset($aResponse['warnings']['WREFERENCENOTSUPPORTED']) && isset($aVariantInInsertion['warnings']['WREFERENCENOTSUPPORTED'])) {
+                                $aResponse['warnings']['WREFERENCENOTSUPPORTED'] = $aVariantInInsertion['warnings']['WREFERENCENOTSUPPORTED'];
+                            }
+
+                        } elseif (isset($aVariantInInsertion['warnings']['WREFERENCENOTSUPPORTED'])) {
+                            // The insertion uses an unsupported reference sequence. Copy the warning to our output.
+                            if (!isset($aResponse['warnings']['WREFERENCENOTSUPPORTED'])) {
+                                $aResponse['warnings']['WREFERENCENOTSUPPORTED'] = $aVariantInInsertion['warnings']['WREFERENCENOTSUPPORTED'];
+                            }
+
                         } else {
                             // Let's only throw this warning when the above error isn't present.
                             //  The user may not have meant to send a complex variant.
@@ -2775,6 +2896,26 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
                 }
 
+            } elseif (preg_match('/^(\[[A-Z]+\]|\([A-Z]+\))$/i', $aVariant['suffix'], $aRegs)) {
+                // g.123_124del[AA], g.123_124del(AA).
+                $sSequence = substr($aVariant['suffix'], 1, -1);
+                $bCaseOK = ($sSequence == strtoupper($sSequence));
+                $nSuffixMinLength = strlen($sSequence);
+
+                // Check if only correct bases have been used.
+                $sUnknownBases = preg_replace(
+                    '/' . $_LIBRARIES['regex_patterns']['bases']['ref'] . '+/',
+                    '',
+                    strtoupper($sSequence)
+                );
+                if ($sUnknownBases) {
+                    $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
+                }
+
+                $aResponse['warnings']['WSUFFIXFORMAT'] =
+                    'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
+                    ' Please rewrite "' . $aVariant['suffix'] . '" to "' . $sSequence . '".';
+
             } elseif (preg_match('/^\(([0-9]+)(?:_([0-9]+))?\)$/', $aVariant['suffix'], $aRegs)) {
                 // g.123_124del(2), g.(100_200)del(50_60).
                 list(, $nSuffixMinLength, $nSuffixMaxLength) = array_pad($aRegs, 3, '');
@@ -2787,6 +2928,25 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     (!$nSuffixMaxLength || $nSuffixMinLength == $nSuffixMaxLength?
                         $nSuffixMinLength :
                         '(' . $nSuffixMinLength . '_' . $nSuffixMaxLength . ')') . ']".';
+
+            } elseif (preg_match('/^([A-Z]+)\[\(([0-9]+|\?)\)\]$/', strtoupper($aVariant['suffix']), $aRegs)) {
+                // g.(100_200)delN[(50)].
+                $bCaseOK = ($aVariant['suffix'] == strtoupper($aVariant['suffix']));
+                list(, $sSequence, $nSuffixLength) = $aRegs;
+                $nSuffixMinLength = $nSuffixLength;
+
+                // Check if only correct bases have been used.
+                $sUnknownBases = preg_replace(
+                    '/' . $_LIBRARIES['regex_patterns']['bases']['ref'] . '+/',
+                    '',
+                    $sSequence
+                );
+                if ($sUnknownBases) {
+                    $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', str_split($sUnknownBases)) . '".';
+                }
+                $aResponse['warnings']['WSUFFIXFORMAT'] =
+                    'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
+                    ' Please rewrite "' . $aVariant['suffix'] . '" to "' . $sSequence . '[' . $nSuffixLength . ']".';
 
             } elseif (preg_match('/^([A-Z]+)\[(([0-9]+|\?)_([0-9]+|\?))\]$/', strtoupper($aVariant['suffix']), $aRegs)) {
                 // g.(100_200)delN[50_60].
@@ -3312,6 +3472,244 @@ function lovd_getTableInfoByCategory ($sCategory)
         return false;
     }
     return $aTables[$sCategory];
+}
+
+
+
+
+
+function lovd_guessVariantInfo ($sReferenceSequence, $sVariant)
+{
+    // This function will try to recognize invalid descriptions and try to guess
+    //  some information on the variant. It is similar to lovd_getVariantInfo()
+    //  in that it returns the same data if possible, but this function is only
+    //  meant for invalid descriptions. It is also similar to lovd_fixHGVS() in
+    //  that it tries to figure out what the user meant, but it doesn't HAVE to
+    //  provide a fix, it should return data instead.
+    global $_LIBRARIES, $_SETT;
+
+    // First, try to pick up a protein notation that we sometimes receive.
+    if (preg_match('/^(p\.)?\(?([A-Z]|[A-Z][a-z]{2})([0-9]+)([A-Z]|[A-Z][a-z]{2})\)?$/', $sVariant, $aMatches)) {
+        // Double-check if this couldn't be a DNA description.
+        if ($aMatches[1] // p. prefix given.
+            || strlen($aMatches[2]) > 1 || !in_array(strtoupper($aMatches[2]), ['A', 'C', 'G', 'T']) // Three-letter amino-acid code or non-DNA nucleotide.
+            || strlen($aMatches[4]) > 1 || !in_array(strtoupper($aMatches[4]), ['A', 'C', 'G', 'T']) // Three-letter amino-acid code or non-DNA nucleotide.
+        ) {
+            // E.g., R120L or p.Arg120Leu. Assuming this is a protein substitution.
+            // To send more than an array with just an error, create a template and edit that.
+            return array_merge(
+                (lovd_getVariantInfo('g.' . $aMatches[3] . 'A>T') ?: []),
+                [
+                    'errors' => ['EINVALID' => 'This variant description looks like a protein description, while we are expecting DNA input. Please double-check your input.']
+                ]
+            );
+        }
+    }
+
+    // Sometimes, variant identifiers are sent.
+    if (preg_match('/^(rs|RCV|SCV|VCV)?[0-9]+(\.[0-9]+)?$/i', $sVariant, $aMatches)) {
+        // E.g., rs123456.
+        // Sad to see that we need to replicate the $aResponse array, but I don't think I have a better way to obtain it.
+        return [
+            'position_start' => 0,
+            'position_end'   => 0,
+            'type'           => '',
+            'range'          => false,
+            'warnings'       => [],
+            'errors'         => [
+                'EINVALID' => 'This is not a valid HGVS description; it looks like ' .
+                    ([
+                        'rs' => 'a dbSNP',
+                        'RCV' => 'a ClinVar reference',
+                        'SCV' => 'a ClinVar submission',
+                        'VCV' => 'a ClinVar variation',
+                    ][($aMatches[1] ?? '')] ?? 'some variant') .
+                    ' identifier. Please provide a variant description following the HGVS nomenclature.',
+            ],
+        ];
+    }
+
+    // Add support for VCF-like variant descriptions. Ignore spacing.
+    // Matches "1:123456:A:C" (note, the chromosome has been cut off as the reference sequence) and "1-123456-A-C" (still has the chromosome).
+    if (preg_match(
+        '/^([0-9]{1,2}|[XYM])[:-]([0-9]+)[:-](' . $_LIBRARIES['regex_patterns']['bases']['ref'] . '+)[:-](' . $_LIBRARIES['regex_patterns']['bases']['ref'] . '+)$/',
+        ($sReferenceSequence? $sReferenceSequence . ':' : '') . $sVariant,
+        $aMatches)) {
+        // E.g., 1:123456:A:C. Process the variant as a substitution, lovd_fixHGVS() will know how to fix it.
+        // I choose to support this type of description here so we can provide detailed feedback.
+        // We'll be tossing out the chromosome, so they need to fix that.
+        list(,$sChromosome, $nPosition, $sRef, $sAlt) = $aMatches;
+        $sFixedVariant = lovd_fixHGVS('g.' . $nPosition . $sRef . '>' . $sAlt);
+        $aVariant = lovd_getVariantInfo(($sReferenceSequence? $sReferenceSequence . ':' : '') . $sFixedVariant);
+        if ($aVariant) {
+            // For the 1:123456:A:C format, the code cut off the "1" and treated it like a reference sequence.
+            // This will have thrown a EREFERENCEFORMAT.
+            // But since we fixed the variant already, there shouldn't be any other issues, so we just overwrite everything.
+            $aVariant['warnings'] = ['WINVALID' => 'This is not a valid HGVS description; it looks like a VCF-based description. Please rewrite "' . ($sReferenceSequence? $sReferenceSequence . ':' : '') . $sVariant . '" to "' . $sFixedVariant . '".'];
+            $aVariant['errors'] = ['EREFSEQMISSING' => 'You indicated this variant is located on chromosome ' . $sChromosome . '. However, the HGVS nomenclature does not include chromosomes in variant descriptions, they are represented by reference sequences. Therefore, please provide a reference sequence for this chromosome.'];
+            if (!empty($_SETT['human_builds'])) {
+                foreach (array_slice(array_keys($_SETT['human_builds']), -2) as $sBuild) {
+                    if (!empty($_SETT['human_builds'][$sBuild]['ncbi_sequences'][$sChromosome])) {
+                        $aVariant['errors']['EREFSEQMISSING'] .= ' For ' . $sBuild . '/' . $_SETT['human_builds'][$sBuild]['ncbi_name'] . ', use ' . $_SETT['human_builds'][$sBuild]['ncbi_sequences'][$sChromosome] . '.';
+                    }
+                }
+            }
+            return $aVariant;
+        }
+    }
+
+    if (strlen($sVariant) > 1 && $sVariant[1] != '.') {
+        // Variant doesn't have a prefix, e.g., 100A>T.
+        // Figure out its most likely prefix, and test if we're at least getting an array back.
+        $sPrefix = lovd_guessVariantPrefix($sReferenceSequence, $sVariant);
+        $sFixedVariant = $sPrefix . '.' . $sVariant;
+        $aVariant = lovd_getVariantInfo(($sReferenceSequence? $sReferenceSequence . ':' : '') . $sFixedVariant, false);
+        if ($aVariant) {
+            // Make sure this warning comes first. If the fixed variant has warnings as well, these need to come later.
+            $aVariant['warnings'] = array_merge(
+                ['WPREFIXMISSING' => 'This variant description seems incomplete. Variant descriptions should start with a molecule type (e.g., "' . $sPrefix . '."). Please rewrite "' . $sVariant . '" to "' . $sFixedVariant . '".'],
+                $aVariant['warnings']
+            );
+            return $aVariant;
+
+        } elseif (preg_match('/^[cgmn]:/', $sVariant)) {
+            // Variant actually does have a prefix, but a colon instead of a period, e.g., c:100A>T.
+            // Add the period and try again.
+            $sFixedVariant = $sVariant[0] . '.' . substr($sVariant, 2);
+            $aVariant = lovd_getVariantInfo(($sReferenceSequence? $sReferenceSequence . ':' : '') . $sFixedVariant, false);
+            if ($aVariant) {
+                // Make sure this warning comes first. If the fixed variant has warnings as well, these need to come later.
+                $aVariant['warnings'] = array_merge(
+                    ['WPREFIXFORMAT' => 'This is not a valid HGVS description. Molecule types in variant descriptions should be followed by a period (e.g., "' . $sVariant[0] . '."). Please rewrite "' . $sVariant . '" to "' . $sFixedVariant . '".'],
+                    $aVariant['warnings']
+                );
+                return $aVariant;
+            }
+
+        } elseif (preg_match('/^[cgmn][0-9(-]/', $sVariant)) {
+            // Variant actually does have a prefix, but not a period, e.g., c100A>T.
+            // Add the period and try again.
+            $sFixedVariant = $sVariant[0] . '.' . substr($sVariant, 1);
+            $aVariant = lovd_getVariantInfo(($sReferenceSequence? $sReferenceSequence . ':' : '') . $sFixedVariant, false);
+            if ($aVariant) {
+                // Make sure this warning comes first. If the fixed variant has warnings as well, these need to come later.
+                $aVariant['warnings'] = array_merge(
+                    ['WPREFIXFORMAT' => 'This variant description seems incomplete. Molecule types in variant descriptions should be followed by a period (e.g., "' . $sVariant[0] . '."). Please rewrite "' . $sVariant . '" to "' . $sFixedVariant . '".'],
+                    $aVariant['warnings']
+                );
+                return $aVariant;
+            }
+        }
+    }
+
+    if (preg_match('/^([cgmn]\.)\[(.+)\]$/', $sVariant, $aMatches) && strpos($aMatches[2], ';') === false) {
+        if (strpos($aMatches[2], ',') !== false) {
+            // E.g., c.[100A>C,101del]. This should have used a semicolon.
+            $sFixedVariant = str_replace(',', ';', $sVariant);
+            $aVariant = lovd_getVariantInfo(($sReferenceSequence? $sReferenceSequence . ':' : '') . $sFixedVariant);
+            if ($aVariant) {
+                // Make sure this error comes first. If the fixed variant has errors as well, these need to come later.
+                $aVariant['warnings'] = array_merge(
+                    ['WALLELEFORMAT' => 'The allele syntax uses semicolons (;) to separate variants, not commas. Please rewrite "' . $sVariant . '" to "' . $sFixedVariant . '".',],
+                    $aVariant['warnings']
+                );
+                return $aVariant;
+            }
+
+        } else {
+            // E.g., c.[100A>C]. Perhaps from people trying out the allele notation? There is no ';' in there, though.
+            // We don't currently handle the allele notation, so lovd_getVariantInfo() doesn't know what to do with this.
+            // Just remove the square brackets and try again.
+            $sFixedVariant = $aMatches[1] . $aMatches[2];
+            $aVariant = lovd_getVariantInfo(($sReferenceSequence? $sReferenceSequence . ':' : '') . $sFixedVariant);
+            if ($aVariant) {
+                // Make sure this error comes first. If the fixed variant has errors as well, these need to come later.
+                $aVariant['warnings'] = array_merge(
+                    ['WWRONGTYPE' => 'The allele syntax with square brackets is meant for multiple variants. Please rewrite "' . $sVariant . '" to "' . $sFixedVariant . '".',],
+                    $aVariant['warnings']
+                );
+                return $aVariant;
+            }
+        }
+    }
+
+    if (preg_match('/^([cgmn]\.[0-9*-]+)([A-Z])$/i', $sVariant, $aMatches)) {
+        // E.g., c.100A. Assuming this is a substitution, but we don't have the original base.
+        $sFixedVariant =
+            $aMatches[1] .
+            (strtoupper($aMatches[2]) == 'A'? 'T' : 'A') . '>' .
+            strtoupper($aMatches[2]);
+        $aVariant = lovd_getVariantInfo(($sReferenceSequence? $sReferenceSequence . ':' : '') . $sFixedVariant);
+        if ($aVariant) {
+            $aVariant['type'] = ''; // Note, we're not sure about the substitution.
+            // Make sure this error comes first. If the fixed variant has errors as well, these need to come later.
+            $aVariant['errors'] = array_merge(
+                ['EINVALID' => 'This variant description seems incomplete. Did you mean to write a substitution? Substitutions are written like "' . $sFixedVariant . '".'],
+                $aVariant['errors']
+            );
+            return $aVariant;
+        }
+    }
+
+    if (preg_match('/^([cgmn]\.)([A-Z])([0-9*-]+)([A-Z])$/i', $sVariant, $aMatches)) {
+        // E.g., c.A100T. Assuming this is a substitution.
+        $sFixedVariant =
+            $aMatches[1] .
+            $aMatches[3] .
+            strtoupper($aMatches[2]) . '>' .
+            strtoupper($aMatches[4]);
+        $aVariant = lovd_getVariantInfo(($sReferenceSequence? $sReferenceSequence . ':' : '') . $sFixedVariant);
+        if ($aVariant) {
+            // Make sure this error comes first. If the fixed variant has errors as well, these need to come later.
+            $aVariant['warnings'] = array_merge(
+                ['WINVALID' => 'This is not a valid HGVS description. Did you mean to write a substitution? Please rewrite "' . $aMatches[0] . '" to "' . $sFixedVariant . '".'],
+                $aVariant['warnings']
+            );
+            return $aVariant;
+        }
+    }
+
+    return false;
+}
+
+
+
+
+
+function lovd_guessVariantPrefix ($sReferenceSequence, $sVariant)
+{
+    // Try to guess what variant prefix (molecule type) would fit this variant
+    //  description by checking the reference sequence and the variant.
+    // This assumes no prefix is given in the variant description.
+    // This is far from perfect, but an educated guess is good enough.
+
+    $aPrefixesByRefSeq = (lovd_getVariantPrefixesByRefSeq($sReferenceSequence) ?? []);
+    if ($aPrefixesByRefSeq) {
+        // When we have a single match, return that.
+        // When we have multiple matches, we will never be able to prove that it may be the second option.
+        // We could prove that something is c. and not n., but not the reverse.
+        // Therefore, make our lives easier and just return the first (g. or c.).
+        return $aPrefixesByRefSeq[0];
+
+    } elseif (preg_match('/(^|[^0-9])[*-][0-9]/', $sVariant)) {
+        // There seems to be an UTR position mentioned.
+        return 'c';
+
+    } elseif (preg_match('/[0-9][+-][0-9]/', $sVariant)) {
+        // There seems to be an intronic position mentioned.
+        // This can be c. or n., but we'll default to c.
+        return 'c';
+
+    } elseif (preg_match('/([0-9]+)/', $sVariant, $aRegs)
+        && $aRegs[1] < 1000) {
+        // The first number in the variant description is lower than 1000.
+        // Most likely to be a coding variant.
+        return 'c';
+
+    } else {
+        // Larger numbers and everything else will be 'g'.
+        return 'g';
+    }
 }
 
 
