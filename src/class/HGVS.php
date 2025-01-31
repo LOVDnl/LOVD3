@@ -28,15 +28,6 @@
  *
  *************/
 
-// Don't allow direct access.
-if (!defined('ROOT_PATH')) {
-    exit;
-}
-
-
-
-
-
 #[AllowDynamicProperties]
 class HGVS
 {
