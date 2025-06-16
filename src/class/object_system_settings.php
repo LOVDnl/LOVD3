@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2024-09-04
+ * Modified    : 2025-06-16
  * For LOVD    : 3.0-31
  *
- * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2025 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -148,7 +148,7 @@ class LOVD_SystemSetting extends LOVD_Object
         // MD key must work.
         if (!empty($aData['md_apikey'])) {
             $aResponse = lovd_php_file(
-                'https://mobidetails.iurc.montp.inserm.fr/MD/api/service/check_api_key',
+                'https://mobidetails.chu-montpellier.fr/api/service/check_api_key',
                 false,
                 'api_key=' . $aData['md_apikey'],
                 array(
@@ -267,7 +267,7 @@ class LOVD_SystemSetting extends LOVD_Object
                         'skip',
                         array('', '', 'print', 'API keys'),
                         array('MobiDetails API key', '', 'text', 'md_apikey', 40),
-                        array('', '', 'note', 'LOVD allows looking up variants in <A href="https://mobidetails.iurc.montp.inserm.fr/MD" target="_blank">MobiDetails</A>, an online DNA variant annotation and interpretation platform. To submit variants to MobiDetails, you need an API key. You can register for one <A href="https://mobidetails.iurc.montp.inserm.fr/MD/auth/register" target="_blank">here</A>.'),
+                        array('', '', 'note', 'LOVD allows looking up variants in <A href="https://mobidetails.chu-montpellier.fr/" target="_blank">MobiDetails</A>, an online DNA variant annotation and interpretation platform. To submit variants to MobiDetails, you need an API key. You can register for one <A href="https://mobidetails.chu-montpellier.fr/auth/register" target="_blank">here</A>.'),
                         'hr',
                         'skip',
                         'skip',

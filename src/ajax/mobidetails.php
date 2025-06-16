@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-10-01
- * Modified    : 2024-07-03
+ * Modified    : 2025-06-16
  * For LOVD    : 3.0-31
  *
- * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2025 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -88,8 +88,8 @@ if (!$("#mobidetails_dialog").hasClass("ui-dialog-content") || !$("#mobidetails_
 
 ');
 
-$sFormConfirmation = '<FORM id=\'mobidetails_confirm_form\'><INPUT type=\'hidden\' name=\'csrf_token\' value=\'{{CSRF_TOKEN}}\'><A href=\'https://mobidetails.iurc.montp.inserm.fr/MD\' target=\'_blank\'>MobiDetails</A> is an annotation platform dedicated to the interpretation of DNA variants. MobiDetails has not seen this variant before and still needs to generate the annotation. This may take a while. Confirm you want this variant annotated by MobiDetails by clicking the button below.<BR><BR></FORM>';
-$sFormConfirmationNoKey = '<A href=\'https://mobidetails.iurc.montp.inserm.fr/MD\' target=\'_blank\'>MobiDetails</A> is an annotation platform dedicated to the interpretation of DNA variants. MobiDetails has not seen this variant before and still needs to generate the annotation. However, this LOVD instance doesn\'t have an MobiDetails API key configured yet, so it can not send the variant to MobiDetails. Please contact the Curator and ask to have an MobiDetails API key registered in the LOVD System Settings.<BR><BR>';
+$sFormConfirmation = '<FORM id=\'mobidetails_confirm_form\'><INPUT type=\'hidden\' name=\'csrf_token\' value=\'{{CSRF_TOKEN}}\'><A href=\'https://mobidetails.chu-montpellier.fr/\' target=\'_blank\'>MobiDetails</A> is an annotation platform dedicated to the interpretation of DNA variants. MobiDetails has not seen this variant before and still needs to generate the annotation. This may take a while. Confirm you want this variant annotated by MobiDetails by clicking the button below.<BR><BR></FORM>';
+$sFormConfirmationNoKey = '<A href=\'https://mobidetails.chu-montpellier.fr/\' target=\'_blank\'>MobiDetails</A> is an annotation platform dedicated to the interpretation of DNA variants. MobiDetails has not seen this variant before and still needs to generate the annotation. However, this LOVD instance doesn\'t have an MobiDetails API key configured yet, so it can not send the variant to MobiDetails. Please contact the Curator and ask to have an MobiDetails API key registered in the LOVD System Settings.<BR><BR>';
 
 // Set JS variables and objects.
 print('
@@ -119,7 +119,7 @@ if (ACTION == 'check') {
 
     // Now check with MobiDetails.
     $aJSON = false;
-    $aJSONResponse = lovd_php_file('https://mobidetails.iurc.montp.inserm.fr/MD/api/variant/exists/' . rawurlencode($sVOG));
+    $aJSONResponse = lovd_php_file('https://mobidetails.chu-montpellier.fr/api/variant/exists/' . rawurlencode($sVOG));
     if ($aJSONResponse !== false) {
         $aJSON = json_decode(implode($aJSONResponse), true);
     }
@@ -171,7 +171,7 @@ if (ACTION == 'confirm' && POST) {
     // Send variant to MobiDetails. This can take a while.
     $aJSON = false;
     $aJSONResponse = lovd_php_file(
-        'https://mobidetails.iurc.montp.inserm.fr/MD/api/variant/create_g',
+        'https://mobidetails.chu-montpellier.fr/api/variant/create_g',
         false,
         'caller=cli&variant_ghgvs=' . rawurlencode($sVOG) . '&gene_hgnc=' . $nHGNCID . '&api_key=' . $_CONF['md_apikey'],
         array(
