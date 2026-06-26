@@ -357,19 +357,36 @@ function lovd_checkRateLimiting ()
 
     // We handled all limits. If we need to block this user, do so now.
     if ($bBlock) {
-        // Since we might have been waiting, we need to sort out the Retry After time again.
-        $nRetryAfter = max(0, (strtotime($sNow . ' + 1 minute') - time()));
+        if (empty($aLimit['max_hits_per_min'])) {
+            // Not only do we want to block this user, but we don't even have a limit set, so this is a hard block that
+            //  won't go away. We'll use an HTTP 402 (Payment Required), as this is the closest HTTP 4XX that we can use.
+            //  We can't use 403 since that will compete with .htaccess-based blocking.
+            header('HTTP/1.0 402 Payment Required', true, 402);
+            if (!$aMessages) {
+                $aMessages = [
+                    "Payment Required.",
+                    "Web scraping of this resource is not allowed, and puts an unreasonable strain on the server.",
+                    "To obtain permission to access this resource, please contact the site owner.",
+                ];
+            }
 
-        // Now, prep the output.
-        header('Retry-After: ' . $nRetryAfter, true, 429); // HTTP 429 Too Many Requests.
-        if (!$aMessages) {
-            $aMessages = [
-                "Too Many Requests.",
-                "You have exceeded the number of requests you're allowed to make. Wait $nRetryAfter seconds and then try again, but slow down your pace.",
-                "Note that your allowed number of requests per minute may be shared with other IP addresses. A rate limit can be configured for multiple ranges of IP addresses, all sharing one slot.",
-                "We may configure such a limit when we notice that a single service is using multiple IP addresses to query this system, putting an unfair strain on the server.",
-            ];
+        } else {
+            // A temporary block.
+            // Since we might have been waiting, we need to sort out the Retry After time again.
+            $nRetryAfter = max(0, (strtotime($sNow . ' + 1 minute') - time()));
+
+            // Now, prep the output.
+            header('Retry-After: ' . $nRetryAfter, true, 429); // HTTP 429 Too Many Requests.
+            if (!$aMessages) {
+                $aMessages = [
+                    "Too Many Requests.",
+                    "You have exceeded the number of requests you're allowed to make. Wait $nRetryAfter seconds and then try again, but slow down your pace.",
+                    "Note that your allowed number of requests per minute may be shared with other IP addresses. A rate limit can be configured for multiple ranges of IP addresses, all sharing one slot.",
+                    "We may configure such a limit when we notice that a single service is using multiple IP addresses to query this system, putting an unfair strain on the server.",
+                ];
+            }
         }
+
         switch (FORMAT) {
             case 'application/json':
                 print(
