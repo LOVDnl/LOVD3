@@ -258,8 +258,8 @@ function lovd_checkRateLimiting ()
     $aMessages = [];
     $sNow = date('Y-m-d H:i:00');
     foreach ($aLimits as $aLimit) {
-        if (lovd_validateIP($aLimit['ip_pattern'], $_SERVER['REMOTE_ADDR'])
-            && (empty($aLimit['user_agent_pattern']) || lovd_matchString($aLimit['user_agent_pattern'], $_SERVER['HTTP_USER_AGENT']))
+        if (lovd_validateIP($aLimit['ip_pattern'], ($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'))
+            && (empty($aLimit['user_agent_pattern']) || lovd_matchString($aLimit['user_agent_pattern'], ($_SERVER['HTTP_USER_AGENT'] ?? '')))
             && (empty($aLimit['url_pattern']) || lovd_matchString($aLimit['url_pattern'], CURRENT_PATH))) {
             // We have a match.
             $aData = $_DB->q('SELECT * FROM ' . TABLE_RATE_LIMITS_DATA . ' WHERE ratelimitid = ? AND hit_date = ?',
