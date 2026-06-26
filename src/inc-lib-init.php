@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2025-10-13
+ * Modified    : 2026-06-26
  * For LOVD    : 3.0-31
  *
- * Copyright   : 2004-2025 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2026 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -266,6 +266,17 @@ function lovd_checkRateLimiting ()
                 array($aLimit['id'], $sNow))->fetchAssoc();
             if (!$aData) {
                 // No record for this minute. Create one. We don't check if this insert worked or not.
+                if ($aLimit['max_hits_per_min']) {
+                    // The limit is positive; so we can't be there yet.
+                    $nRejected = 0;
+                } else {
+                    // Limit set to 0, so block this user immediately.
+                    $nRejected = 1;
+                    $bBlock = true;
+                    if ($aLimit['message']) {
+                        $aMessages[] = $aLimit['message'];
+                    }
+                }
                 $_DB->q(
                     'INSERT INTO '. TABLE_RATE_LIMITS_DATA . ' (ratelimitid, ips, user_agents, urls, hit_date, hit_count, reject_count) VALUES (?, ?, ?, ?, ?, ?, ?)',
                     array(
@@ -275,7 +286,7 @@ function lovd_checkRateLimiting ()
                         json_encode([CURRENT_PATH]),
                         $sNow,
                         1,
-                        0
+                        $nRejected
                     ),
                     false
                 );
@@ -311,7 +322,7 @@ function lovd_checkRateLimiting ()
                 $sQ .= ' WHERE ratelimitid = ? AND hit_date = ?';
                 $aQ[] = $aData['ratelimitid'];
                 $aQ[] = $aData['hit_date'];
-                // We don't check if this insert worked or not.
+                // We don't check if this update worked or not.
                 $_DB->q($sQ, $aQ, false);
             }
 
