@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2024-09-03
- * Modified    : 2024-09-12
+ * Modified    : 2026-06-26
  * For LOVD    : 3.0-31
  *
- * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2026 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -77,7 +77,7 @@ class LOVD_RateLimit extends LOVD_Object
                     'view' => array('Delay', 50),
                     'db'   => array('delay', 'ASC', true)),
                 'data_' => array(
-                    'view' => array('Data', 100),
+                    'view' => array('Data', 110),
                     'db'   => false),
             );
         $this->sSortDefault = 'id';
@@ -151,10 +151,6 @@ class LOVD_RateLimit extends LOVD_Object
             }
         }
 
-        if (isset($aData['max_hits_per_min']) && $aData['max_hits_per_min'] < 6) {
-            lovd_errorAdd('max_hits_per_min', 'Setting the number of allowed hits per minute lower than 6 is not supported.');
-        }
-
         if (!empty($aData['delay']) && $aData['delay'] > 10) {
             lovd_errorAdd('delay', 'Setting the delay to over 10 seconds is not supported, as it allows others to occupy all your web server threads, making LOVD unreachable.');
         }
@@ -190,7 +186,7 @@ class LOVD_RateLimit extends LOVD_Object
                 array('URLs to limit access to', '', 'text', 'url_pattern', 50),
                 array('', '', 'note', 'Leave this empty to apply this rate limit to all of LOVD. Otherwise, to include or exclude only specific pages, use a regular expression with slash delimiters.<BR>E.g., use "/^api/" to only apply this rate limit to the API.'),
                 array('Max hits per minute', 'How many hits are allowed per minute? Any more requests than this number, will be blocked.', 'text', 'max_hits_per_min', 5),
-                array('', '', 'note', 'Setting this to 60 will limit the user to one request per second.'),
+                array('', '', 'note', 'Setting this to 0 will effectively block the user immediately. Setting this to 60 will limit the user to one request per second.'),
                 array('Also delay the user this many seconds', 'Add the number of seconds the user is also delayed. Read the notes to understand the danger of this setting.', 'text', 'delay', 5),
                 array('', '', 'note', 'Adding a delay makes the user wait, with or without them reaching the rate limit. Without any delay (the default value of 0), the user gets their output immediately if they haven\'t reached their limit yet, or an error otherwise. When they have reached their limit, badly implemented scripts may then immediately try again. When you see this, you can add a delay here. The delay can, however, also prevent the error from occurring as the user is slowed down significantly.<BR><B>Never set this to more than just a few seconds!</B> You will, otherwise, risk using up all your web server threads.'),
                 array('Message for the user', '', 'textarea', 'message', 55, 5),

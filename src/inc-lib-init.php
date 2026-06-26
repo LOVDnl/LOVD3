@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2025-10-13
+ * Modified    : 2026-06-26
  * For LOVD    : 3.0-31
  *
- * Copyright   : 2004-2025 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2026 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -258,14 +258,25 @@ function lovd_checkRateLimiting ()
     $aMessages = [];
     $sNow = date('Y-m-d H:i:00');
     foreach ($aLimits as $aLimit) {
-        if (lovd_validateIP($aLimit['ip_pattern'], $_SERVER['REMOTE_ADDR'])
-            && (empty($aLimit['user_agent_pattern']) || lovd_matchString($aLimit['user_agent_pattern'], $_SERVER['HTTP_USER_AGENT']))
+        if (lovd_validateIP($aLimit['ip_pattern'], ($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'))
+            && (empty($aLimit['user_agent_pattern']) || lovd_matchString($aLimit['user_agent_pattern'], ($_SERVER['HTTP_USER_AGENT'] ?? '')))
             && (empty($aLimit['url_pattern']) || lovd_matchString($aLimit['url_pattern'], CURRENT_PATH))) {
             // We have a match.
             $aData = $_DB->q('SELECT * FROM ' . TABLE_RATE_LIMITS_DATA . ' WHERE ratelimitid = ? AND hit_date = ?',
                 array($aLimit['id'], $sNow))->fetchAssoc();
             if (!$aData) {
                 // No record for this minute. Create one. We don't check if this insert worked or not.
+                if ($aLimit['max_hits_per_min']) {
+                    // The limit is positive; so we can't be there yet.
+                    $nRejected = 0;
+                } else {
+                    // Limit set to 0, so block this user immediately.
+                    $nRejected = 1;
+                    $bBlock = true;
+                    if ($aLimit['message']) {
+                        $aMessages[] = $aLimit['message'];
+                    }
+                }
                 $_DB->q(
                     'INSERT INTO '. TABLE_RATE_LIMITS_DATA . ' (ratelimitid, ips, user_agents, urls, hit_date, hit_count, reject_count) VALUES (?, ?, ?, ?, ?, ?, ?)',
                     array(
@@ -275,7 +286,7 @@ function lovd_checkRateLimiting ()
                         json_encode([CURRENT_PATH]),
                         $sNow,
                         1,
-                        0
+                        $nRejected
                     ),
                     false
                 );
@@ -311,7 +322,7 @@ function lovd_checkRateLimiting ()
                 $sQ .= ' WHERE ratelimitid = ? AND hit_date = ?';
                 $aQ[] = $aData['ratelimitid'];
                 $aQ[] = $aData['hit_date'];
-                // We don't check if this insert worked or not.
+                // We don't check if this update worked or not.
                 $_DB->q($sQ, $aQ, false);
             }
 
@@ -346,19 +357,36 @@ function lovd_checkRateLimiting ()
 
     // We handled all limits. If we need to block this user, do so now.
     if ($bBlock) {
-        // Since we might have been waiting, we need to sort out the Retry After time again.
-        $nRetryAfter = max(0, (strtotime($sNow . ' + 1 minute') - time()));
+        if (empty($aLimit['max_hits_per_min'])) {
+            // Not only do we want to block this user, but we don't even have a limit set, so this is a hard block that
+            //  won't go away. We'll use an HTTP 402 (Payment Required), as this is the closest HTTP 4XX that we can use.
+            //  We can't use 403 since that will compete with .htaccess-based blocking.
+            header('HTTP/1.0 402 Payment Required', true, 402);
+            if (!$aMessages) {
+                $aMessages = [
+                    "Payment Required.",
+                    "Web scraping of this resource is not allowed, and puts an unreasonable strain on the server.",
+                    "To obtain permission to access this resource, please contact the site owner.",
+                ];
+            }
 
-        // Now, prep the output.
-        header('Retry-After: ' . $nRetryAfter, true, 429); // HTTP 429 Too Many Requests.
-        if (!$aMessages) {
-            $aMessages = [
-                "Too Many Requests.",
-                "You have exceeded the number of requests you're allowed to make. Wait $nRetryAfter seconds and then try again, but slow down your pace.",
-                "Note that your allowed number of requests per minute may be shared with other IP addresses. A rate limit can be configured for multiple ranges of IP addresses, all sharing one slot.",
-                "We may configure such a limit when we notice that a single service is using multiple IP addresses to query this system, putting an unfair strain on the server.",
-            ];
+        } else {
+            // A temporary block.
+            // Since we might have been waiting, we need to sort out the Retry After time again.
+            $nRetryAfter = max(0, (strtotime($sNow . ' + 1 minute') - time()));
+
+            // Now, prep the output.
+            header('Retry-After: ' . $nRetryAfter, true, 429); // HTTP 429 Too Many Requests.
+            if (!$aMessages) {
+                $aMessages = [
+                    "Too Many Requests.",
+                    "You have exceeded the number of requests you're allowed to make. Wait $nRetryAfter seconds and then try again, but slow down your pace.",
+                    "Note that your allowed number of requests per minute may be shared with other IP addresses. A rate limit can be configured for multiple ranges of IP addresses, all sharing one slot.",
+                    "We may configure such a limit when we notice that a single service is using multiple IP addresses to query this system, putting an unfair strain on the server.",
+                ];
+            }
         }
+
         switch (FORMAT) {
             case 'application/json':
                 print(
