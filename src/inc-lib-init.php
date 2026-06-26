@@ -313,7 +313,11 @@ function lovd_checkRateLimiting ()
                     // We're over the limit.
                     // Don't manually set the counts; let SQL increase it by one to prevent race conditions.
                     $sQ .= 'hit_count = hit_count + 1, reject_count = reject_count + 1';
-                    $bBlock = true;
+                    if (!$bBlock) {
+                        // A True that is not exactly a True, so that we can see the difference between a 402 and a 429.
+                        // We only use this value when $bBlock was still false.
+                        $bBlock = 1;
+                    }
                     if ($aLimit['message']) {
                         $aMessages[] = $aLimit['message'];
                     }
@@ -357,7 +361,7 @@ function lovd_checkRateLimiting ()
 
     // We handled all limits. If we need to block this user, do so now.
     if ($bBlock) {
-        if (empty($aLimit['max_hits_per_min'])) {
+        if ($bBlock === true) {
             // Not only do we want to block this user, but we don't even have a limit set, so this is a hard block that
             //  won't go away. We'll use an HTTP 402 (Payment Required), as this is the closest HTTP 4XX that we can use.
             //  We can't use 403 since that will compete with .htaccess-based blocking.
