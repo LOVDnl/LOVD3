@@ -1,0 +1,63 @@
+cff-version: 1.2.0
+title: LOVD
+type: software
+repository: http://www.lovd.nl/3.0/home
+identifiers:
+- type: other
+  value: lovd
+  description: bio.tools
+license: GPL-3.0
+keywords:
+- term: Human genetics
+  uri: http://edamontology.org/topic_3574
+- term: Functional genomics
+  uri: http://edamontology.org/topic_0085
+- term: Genetic variation
+  uri: http://edamontology.org/topic_0199
+- term: Rare diseases
+  uri: http://edamontology.org/topic_3325
+abstract: The Leiden Open Variation Database (LOVD) provides a flexible, freely available
+  tool for gene-centered collection and display of DNA variations. LOVD 3.0 extends
+  this idea to also provide patient-centered data storage and storage of NGS data,
+  even of variants outside of genes.
+message: If you use this software, please cite it and the Primary publications below.
+references:
+- doi: 10.1002/humu.21438
+  title: 'LOVD v.2.0: the next generation in gene variant databases.'
+  authors:
+  - first_name: Ivo F A C
+    last_name: Fokkema
+  - first_name: Peter E M
+    last_name: Taschner
+  - first_name: Gerard C P
+    last_name: Schaafsma
+  - first_name: J
+    last_name: Celli
+  - first_name: Jeroen F J
+    last_name: Laros
+  - first_name: Johan T
+    last_name: den Dunnen
+  year: 2011
+  page_start: 557
+  page_end: 563
+  pub_type: article
+preferred-citation:
+  doi: 10.1002/humu.21438
+  title: 'LOVD v.2.0: the next generation in gene variant databases.'
+  authors:
+  - first_name: Ivo F A C
+    last_name: Fokkema
+  - first_name: Peter E M
+    last_name: Taschner
+  - first_name: Gerard C P
+    last_name: Schaafsma
+  - first_name: J
+    last_name: Celli
+  - first_name: Jeroen F J
+    last_name: Laros
+  - first_name: Johan T
+    last_name: den Dunnen
+  year: 2011
+  page_start: 557
+  page_end: 563
+  pub_type: article
