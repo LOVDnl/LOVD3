@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2024-09-12
+ * Modified    : 2026-11-18
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -623,7 +623,7 @@ function lovd_mapVariants ()
         }
     }
 <?php
-        if (!defined('MISSING_CONF') && isset($_COOKIE['lovd_settings'])) {
+        if (!defined('MISSING_CONF') && isset($_COOKIE['lovd_settings']) && is_array($_COOKIE['lovd_settings'])) {
             // Determine whether or not to show the donation dialog.
             $nTimeToShow = strtotime('+' . ($_CONF['donate_dialog_months_hidden'] < 1? 1 : $_CONF['donate_dialog_months_hidden']) . ' months', $_COOKIE['lovd_settings']['donation_dialog_last_seen']);
             if ($_CONF['donate_dialog_allow'] && $nTimeToShow <= time()) {
