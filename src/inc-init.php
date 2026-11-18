@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2024-09-04
+ * Modified    : 2026-11-18
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -714,7 +714,7 @@ if ($_INI['database']['driver'] == 'mysql') {
         // ONLY_FULL_GROUP_BY is causing issues; even if we try to play nice,
         //  the totally unnecessary MIN() and MAX() calls slow down queries a lot. See #386.
         MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8, SQL_MODE = REPLACE(REPLACE(@@SQL_MODE, "NO_ZERO_DATE", ""), "ONLY_FULL_GROUP_BY", "")',
-        PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => TRUE,
+        (PHP_VERSION_ID >= 80500? Pdo\Mysql::ATTR_USE_BUFFERED_QUERY : PDO::MYSQL_ATTR_USE_BUFFERED_QUERY) => TRUE,
     );
     $_DB = new LOVD_PDO(
         $_INI['database']['driver'] . ':host=' . $_INI['database']['hostname'] . ';dbname=' . $_INI['database']['database'],
