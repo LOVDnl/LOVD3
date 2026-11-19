@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2026-06-26
+ * Modified    : 2026-11-19
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2026 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1345,6 +1345,35 @@ function lovd_getInstallURL ($bFull = true)
     // ROOT_PATH can be relative or absolute.
     return (!$bFull? '' : PROTOCOL . $_SERVER['HTTP_HOST']) .
         lovd_cleanDirName(substr(ROOT_PATH, 0, 1) == '/'? ROOT_PATH : dirname($_SERVER['SCRIPT_NAME']) . '/' . ROOT_PATH);
+}
+
+
+
+
+
+function lovd_getIPData (string $sIP)
+{
+    // Get the data for the current IP address.
+    global $_DB, $_STAT;
+
+    static $aIPData = [];
+    // Do check for the LOVD version, otherwise, the LOVD instance will break once the code is updated.
+    if (empty($aIPData[$sIP]) && $_STAT['version'] >= '3.0-30c' && filter_var($sIP, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+        $zIP = $_DB->q(
+            'SELECT ip_start, ip_end, level, reason, annotation FROM ' . TABLE_IPS . ' WHERE ip_start <= INET_ATON(?) ORDER BY ip_start DESC LIMIT 1',
+            [$_SERVER['REMOTE_ADDR']])->fetchAssoc();
+        // Having a hit is not necessarily a match. The database is heavily optimized, but we need to do one more check.
+        if ($zIP && ip2long($_SERVER['REMOTE_ADDR']) <= $zIP['ip_end']) {
+            // Now, we're sure if it's a match.
+            $aIPData[$sIP] = $zIP;
+
+            // Now, we no longer need the integers.
+            $aIPData[$sIP]['ip_start'] = long2ip($aIPData['ip_start']);
+            $aIPData[$sIP]['ip_end'] = long2ip($aIPData['ip_end']);
+        }
+    }
+
+    return ($aIPData[$sIP] ?? false);
 }
 
 
@@ -4031,6 +4060,23 @@ function lovd_isColleagueOfOwner ($sType, $Data, $bMustHaveEditPermission = true
     $q = $_DB->q($sQ, array_merge($Data, $aOwnerIDs));
 
     return ($q !== false && intval($q->fetchColumn()) == count($Data));
+}
+
+
+
+
+
+function lovd_isIPBlocked ($sIP)
+{
+    // Checks if this IP address has been blocked. When blocked, users will need to log in to obtain access.
+    // Just return a boolean, based on data from lovd_getIPData().
+    $zIP = lovd_getIPData($sIP);
+    if ($zIP && $zIP['level']) {
+        // Yup, it's blocked. A level of 0 means they're allowed access (useful to keep the record but lift the block).
+        return true;
+    } else {
+        return false;
+    }
 }
 
 

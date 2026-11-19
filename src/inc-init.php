@@ -938,12 +938,6 @@ if (!defined('NOT_INSTALLED')) {
         define('ACTION', false);
     }
 
-    // Implement rate limiting. We do this only here, because we need CURRENT_PATH.
-    if (!empty($_CONF['use_rate_limiting'])) {
-        // This stops a user when they're sending in too many requests.
-        lovd_checkRateLimiting();
-    }
-
     // STUB; This should be implemented properly later on.
     define('OFFLINE_MODE', false);
 
@@ -954,6 +948,53 @@ if (!defined('NOT_INSTALLED')) {
     @define('POST', false);
     @define('PUT', false);
     @define('DELETE', false);
+
+
+
+    // Check if this IP is blocked; if not authenticated, this means the user will need to log in.
+    // NOTE: During DDOS attacks, just modify the code to have isIPBlocked() return true.
+    if (!$_AUTH && lovd_isIPBlocked($_SERVER['REMOTE_ADDR'])) {
+        // This IP is blocked, and should be authenticated. However, some pages are free.
+        header('X-LOVD-auth: required');
+
+        // If we're in an ajax script, don't send all kinds of HTML output.
+        if (str_starts_with(lovd_getProjectFile(), '/ajax/')) {
+            header('HTTP/1.0 403 Forbidden', true, 403); // A 401 requires an WWW-Authenticate header, and I won't be able to construct a valid one.
+            die(AJAX_NO_AUTH);
+
+        } elseif (!in_array(lovd_getProjectFile(), ['/api.php', '/docs/index.php', '/login.php', '/logout.php', '/reset_password.php', '/users.php'])) {
+            header('HTTP/1.0 403 Forbidden', true, 403); // A 401 requires an WWW-Authenticate header, and I won't be able to construct a valid one.
+            $_T->printHeader(false); // Simple page.
+            $_T->printTitle('Access restricted — account required');
+            $sMessage = 'Due to restrictions based on your current IP address or network, this page is only available for registered users. ';
+            if (!$_CONF['allow_submitter_registration']) {
+                $sMessage .= 'If you have an account, please <A href="login">log in</A>. Otherwise, contact the site owners to obtain access, or try accessing this LOVD from a different IP address or network.';
+                lovd_showInfoTable(
+                    $sMessage,
+                    'warning'
+                );
+            } else {
+                $sMessage .= 'If you have an account, please <A href="login">log in</A>. Otherwise, <A href="users?register">create a free account</A>.';
+                lovd_showInfoTable(
+                    $sMessage,
+                    'warning'
+                );
+            }
+
+            $_T->printFooter();
+            exit;
+        }
+    }
+
+
+
+    // Implement rate limiting. We do this only here, because we need CURRENT_PATH.
+    if (!empty($_CONF['use_rate_limiting'])) {
+        // This stops a user when they're sending in too many requests.
+        lovd_checkRateLimiting();
+    }
+
+
 
     // We really don't need any of this, if we're loaded by the update picture.
     // FIXME; double check all of this block.
