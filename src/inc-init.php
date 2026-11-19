@@ -951,6 +951,12 @@ if (!defined('NOT_INSTALLED')) {
 
 
 
+    // Implement soft-blocking users; when soft-blocked, they are required to log in.
+    if (!$_AUTH && !lovd_isIPBlocked($_SERVER['REMOTE_ADDR'])) {
+        // Add logic here that will force IPs to be logged in from now on.
+        // lovd_saveIP($_SERVER['REMOTE_ADDR'], 1, 'Reason', 'Annotation');
+    }
+
     // Check if this IP is blocked; if not authenticated, this means the user will need to log in.
     // NOTE: During DDOS attacks, just modify the code to have isIPBlocked() return true.
     if (!$_AUTH && lovd_isIPBlocked($_SERVER['REMOTE_ADDR'])) {

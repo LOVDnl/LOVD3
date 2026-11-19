@@ -4641,6 +4641,46 @@ function lovd_requireAUTH ($nLevel = 0)
 
 
 
+function lovd_saveIP (string $sIP, int $nLevel, string $sReason = '', string $sAnnotation = '')
+{
+    // Save the IP address or IP range in the database.
+    global $_AUTH, $_DB;
+
+    // IP needs to be this IP, or you need authentication.
+    if ($sIP != $_SERVER['REMOTE_ADDR'] && (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER)) {
+        return false;
+    }
+
+    if (filter_var($sIP, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+        // Single IP.
+        $nIPStart = ip2long($sIP);
+        $nIPEnd = $nIPStart;
+    } else {
+        return false;
+    }
+
+    // IP address can't have data already.
+    if (lovd_getIPData($sIP)) {
+        return false;
+    }
+
+    // Level defaults to 0 (allow).
+    if (filter_var($nLevel, FILTER_VALIDATE_INT, ['min_range' => 0, 'max_range' => 1]) === false) {
+        $nLevel = 0;
+    }
+
+    $q = $_DB->q(
+        'INSERT INTO ' . TABLE_IPS . ' (ip_start, ip_end, level, reason, annotation) VALUES (?, ?, ?, ?, ?)',
+        [$nIPStart, $nIPEnd, $nLevel, $sReason, $sAnnotation], false
+    );
+
+    return ($q !== false);
+}
+
+
+
+
+
 function lovd_saveWork ()
 {
     // Save the changes made in $_AUTH['saved_work'] by inserting the changed array back into the database.
