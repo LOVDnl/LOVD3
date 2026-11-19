@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2024-09-03
+ * Modified    : 2026-11-19
  * For LOVD    : 3.0-31
  *
- * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2026 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.NL>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -871,6 +871,17 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                           ENGINE=InnoDB,
                           DEFAULT CHARACTER SET utf8',
                      )
+                 ),
+                 '3.0-30c' => array(
+                     'CREATE TABLE IF NOT EXISTS ' . TABLE_IPS . ' (
+                        ip_start INT UNSIGNED NOT NULL,
+                        ip_end INT UNSIGNED NOT NULL,
+                        level TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
+                        reason VARCHAR(255),
+                        annotation VARCHAR(255) NOT NULL,
+                        PRIMARY KEY (ip_start))
+                      ENGINE=InnoDB,
+                      DEFAULT CHARACTER SET utf8',
                  ),
              );
 

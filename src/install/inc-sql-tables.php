@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2024-09-03
+ * Modified    : 2026-11-19
  * For LOVD    : 3.0-31
  *
- * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2026 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -753,6 +753,16 @@ $aTableSQL =
     INDEX (edited_by),
     CONSTRAINT ' . TABLE_ANNOUNCEMENTS . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT ' . TABLE_ANNOUNCEMENTS . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
+    ' . $sSettings
+
+         , 'TABLE_IPS' =>
+   'CREATE TABLE ' . TABLE_IPS . ' (
+    ip_start INT UNSIGNED NOT NULL,
+    ip_end INT UNSIGNED NOT NULL,
+    level TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
+    reason VARCHAR(255),
+    annotation VARCHAR(255) NOT NULL,
+    PRIMARY KEY (ip_start))
     ' . $sSettings
 
          , 'TABLE_SOURCES' =>
