@@ -4083,6 +4083,17 @@ function lovd_isIPBlocked ($sIP)
 
 
 
+function lovd_isIPListed ($sIP)
+{
+    // Checks if this IP address has been listed. This includes blocked IPs, but also IPs simply stored.
+    // Just return a boolean, based on data from lovd_getIPData().
+    return (bool) lovd_getIPData($sIP);
+}
+
+
+
+
+
 function lovd_isOwner ($sType, $Data)
 {
     // Checks if the current user (specified by global $_AUTH) is owner of the

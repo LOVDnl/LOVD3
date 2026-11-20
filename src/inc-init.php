@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2026-11-19
+ * Modified    : 2026-11-20
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2026 Leiden University Medical Center; http://www.LUMC.nl/
@@ -952,7 +952,7 @@ if (!defined('NOT_INSTALLED')) {
 
 
     // Implement soft-blocking users; when soft-blocked, they are required to log in.
-    if (!$_AUTH && !lovd_isIPBlocked($_SERVER['REMOTE_ADDR'])) {
+    if (!$_AUTH && !lovd_isIPListed($_SERVER['REMOTE_ADDR'])) {
         // Add logic here that will force IPs to be logged in from now on.
         // lovd_saveIP($_SERVER['REMOTE_ADDR'], 1, 'Reason', 'Annotation');
     }
