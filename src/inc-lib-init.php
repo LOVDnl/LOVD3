@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2026-11-19
+ * Modified    : 2026-11-20
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2026 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1361,15 +1361,15 @@ function lovd_getIPData (string $sIP)
     if (empty($aIPData[$sIP]) && $_STAT['version'] >= '3.0-30c' && filter_var($sIP, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
         $zIP = $_DB->q(
             'SELECT ip_start, ip_end, level, reason, annotation FROM ' . TABLE_IPS . ' WHERE ip_start <= INET_ATON(?) ORDER BY ip_start DESC LIMIT 1',
-            [$_SERVER['REMOTE_ADDR']])->fetchAssoc();
+            [$sIP])->fetchAssoc();
         // Having a hit is not necessarily a match. The database is heavily optimized, but we need to do one more check.
-        if ($zIP && ip2long($_SERVER['REMOTE_ADDR']) <= $zIP['ip_end']) {
+        if ($zIP && ip2long($sIP) <= $zIP['ip_end']) {
             // Now, we're sure if it's a match.
             $aIPData[$sIP] = $zIP;
 
             // Now, we no longer need the integers.
-            $aIPData[$sIP]['ip_start'] = long2ip($aIPData['ip_start']);
-            $aIPData[$sIP]['ip_end'] = long2ip($aIPData['ip_end']);
+            $aIPData[$sIP]['ip_start'] = long2ip($aIPData[$sIP]['ip_start']);
+            $aIPData[$sIP]['ip_end'] = long2ip($aIPData[$sIP]['ip_end']);
         }
     }
 
