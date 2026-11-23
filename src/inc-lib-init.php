@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2026-11-20
+ * Modified    : 2026-11-23
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2026 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1144,6 +1144,11 @@ function lovd_getCurrentPageTitle ()
         $sTitle .= ' created by user account #' . $ID;
     }
 
+    // For IPs, fix the capitalization.
+    if ($sObject == 'ips') {
+        $sTitle = str_replace(' ip', ' IP', $sTitle);
+    }
+
     if (!$ID) {
         return $sTitle;
     }
@@ -1168,6 +1173,20 @@ function lovd_getCurrentPageTitle ()
             if ($sName) {
                 $sTitle .= ' (' . $sName .
                     (!$nOMIM? '' : ', OMIM:' . $nOMIM) . ')';
+            }
+            break;
+        case 'ips':
+            $sIPStart = long2ip($ID);
+            $sEnd = $_DB->q('SELECT ip_end FROM ' . TABLE_IPS . '
+                WHERE ip_start = ?', array($ID))->fetchColumn();
+            if ($sEnd !== false) {
+                $sEnd = long2ip($sEnd);
+                if ($sIPStart == $sEnd) {
+                    $sIPs = $sIPStart;
+                } else {
+                    $sIPs = $sIPStart . ' - ' . $sEnd;
+                }
+                $sTitle .= ' (' . $sIPs . ')';
             }
             break;
         case 'links':

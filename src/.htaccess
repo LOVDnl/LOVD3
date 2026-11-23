@@ -38,6 +38,7 @@ php_value suhosin.request.max_vars 15000
     RewriteRule ^import(.*)$ import.php
 #    RewriteRule ^install(.*)$ install/index.php # I'm having trouble using /install?etc because Apache is redirecting to /install/?etc which loses the $_POST info. Very annoying.
     RewriteRule ^individuals(.*)$ individuals.php
+    RewriteRule ^ips(.*)$ ips.php
     RewriteRule ^links(.*)$ links.php
     RewriteRule ^login(.*)$ login.php
     RewriteRule ^logout(.*)$ logout.php
