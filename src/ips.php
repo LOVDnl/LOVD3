@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2026-11-21
- * Modified    : 2026-11-23
+ * Modified    : 2026-11-24
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2026 Leiden University Medical Center; http://www.LUMC.nl/
@@ -58,6 +58,92 @@ if (PATH_COUNT == 1 && !ACTION) {
     $_DATA = new LOVD_IP();
 
     $_DATA->viewList('IPs', array('show_options' => true));
+
+    $_T->printFooter();
+    exit;
+}
+
+
+
+
+
+if (PATH_COUNT == 1 && ACTION == 'create') {
+    // URL: /ips?create
+    // Create a new IP entry.
+
+    define('LOG_EVENT', 'IPCreate');
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
+
+    require ROOT_PATH . 'class/object_ips.php';
+    $_DATA = new LOVD_IP();
+    require ROOT_PATH . 'inc-lib-form.php';
+
+    if (!empty($_POST)) {
+        lovd_errorClean();
+
+        $_DATA->checkFields($_POST);
+
+        if (!lovd_error()) {
+            // Fields to be used.
+            $aFields = array('ip_start', 'ip_end', 'level', 'reason', 'annotation');
+
+            // Prepare values.
+            $sIPStart = str_replace('*', '0', $_POST['name']);
+            $sIPEnd = str_replace('*', '255', $_POST['name']);
+            while (substr_count($sIPStart, '.') < 3) {
+                $sIPStart .= '.0';
+                $sIPEnd .= '.255';
+            }
+            $_POST['ip_start'] = ip2long($sIPStart);
+            $_POST['ip_end'] = ip2long($sIPEnd);
+            $b = $_DATA->insertEntry($_POST, $aFields);
+
+            // Write to log...
+            lovd_writeLog('Event', LOG_EVENT, 'Created IP entry ' . $_POST['ip_start'] . ' (' . $_POST['name'] . ')');
+
+            // Thank the user...
+            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0] . '/' . $_POST['ip_start'] . '?edit');
+
+            $_T->printHeader();
+            $_T->printTitle();
+            lovd_showInfoTable('Successfully created the IP entry!', 'success');
+
+            $_T->printFooter();
+            exit;
+        }
+
+    } else {
+        // Default values.
+        $_DATA->setDefaultValues();
+    }
+
+
+
+    $_T->printHeader();
+    $_T->printTitle();
+
+    if (GET) {
+        print('      To create a new IP entry, please fill out the form below.<BR>' . "\n" .
+              '      <BR>' . "\n\n");
+    }
+
+    lovd_errorPrint();
+
+    // Tooltip JS code.
+    lovd_includeJS('inc-js-tooltip.php');
+
+    // Table.
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
+
+    // Array which will make up the form table.
+    $aForm = array_merge(
+        $_DATA->getForm(),
+        array(
+            array('', '', 'submit', 'Create IP entry'),
+        ));
+    lovd_viewForm($aForm);
+
+    print('</FORM>' . "\n\n");
 
     $_T->printFooter();
     exit;

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2026-11-21
- * Modified    : 2026-11-23
+ * Modified    : 2026-11-24
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2026 Leiden University Medical Center; http://www.LUMC.nl/
@@ -79,6 +79,84 @@ class LOVD_IP extends LOVD_Object
         $this->sSortDefault = 'ip_start';
 
         parent::__construct();
+    }
+
+
+
+
+
+    function checkFields ($aData, $zData = false, $aOptions = array())
+    {
+        // Checks fields before submission of data.
+
+        // Mandatory fields.
+        $this->aCheckMandatory = array(
+            'name',
+            'level',
+        );
+        parent::checkFields($aData, $zData, $aOptions);
+
+        if (!empty($aData['name'])) {
+            // First, if we're ending with a dot, assume we mean ".*". That will simplify things for us.
+            if (str_ends_with($aData['name'], '.')) {
+                $_POST['name'] = $aData['name'] .= '*';
+            }
+            if (!preg_match('/([0-9]+\.){1,3}([0-9]+|\*)$/', $aData['name'])) {
+                lovd_errorAdd('name', 'Please double-check the IP format; it does not follow any of the allowed formats.');
+            } else {
+                $aParts = explode('.', $aData['name']);
+                foreach ($aParts as $sPart) {
+                    if (!($sPart == '*' || $sPart <= 255)) {
+                        lovd_errorAdd('name', 'Please double-check the IP format; it does not follow any of the allowed formats.');
+                        break;
+                    }
+                }
+            }
+        }
+
+        // XSS attack prevention. Deny input of HTML.
+        lovd_checkXSS($aData);
+    }
+
+
+
+
+
+    function getForm ()
+    {
+        // Build the form.
+
+        // If we've built the form before, simply return it. Especially imports will repeatedly call checkFields(), which calls getForm().
+        if (!empty($this->aFormData)) {
+            return parent::getForm();
+        }
+
+        $aLevels = [
+            0 => '0: Whitelist',
+            1 => '1: Soft-block (requires login)',
+        ];
+
+        // Array which will make up the form table.
+        $this->aFormData = array(
+            array('POST', '', '', '', '35%', '14', '65%'),
+  'name' => array('IP entry', 'Formats: 1.2.3.4, 1.2.3.*, 1.2.*, or 1.*', 'text', 'name', 20),
+            array('Level', '', 'select', 'level', 1, $aLevels, false, false, false),
+            array('Reason', '', 'text', 'reason', 30),
+            array('Annotation', '', 'text', 'annotation', 50),
+        );
+
+        return parent::getForm();
+    }
+
+
+
+
+
+    function setDefaultValues ()
+    {
+        // Sets default values of fields in $_POST.
+        $_POST['level'] = 1;
+        return true;
     }
 }
 ?>
