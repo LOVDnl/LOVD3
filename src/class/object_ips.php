@@ -52,6 +52,12 @@ class LOVD_IP extends LOVD_Object
     {
         // Default constructor.
 
+        // SQL code for loading an entry for an edit form.
+        $this->sSQLLoadEntry = '
+            SELECT *, IF(ip_start = ip_end, INET_NTOA(ip_start), CONCAT(INET_NTOA(ip_start), " - ", INET_NTOA(ip_end))) AS ip_range
+            FROM ' . TABLE_IPS . '
+            WHERE ip_start = ?';
+
         // SQL code for viewing a list of entries.
         $this->aSQLViewList['SELECT']   = '*, ip_start AS row_id, CONCAT("ips/", ip_start, "?edit") AS row_link, IF(ip_start = ip_end, INET_NTOA(ip_start), CONCAT(INET_NTOA(ip_start), " - ", INET_NTOA(ip_end))) AS ip_range';
         $this->aSQLViewList['FROM']     = TABLE_IPS;
@@ -144,6 +150,10 @@ class LOVD_IP extends LOVD_Object
             array('Reason', '', 'text', 'reason', 30),
             array('Annotation', '', 'text', 'annotation', 50),
         );
+
+        if (ACTION != 'create') {
+            unset($this->aFormData['name']);
+        }
 
         return parent::getForm();
     }

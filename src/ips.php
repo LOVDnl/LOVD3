@@ -148,4 +148,72 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     $_T->printFooter();
     exit;
 }
+
+
+
+
+
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
+    // URL: /ips/1?edit
+    // Edit specific entry.
+
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
+    define('LOG_EVENT', 'IPEdit');
+
+    require ROOT_PATH . 'class/object_ips.php';
+    $_DATA = new LOVD_IP();
+    $zData = $_DATA->loadEntry($nID);
+    require ROOT_PATH . 'inc-lib-form.php';
+
+    if (!empty($_POST)) {
+        lovd_errorClean();
+
+        $_DATA->checkFields($_POST);
+
+        if (!lovd_error()) {
+            // Fields to be used.
+            $aFields = array('level', 'reason', 'annotation');
+
+            $_DATA->updateEntry(['ip_start' => $nID], $_POST, $aFields);
+
+            // Write to log...
+            lovd_writeLog('Event', LOG_EVENT, 'Edited IP entry ' . $nID . ' (' . $zData['ip_range'] . ')');
+
+            // We don't thank the user, we want to move on quickly.
+            header('Location: ' . lovd_getInstallURL() . CURRENT_PATH . '?' . ACTION);
+            exit;
+        }
+
+    } else {
+        // Load current values.
+        $_POST = array_merge($_POST, $zData);
+    }
+
+
+
+    $_T->printHeader();
+    $_T->printTitle();
+
+    lovd_errorPrint();
+
+    // Tooltip JS code.
+    lovd_includeJS('inc-js-tooltip.php');
+
+    // Table.
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post" onsubmit="return lovd_checkForm();">' . "\n");
+
+    // Array which will make up the form table.
+    $aForm = array_merge(
+                 $_DATA->getForm(),
+                 array(
+                        array('', '', 'submit', 'Edit IP entry'),
+                      ));
+    lovd_viewForm($aForm);
+
+    print('</FORM>' . "\n\n");
+
+    $_T->printFooter();
+    exit;
+}
 ?>
