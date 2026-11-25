@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2026-11-21
- * Modified    : 2026-11-24
+ * Modified    : 2026-11-25
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2026 Leiden University Medical Center; http://www.LUMC.nl/
@@ -175,13 +175,28 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
             // Fields to be used.
             $aFields = array('level', 'reason', 'annotation');
 
-            $_DATA->updateEntry(['ip_start' => $nID], $_POST, $aFields);
+            if (!empty($_POST['stretch-up'])) {
+                // Instead of editing normally, we'll also update the start IP to *.0.
+                $nNewID = lovd_getIPSubnetStart($zData['ip_start']);
+                if ($nNewID > $zPrevIP['ip_end']) {
+                    $_DATA->updateEntry(['ip_start' => $nID], $_POST, $aFields);
+                    // By design, updateEntry() can't help us, as we need to change the ID of the entry.
+                    $b = $_DB->q('UPDATE ' . TABLE_IPS . ' SET ip_start = ? WHERE ip_start = ?', [$nNewID, $nID]);
+                }
+
+            } else {
+                $_DATA->updateEntry(['ip_start' => $nID], $_POST, $aFields);
+            }
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Edited IP entry ' . $nID . ' (' . $zData['ip_range'] . ')');
 
             // We don't thank the user, we want to move on quickly.
-            header('Location: ' . lovd_getInstallURL() . CURRENT_PATH . '?' . ACTION);
+            if (!isset($nNewID)) {
+                header('Location: ' . lovd_getInstallURL() . CURRENT_PATH . '?' . ACTION);
+            } else {
+                header('Location: ' . lovd_getInstallURL() . $_PE[0] . "/$nNewID?" . ACTION);
+            }
             exit;
         }
 
@@ -209,6 +224,14 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
                  array(
                         array('', '', 'submit', 'Edit IP entry'),
                       ));
+
+    // If we can stretch the IP up, offer to do so.
+    if (!lovd_isIPFirstInSubnet($zData['ip_start'])
+        && lovd_getIPSubnetEnd($zPrevIP['ip_end']) < lovd_getIPSubnetStart($zData['ip_start'])) {
+        // We can stretch this IP up, as its start doesn't end with *.0.
+        // Also, the previous IP entry does not end in the same subnet.
+        $aForm[] = ['', '', 'submit', 'Stretch up to *.0', 'stretch-up'];
+    }
     lovd_viewForm($aForm);
 
     print('</FORM>' . "\n\n");

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2026-11-23
+ * Modified    : 2026-11-25
  * For LOVD    : 3.0-31
  *
  * Copyright   : 2004-2026 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1393,6 +1393,28 @@ function lovd_getIPData (string $sIP)
     }
 
     return ($aIPData[$sIP] ?? false);
+}
+
+
+
+
+
+function lovd_getIPSubnetEnd (int $nIP)
+{
+    // Calculate the end of the subnet for the given IP address (integer value).
+    // We use this a lot, so it helps writing readable code if we use a function like this.
+    return (ceil($nIP/256)*256)-1;
+}
+
+
+
+
+
+function lovd_getIPSubnetStart (int $nIP)
+{
+    // Calculate the start of the subnet for the given IP address (integer value).
+    // We use this a lot, so it helps writing readable code if we use a function like this.
+    return floor($nIP/256)*256;
 }
 
 
@@ -4096,6 +4118,17 @@ function lovd_isIPBlocked ($sIP)
     } else {
         return false;
     }
+}
+
+
+
+
+
+function lovd_isIPFirstInSubnet (int $nIP)
+{
+    // Calculate whether this IP is the first of the subnet (integer value).
+    // We use this a lot, so it helps writing readable code if we use a function like this.
+    return !($nIP%256);
 }
 
 
