@@ -4135,6 +4135,17 @@ function lovd_isIPFirstInSubnet (int $nIP)
 
 
 
+function lovd_isIPLastInSubnet (int $nIP)
+{
+    // Calculate whether this IP is the last of the subnet (integer value).
+    // We use this a lot, so it helps writing readable code if we use a function like this.
+    return !(($nIP+1)%256);
+}
+
+
+
+
+
 function lovd_isIPListed ($sIP)
 {
     // Checks if this IP address has been listed. This includes blocked IPs, but also IPs simply stored.

@@ -166,6 +166,14 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
+    // Collect information on the previous and next IP entries.
+    $zPrevIP = $_DB->q(
+        'SELECT ip_start, ip_end FROM ' . TABLE_IPS . ' WHERE ip_start < ? ORDER BY ip_start DESC LIMIT 1',
+        [$zData['ip_start']])->fetchAssoc();
+    $zNextIP = $_DB->q(
+        'SELECT ip_start, ip_end, level, reason, annotation, IF(ip_start = ip_end, INET_NTOA(ip_start), CONCAT(INET_NTOA(ip_start), " - ", INET_NTOA(ip_end))) AS ip_range FROM ' . TABLE_IPS . ' WHERE ip_start > ? ORDER BY ip_start ASC LIMIT 1',
+        [$zData['ip_start']])->fetchAssoc();
+
     if (!empty($_POST)) {
         lovd_errorClean();
 
@@ -182,6 +190,14 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
                     $_DATA->updateEntry(['ip_start' => $nID], $_POST, $aFields);
                     // By design, updateEntry() can't help us, as we need to change the ID of the entry.
                     $b = $_DB->q('UPDATE ' . TABLE_IPS . ' SET ip_start = ? WHERE ip_start = ?', [$nNewID, $nID]);
+                }
+
+            } elseif (!empty($_POST['stretch-down'])) {
+                // Instead of editing normally, we'll also update the end IP to *.255.
+                if (!$zNextIP || lovd_getIPSubnetStart($zData['ip_end']) != lovd_getIPSubnetStart($zNextIP['ip_start'])) {
+                    $aFields[] = 'ip_end';
+                    $_POST['ip_end'] = lovd_getIPSubnetEnd($zData['ip_end']);
+                    $_DATA->updateEntry(['ip_start' => $nID], $_POST, $aFields);
                 }
 
             } else {
@@ -231,6 +247,14 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
         // We can stretch this IP up, as its start doesn't end with *.0.
         // Also, the previous IP entry does not end in the same subnet.
         $aForm[] = ['', '', 'submit', 'Stretch up to *.0', 'stretch-up'];
+    }
+
+    // If we can stretch the IP down, offer to do so.
+    if (!lovd_isIPLastInSubnet($zData['ip_end'])
+        && (!$zNextIP || lovd_getIPSubnetEnd($zData['ip_end']) < lovd_getIPSubnetStart($zNextIP['ip_start']))) {
+        // We can stretch the IP range down, as its end doesn't end with *.255.
+        // Also, the next IP is in a different subnet.
+        $aForm[] = ['', '', 'submit', 'Stretch down to *.255', 'stretch-down'];
     }
     lovd_viewForm($aForm);
 
